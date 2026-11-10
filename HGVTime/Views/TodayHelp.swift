@@ -1,0 +1,130 @@
+import SwiftUI
+
+/// Builds the help messages shown on Today when a button is pressed, and the "Next" hint.
+enum TodayHelp {
+
+    /// Message after switching to `kind`. `s` is the status just before the switch.
+    static func afterSwitch(to kind: DutyKind, status s: ComplianceStatus, settings: AppSettings, now: Date = .now) -> HelpMessage {
+        let tenLeft = max(0, Limits.maxExtensionsPerWeek - s.extensionsUsed)
+        switch kind {
+        case .drive:
+            let canDrive = s.breakRemaining > 0 ? 0 : s.driveAvailableNow
+            var lines: [String] = []
+            if s.breakRemaining > 0 {
+                lines.append("You still need \(Fmt.hm(s.breakRemaining)) of break before driving again. Driving now is an infringement.")
+            } else {
+                lines.append("You can drive \(Fmt.hm(canDrive)) — until about \(Fmt.time(now.addingTimeInterval(canDrive))).")
+                lines.append("Then take a 45 min break (or 15 min + 30 min, in that order).")
+            }
+            lines.append("Today: \(Fmt.hm(s.stats.euDriving)) of \(Fmt.hm(s.dailyDrivingLimit)) driven. 10h days left this week: \(tenLeft) of 2.")
+            return HelpMessage(symbol: "steeringwheel", color: .blue, title: "Driving", lines: lines)
+
+        case .otherWork:
+            var lines = ["Loading, unloading, checks, cleaning, paperwork. Counts as working time, not driving."]
+            if settings.applyWorkingTime {
+                lines.append("You can work \(Fmt.hm(s.wtdWorkBeforeBreak)) more before a working-time break (no more than 6h in a row).")
+                lines.append("Breaks needed today: 30 min if you work 6–9h, 45 min over 9h, in pieces of 15 min or more.")
+            }
+            return HelpMessage(symbol: "hammer.fill", color: .orange, title: "Other work", lines: lines)
+
+        case .availability:
+            return HelpMessage(symbol: "hourglass", color: .purple, title: "POA (period of availability)", lines: [
+                "Waiting time when you know how long the wait is in advance, e.g. waiting to be tipped, or double-manned in the passenger seat.",
+                "Not working time and not a break. It still counts towards your shift length.",
+                s.restStartByLatest.map { "Start daily rest by \(Fmt.time($0))." } ?? ""
+            ].filter { !$0.isEmpty })
+
+        case .rest:
+            var lines: [String] = []
+            let need = s.breakNeeded > 0 ? s.breakNeeded : Limits.fullBreak
+            if need == Limits.splitBreakSecond {
+                lines.append("You've had 15 min — take at least 30 min now to complete your break. Finish after \(Fmt.time(now.addingTimeInterval(Limits.splitBreakSecond))).")
+            } else {
+                lines.append("A full break is 45 min — finish after \(Fmt.time(now.addingTimeInterval(Limits.fullBreak))).")
+                lines.append("Or split it: at least 15 min now, then at least 30 min later.")
+            }
+            if settings.applyWorkingTime && s.wtdBreakNeededToday > 0 {
+                lines.append("Working time: you still need \(Fmt.hm(s.wtdBreakNeededToday)) of breaks today.")
+            }
+            lines.append("After a full break you get a fresh 4h30 of driving.")
+            return HelpMessage(symbol: "cup.and.saucer.fill", color: .green, title: "Break", lines: lines)
+        }
+    }
+
+    static func afterStartShift(status s: ComplianceStatus, settings: AppSettings, now: Date = .now) -> HelpMessage {
+        let reducedLeft = max(0, Limits.maxReducedDailyRests - s.reducedRestsUsed)
+        var lines = [
+            "Shift started at \(Fmt.time(now)) with \(settings.shiftStartKind.title.lowercased()).",
+            "Normal day (13h, then 11h rest): start rest by \(Fmt.time(now.addingTimeInterval(13 * 3600))).",
+            reducedLeft > 0
+                ? "Longest day (15h, then 9h reduced rest): by \(Fmt.time(now.addingTimeInterval(15 * 3600))). 15h days left: \(reducedLeft) of 3."
+                : "No 15h days left — you need a full 11h rest tonight."
+        ]
+        if let due = s.weeklyRestDueBy { lines.append("Weekly rest must start by \(Fmt.dayTime(due)).") }
+        return HelpMessage(symbol: "play.circle.fill", color: .green, title: "Shift started", lines: lines)
+    }
+
+    static func afterEndShift(_ type: RestType, status s: ComplianceStatus, now: Date = .now) -> HelpMessage {
+        let reducedLeft = max(0, Limits.maxReducedDailyRests - s.reducedRestsUsed)
+        if type == .weekly {
+            return HelpMessage(symbol: "house.fill", color: .indigo, title: "Weekly rest started", lines: [
+                "Regular weekly rest (45h) complete at \(Fmt.dayTime(now.addingTimeInterval(Limits.regularWeeklyRest))).",
+                "Reduced weekly rest (24h) at \(Fmt.dayTime(now.addingTimeInterval(Limits.reducedWeeklyRest))) — the missing hours must be paid back within 3 weeks.",
+                "Your 10h driving days and 9h reduced rests reset after weekly rest."
+            ])
+        }
+        return HelpMessage(symbol: "moon.zzz.fill", color: .teal, title: "Daily rest started", lines: [
+            "Regular daily rest (11h) complete at \(Fmt.time(now.addingTimeInterval(Limits.regularDailyRest))) — you can start work from then.",
+            reducedLeft > 0
+                ? "Reduced (9h) at \(Fmt.time(now.addingTimeInterval(Limits.reducedDailyRest))). Reduced rests left: \(reducedLeft) of 3."
+                : "No reduced rests left — take the full 11h.",
+            "Or split: 3h now and 9h later (12h in total)."
+        ])
+    }
+
+    static func inCab(on: Bool, settings: AppSettings) -> HelpMessage {
+        on
+            ? HelpMessage(symbol: "box.truck.fill", color: .blue, title: "In cab — automatic", lines: [
+                "When the vehicle moves above \(Int(settings.autoMovingSpeedKmh)) km/h for 8 seconds, Driving is recorded.",
+                "When it's stopped for \(settings.autoStopDelaySeconds >= 60 ? "\(settings.autoStopDelaySeconds / 60) min" : "\(settings.autoStopDelaySeconds) s"), \(settings.autoStoppedKind == .rest ? "Break" : settings.autoStoppedKind.title) is recorded from the moment it stopped.",
+                "Carrying or shaking the phone does nothing — it uses GPS speed and the motion sensor. Allow location “Always” so it works with the phone locked.",
+                "You can still press Break or POA yourself while stopped."
+            ])
+            : HelpMessage(symbol: "figure.walk", color: .gray, title: "Walking — manual", lines: [
+                "Nothing is recorded automatically. Press the buttons as you change activity, like the tacho mode switch."
+            ])
+    }
+
+    /// A one-line "what's next" for the status card.
+    static func next(status s: ComplianceStatus, openEntry: ActivityEntry?) -> String? {
+        guard s.hasData, let open = openEntry else { return nil }
+        let now = s.now
+        if open.endsShift {
+            let rest = s.currentRestLength
+            if open.restType == .weekly {
+                return rest < Limits.reducedWeeklyRest
+                    ? "Next: 24h at \(Fmt.dayTime(s.currentSince.addingTimeInterval(Limits.reducedWeeklyRest))) · 45h at \(Fmt.dayTime(s.currentSince.addingTimeInterval(Limits.regularWeeklyRest)))"
+                    : "Next: 45h regular weekly rest at \(Fmt.dayTime(s.currentSince.addingTimeInterval(Limits.regularWeeklyRest)))"
+            }
+            if rest < Limits.reducedDailyRest {
+                return "Next: 9h rest at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.reducedDailyRest))) · 11h at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.regularDailyRest)))"
+            }
+            return rest < Limits.regularDailyRest
+                ? "Next: full 11h rest at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.regularDailyRest)))"
+                : "Rest complete — you can start your shift"
+        }
+        switch open.kind {
+        case .drive:
+            return "Next: break due at \(Fmt.time(now.addingTimeInterval(s.continuousDrivingRemaining))) (in \(Fmt.hm(s.continuousDrivingRemaining)))"
+        case .rest:
+            if s.breakRemaining > 0 {
+                return "Break done at \(Fmt.time(now.addingTimeInterval(s.breakRemaining))) (\(Fmt.hm(s.breakRemaining)) to go)"
+            }
+            return "Break complete — 4h30 driving available"
+        case .otherWork:
+            return "Next: working-time break needed by \(Fmt.time(now.addingTimeInterval(s.wtdWorkBeforeBreak)))"
+        case .availability:
+            return s.restStartByLatest.map { "Start daily rest by \(Fmt.time($0))" }
+        }
+    }
+}

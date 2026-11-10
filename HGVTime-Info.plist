@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>In-cab mode uses your speed to record driving when the vehicle moves and other work when it stops, like a tachograph.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>In-cab mode checks the iPhone's motion sensor to tell that you're in a moving vehicle, so walking around isn't recorded as driving.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Allow “Always” so in-cab mode keeps recording driving and stops while the app is in the background or the phone is locked.</string>
+</dict>
+</plist>
