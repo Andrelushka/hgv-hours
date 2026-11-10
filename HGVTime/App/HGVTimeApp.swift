@@ -38,6 +38,7 @@ struct RootView: View {
                 .interactiveDismissDisabled()
         }
         .task {
+            ActivityController.removeDuplicateNightOuts(context: context)
             PhoneWatchBridge.shared.configure(context: context, store: store)
             AutoDriveDetector.shared.configure(context: context, settings: store.settings)
             ActivityController.refreshSideEffects(context: context, settings: store.settings)

@@ -25,6 +25,18 @@ struct PaySettings: Codable, Equatable {
     var nightOutAllowance: Double = 0
     /// Guaranteed paid hours per shift (0 = off).
     var minimumPaidHoursPerShift: Double = 0
+    /// Guaranteed paid hours per week (0 = off).
+    var minimumPaidHoursPerWeek: Double = 0
+    /// Guaranteed paid hours per calendar month (0 = off).
+    var minimumPaidHoursPerMonth: Double = 0
+
+    // Salary
+    var salaryAmount: Double = 0
+    /// "year", "month", "week" or "day".
+    var salaryPeriod: String = SalaryPeriod.year.rawValue
+    /// Contracted hours per week: overtime starts after these (salary only).
+    var contractedHoursPerWeek: Double = 45
+    var contractedDaysPerWeek: Double = 5
     var currencySymbol = "£"
     /// Custom overtime rate in £/hour. 0 = use the multiplier instead.
     var overtimeFixedRate: Double = 0
@@ -56,16 +68,49 @@ struct PaySettings: Codable, Equatable {
     var extras: [PayExtra] = []
 
     var basis: PayBasis { PayBasis(rawValue: payBasis) ?? .hourly }
+    var salaryPer: SalaryPeriod { SalaryPeriod(rawValue: salaryPeriod) ?? .year }
+
+    /// Salary converted to one week.
+    var weeklySalary: Double {
+        switch salaryPer {
+        case .year: salaryAmount / 52
+        case .month: salaryAmount * 12 / 52
+        case .week: salaryAmount
+        case .day: salaryAmount * contractedDaysPerWeek
+        }
+    }
+
+    /// Hourly value of the salary, used for overtime.
+    var salaryHourly: Double { contractedHoursPerWeek > 0 ? weeklySalary / contractedHoursPerWeek : 0 }
     var holiday: HolidayMode {
         holidayMode == "onTop" ? .separate : (HolidayMode(rawValue: holidayMode) ?? .none)
     }
 }
 
 enum PayBasis: String, CaseIterable, Identifiable {
-    case hourly, daily
+    case hourly, daily, salary
     var id: String { rawValue }
-    var title: String { self == .hourly ? "Hourly rate" : "Day rate" }
-    var unit: String { self == .hourly ? "/h" : "/day" }
+    var title: String {
+        switch self {
+        case .hourly: "Hourly"
+        case .daily: "Day rate"
+        case .salary: "Salary"
+        }
+    }
+    var unit: String { self == .daily ? "/day" : "/h" }
+}
+
+enum SalaryPeriod: String, CaseIterable, Identifiable {
+    case year, month, week, day
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .year: "per year"
+        case .month: "per month"
+        case .week: "per week"
+        case .day: "per day"
+        }
+    }
 }
 
 enum HolidayMode: String, CaseIterable, Identifiable {
@@ -125,6 +170,12 @@ struct AppSettings: Codable, Equatable {
     var liveActivityEnabled = true
 
     var hasAcceptedDisclaimer = false
+
+    // Units
+    /// Show distances in miles (UK) instead of km.
+    var useMiles = true
+    /// Show heights/lengths in feet and inches as well as metres.
+    var showFeet = true
 
     // Driver card
     var cardInserted = false

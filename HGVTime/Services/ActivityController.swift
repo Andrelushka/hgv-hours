@@ -92,6 +92,49 @@ enum ActivityController {
         refreshSideEffects(context: context, settings: settings)
     }
 
+    // MARK: Day record
+
+    /// Today's (or a given day's) record, created if missing.
+    static func dayRecord(for date: Date, context: ModelContext) -> DayRecord {
+        let start = Calendar.hgv.startOfDay(for: date)
+        let end = start.addingTimeInterval(86_400)
+        let d = FetchDescriptor<DayRecord>(predicate: #Predicate { $0.day >= start && $0.day < end })
+        if let existing = (try? context.fetch(d))?.first { return existing }
+        let r = DayRecord(day: start)
+        context.insert(r)
+        return r
+    }
+
+    /// Adds GPS-measured distance (in-cab mode) to today's record.
+    static func addGPSDistance(_ km: Double, at date: Date, context: ModelContext, vehicleID: String) {
+        guard km > 0 else { return }
+        let r = dayRecord(for: date, context: context)
+        r.gpsKm += km
+        if r.vehicleID.isEmpty { r.vehicleID = vehicleID }
+        try? context.save()
+    }
+
+    // MARK: Nights out
+
+    static func nightOuts(on day: Date, context: ModelContext) -> [NightOut] {
+        let cal = Calendar.hgv
+        let start = cal.startOfDay(for: day)
+        let end = start.addingTimeInterval(86_400)
+        let d = FetchDescriptor<NightOut>(predicate: #Predicate { $0.date >= start && $0.date < end })
+        return (try? context.fetch(d)) ?? []
+    }
+
+    /// Removes duplicate night-outs on the same day (left by an earlier bug).
+    static func removeDuplicateNightOuts(context: ModelContext) {
+        let all = (try? context.fetch(FetchDescriptor<NightOut>(sortBy: [SortDescriptor(\.date)]))) ?? []
+        var seen = Set<Date>()
+        for n in all {
+            let day = Calendar.hgv.startOfDay(for: n.date)
+            if seen.contains(day) { context.delete(n) } else { seen.insert(day) }
+        }
+        try? context.save()
+    }
+
     // MARK: Driver card
 
     /// Latest card event: inserted or not, and since when.

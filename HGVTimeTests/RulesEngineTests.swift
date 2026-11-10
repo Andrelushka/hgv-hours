@@ -321,4 +321,48 @@ final class RulesEngineTests: XCTestCase {
         let b = AutoDriveDetector.minuteRuleEnd(t(10, 16).addingTimeInterval(3))
         XCTAssertLessThanOrEqual(b, a)
     }
+
+    // MARK: V1.2 pay
+
+    func testWeeklyGuaranteeTopsUp() {
+        var pay = PaySettings()
+        pay.baseRate = 10
+        pay.minimumPaidHoursPerWeek = 40
+        let entries = [e(.drive, t(8), t(18))] // 10h in the week
+        let a = RulesEngine.analyze(entries, now: t(20, day: 2), config: config)
+        let r = PayCalculator.calculate(shifts: a.shifts, nightOuts: 0, settings: pay, calendar: cal)
+        XCTAssertEqual(r.total, 400, accuracy: 0.05)
+        XCTAssertEqual(r.paidHours, 40, accuracy: 0.01)
+    }
+
+    func testMonthlyGuaranteeOnlyWhenAsked() {
+        var pay = PaySettings()
+        pay.baseRate = 10
+        pay.minimumPaidHoursPerMonth = 100
+        let entries = [e(.drive, t(8), t(18))]
+        let a = RulesEngine.analyze(entries, now: t(20, day: 2), config: config)
+        XCTAssertEqual(PayCalculator.calculate(shifts: a.shifts, nightOuts: 0, settings: pay, calendar: cal).total, 100, accuracy: 0.05)
+        XCTAssertEqual(PayCalculator.calculate(shifts: a.shifts, nightOuts: 0, settings: pay, applyMonthlyGuarantee: true, calendar: cal).total,
+                       1000, accuracy: 0.05)
+    }
+
+    func testSalaryWithOvertime() {
+        var pay = PaySettings()
+        pay.payBasis = PayBasis.salary.rawValue
+        pay.salaryAmount = 52_000          // £1,000 a week
+        pay.salaryPeriod = SalaryPeriod.year.rawValue
+        pay.contractedHoursPerWeek = 40    // £25/h
+        pay.overtimeMultiplier = 1.5
+        // Mon–Thu 11h a day = 44h → 4h overtime at £37.50.
+        let entries = (0..<4).map { e(.drive, t(6, day: $0), t(17, day: $0)) }
+        let a = RulesEngine.analyze(entries, now: t(20, day: 4), config: config)
+        let r = PayCalculator.calculate(shifts: a.shifts, nightOuts: 0, settings: pay, salaryDays: 7, calendar: cal)
+        XCTAssertEqual(r.total, 1000 + 4 * 37.5, accuracy: 0.1)
+    }
+
+    func testPlateMatching() {
+        XCTAssertEqual(normalisedReg("ab12 cde"), "AB12CDE")
+        XCTAssertTrue(looksLikePlate("AB12 CDE"))
+        XCTAssertFalse(looksLikePlate("STOP"))
+    }
 }

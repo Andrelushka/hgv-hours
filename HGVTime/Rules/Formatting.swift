@@ -38,3 +38,29 @@ enum Fmt {
         String(format: "%@%.2f", symbol, value)
     }
 }
+
+extension Fmt {
+    /// "4.95 m (16′ 3″)" or "4.95 m".
+    static func length(_ metres: Double, feet: Bool) -> String {
+        guard metres > 0 else { return "—" }
+        let m = String(format: "%.2f m", metres)
+        guard feet else { return m }
+        return "\(m) (\(feetInches(metres)))"
+    }
+
+    /// 16′ 3″
+    static func feetInches(_ metres: Double) -> String {
+        let totalInches = Int((metres / 0.0254).rounded())
+        return "\(totalInches / 12)′ \(totalInches % 12)″"
+    }
+
+    /// Distance in km or miles.
+    static func distance(_ km: Double, miles: Bool) -> String {
+        miles ? String(format: "%.0f mi", km / 1.609344) : String(format: "%.0f km", km)
+    }
+
+    static func odometer(_ km: Double, miles: Bool) -> String {
+        guard km > 0 else { return "—" }
+        return miles ? String(format: "%.0f mi", km / 1.609344) : String(format: "%.0f km", km)
+    }
+}

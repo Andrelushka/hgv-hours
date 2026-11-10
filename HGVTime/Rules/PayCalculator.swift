@@ -25,6 +25,7 @@ struct PayBreakdown {
 enum PayCalculator {
     static func calculate(shifts: [ShiftSummary], nightOuts: Int, settings p: PaySettings,
                           items: [PayItemSnapshot] = [], holidayDayValue: Double = 0,
+                          salaryDays: Double = 7, applyMonthlyGuarantee: Bool = false,
                           calendar cal: Calendar = .hgv) -> PayBreakdown {
         var result = PayBreakdown()
         var buckets: [String: (hours: Double, amount: Double, order: Int)] = [:]
@@ -36,9 +37,14 @@ enum PayCalculator {
         var nightHours = 0.0
         var paidHours = 0.0
         var weekPaid: [Date: Double] = [:]
-        let otRateHourly = p.overtimeFixedRate > 0
-            ? p.overtimeFixedRate
-            : (p.basis == .daily ? (p.dayRateHours > 0 ? p.dayRate / p.dayRateHours : 0) : p.baseRate) * p.overtimeMultiplier
+        let hourlyBase: Double = {
+            switch p.basis {
+            case .daily: p.dayRateHours > 0 ? p.dayRate / p.dayRateHours : 0
+            case .salary: p.salaryHourly
+            case .hourly: p.baseRate
+            }
+        }()
+        let otRateHourly = p.overtimeFixedRate > 0 ? p.overtimeFixedRate : hourlyBase * p.overtimeMultiplier
         let otLabel = p.overtimeFixedRate > 0
             ? "Overtime \(p.currencySymbol)\(String(format: "%.2f", p.overtimeFixedRate))/h"
             : "Overtime ×\(trim(p.overtimeMultiplier))"
@@ -60,6 +66,14 @@ enum PayCalculator {
                         : (hour >= p.nightPremiumStartHour && hour < p.nightPremiumEndHour)
                     if inNight && p.nightPremiumPerHour > 0 { nightHours += hours }
 
+                    if p.basis == .salary {
+                        // Salary covers the contracted hours; hours beyond them are overtime.
+                        let weeklyLimit = p.weeklyOvertimeAfterHours > 0 ? p.weeklyOvertimeAfterHours : p.contractedHoursPerWeek
+                        let dailyOT = p.dailyOvertimeAfterHours > 0 && shiftPaid >= p.dailyOvertimeAfterHours - 0.0001
+                        if dailyOT || (weeklyLimit > 0 && weekPaid[weekKey, default: 0] >= weeklyLimit - 0.0001) {
+                            add(otLabel, hours, hours * otRateHourly, order: 4)
+                        }
+                    }
                     if p.basis == .hourly {
                         let dailyOT = p.dailyOvertimeAfterHours > 0 && shiftPaid >= p.dailyOvertimeAfterHours - 0.0001
                         let weeklyOT = p.weeklyOvertimeAfterHours > 0 && weekPaid[weekKey, default: 0] >= p.weeklyOvertimeAfterHours - 0.0001
@@ -92,10 +106,36 @@ enum PayCalculator {
             paidHours += shiftPaid
         }
 
+        // Guaranteed hours per week and per month (hourly pay).
+        if p.basis == .hourly {
+            if p.minimumPaidHoursPerWeek > 0 {
+                for (_, paid) in weekPaid where paid < p.minimumPaidHoursPerWeek {
+                    let topUp = p.minimumPaidHoursPerWeek - paid
+                    add("Guaranteed weekly hours top-up", topUp, topUp * p.baseRate, order: 7)
+                    paidHours += topUp
+                }
+            }
+            if applyMonthlyGuarantee && p.minimumPaidHoursPerMonth > 0 && paidHours < p.minimumPaidHoursPerMonth {
+                let topUp = p.minimumPaidHoursPerMonth - paidHours
+                add("Guaranteed monthly hours top-up", topUp, topUp * p.baseRate, order: 8)
+                paidHours += topUp
+            }
+        }
+
+        // Salary.
+        if p.basis == .salary && p.salaryAmount > 0 {
+            if p.salaryPer == .day {
+                add("Salary \(p.currencySymbol)\(String(format: "%.2f", p.salaryAmount))/day", Double(shifts.count), Double(shifts.count) * p.salaryAmount, order: 0)
+            } else {
+                add("Salary (\(p.salaryPer.title))", 0, p.weeklySalary * salaryDays / 7, order: 0)
+            }
+        }
+
         for (label, value) in buckets.sorted(by: { ($0.value.order, $0.key) < ($1.value.order, $1.key) }) {
-            let isDayCount = p.basis == .daily && label.hasSuffix("ay rate")
+            let isDayCount = (p.basis == .daily && label.hasSuffix("ay rate")) || label.hasSuffix("/day")
+            let isSalary = label.hasPrefix("Salary (")
             result.lines.append(PayLine(label: isDayCount ? "\(label) × \(Int(value.hours.rounded()))" : label,
-                                        hours: isDayCount ? nil : value.hours, amount: value.amount))
+                                        hours: isDayCount || isSalary ? nil : value.hours, amount: value.amount))
         }
         if result.lines.isEmpty { result.lines.append(PayLine(label: p.basis == .daily ? "Day rate" : "Basic", hours: 0, amount: 0)) }
 
@@ -163,6 +203,9 @@ enum PayCalculator {
     /// Average pay for a worked day over the 52 weeks before `date` (UK holiday pay for variable pay),
     /// excluding holiday pay and one-off bonuses.
     static func averageDayPay(shifts: [ShiftSummary], before date: Date, settings p: PaySettings, calendar cal: Calendar = .hgv) -> Double {
+        if p.basis == .salary {
+            return p.contractedDaysPerWeek > 0 ? p.weeklySalary / p.contractedDaysPerWeek : 0
+        }
         let from = date.addingTimeInterval(-52 * 7 * 86_400)
         let worked = shifts.filter { $0.period.start >= from && $0.period.start < date && !$0.period.isOpen }
         guard !worked.isEmpty else { return 0 }

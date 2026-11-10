@@ -7,7 +7,11 @@ struct WeeksView: View {
     @Query(sort: \NightOut.date) private var nightOuts: [NightOut]
     @Query(sort: \PayItem.date) private var payItems: [PayItem]
     @Environment(\.modelContext) private var context
-    @State private var weekOffset = 0
+    @State private var weekOffset: Int
+
+    init(initialOffset: Int = 0) {
+        _weekOffset = State(initialValue: initialOffset)
+    }
     @State private var addingItem = false
     @State private var exporting = false
 

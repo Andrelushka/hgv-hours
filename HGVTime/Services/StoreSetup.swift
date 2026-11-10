@@ -9,7 +9,7 @@ import SwiftData
 /// renamed to `default.store.migrated` as a backup.
 enum StoreSetup {
     static let schema = Schema([ActivityEntry.self, NightOut.self, PayItem.self, Vehicle.self,
-                                WorkPlan.self, NoteItem.self, CardEvent.self, SpeedEvent.self])
+                                WorkPlan.self, NoteItem.self, CardEvent.self, SpeedEvent.self, DayRecord.self, ResourceLog.self])
 
     static func makeContainer() -> ModelContainer {
         let container: ModelContainer

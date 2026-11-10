@@ -21,6 +21,9 @@ struct HistoryView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { addingEntry = true } label: { Label("Add activity", systemImage: "plus") }
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink { SummaryView() } label: { Label("Summary", systemImage: "tablecells") }
+                }
             }
             .sheet(item: Binding(get: { addingAt.map(HistoryDate.init) }, set: { addingAt = $0?.date })) { item in
                 EntryEditor(entry: nil, defaultStart: item.date, defaultRegime: store.settings.currentRegime)
@@ -107,7 +110,7 @@ struct ShiftRow: View {
                         .labelStyle(.titleAndIcon)
                 }
             }
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 stat("steeringwheel", st.allDriving, .blue)
                 stat("hammer.fill", st.otherWork, .orange)
                 stat("hourglass", st.availability, .purple)
@@ -124,9 +127,11 @@ struct ShiftRow: View {
     }
 
     private func stat(_ symbol: String, _ value: TimeInterval, _ color: Color) -> some View {
-        Label(Fmt.hm(value), systemImage: symbol)
-            .foregroundStyle(color)
-            .labelStyle(.titleAndIcon)
+        HStack(spacing: 2) {
+            Image(systemName: symbol).font(.caption2)
+            Text(Fmt.hm(value)).lineLimit(1).fixedSize()
+        }
+        .foregroundStyle(color)
     }
 }
 

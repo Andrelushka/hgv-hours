@@ -24,8 +24,12 @@ A native SwiftUI app (iOS 17+) that tracks driving, other work, POA and rest the
 - **Pay:** hourly or day rate; Saturday, Sunday, bank holiday and overtime as normal, ×1.25, ×1.5, ×2, a custom multiplier or a custom £ rate; holiday pay **included in the rate** (UK 12.07%) or **paid separately** (holiday days at the 52-week average day's pay, worked out automatically); regular and one-off bonuses; night premium and night-out allowance.
 - **Widgets:** Home Screen (small, medium) and Lock Screen (circular, rectangular, inline) with driving/working time left, rest-by time and earnings.
 - **Apple Watch:** status and countdowns, activity buttons, start/end shift, in-cab switch.
+- **Earnings:** week / month / year totals with a chart, breakdown and an estimate for the full period; hourly, day rate or salary; guaranteed hours per shift, week and month.
+- **Mileage & resources:** odometer per vehicle, start/end mileage per day, GPS distance in in-cab mode; log diesel, AdBlue, tacho rolls and more.
+- **Job stops & debrief:** Arrived / Departed per stop with time and location; a shareable day debrief; a Summary table of every day with CSV export.
+- **Driver card, overspeed and the tacho minute rule** (see ROADMAP.md).
 - **Lock Screen Live Activity, alerts before limits, and PDF/CSV export.**
-- All data is stored on the device. There is no account, no tracking, and no network access.
+- All data is stored on the device. There is no account and no tracking. The only network use is Apple's own map lookup to name a place when you tap Arrived.
 
 ## Build and run on your iPhone
 

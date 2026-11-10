@@ -36,6 +36,8 @@ final class AutoDriveDetector: NSObject {
     /// Above the overspeed threshold right now.
     private(set) var isOverspeeding = false
 
+    @ObservationIgnored private var lastMovingLocation: CLLocation?
+    @ObservationIgnored private var pendingKm: Double = 0
     @ObservationIgnored private var overspeedStart: Date?
     @ObservationIgnored private var overspeedMax: Double = 0
     @ObservationIgnored private var overspeedCoordinate: CLLocationCoordinate2D?
@@ -145,6 +147,8 @@ final class AutoDriveDetector: NSObject {
             motion.stopActivityUpdates()
         }
         if let start = overspeedStart { finishOverspeed(start: start, end: .now) }
+        flushDistance()
+        lastMovingLocation = nil
         stopTimer?.invalidate()
         stopTimer = nil
         started = false
@@ -168,6 +172,19 @@ final class AutoDriveDetector: NSObject {
         let time = location.timestamp
 
         if speedValid && settings.recordOverspeed { trackOverspeed(kmh: kmh, at: time, coordinate: location.coordinate) }
+
+        // Distance: add the gap between accurate fixes while the vehicle is moving.
+        if speedValid && kmh >= stoppedSpeedKmh {
+            if let previous = lastMovingLocation {
+                let metres = location.distance(from: previous)
+                if metres < 2_000 { pendingKm += metres / 1000 }
+            }
+            lastMovingLocation = location
+            if pendingKm >= 0.5 { flushDistance() }
+        } else {
+            lastMovingLocation = nil
+            if pendingKm > 0 { flushDistance() }
+        }
 
         let fastEnough = speedValid && kmh >= settings.autoMovingSpeedKmh
         // At lower speeds also require the motion chip to say "vehicle", when it's available.
@@ -227,6 +244,12 @@ final class AutoDriveDetector: NSObject {
         let cal = Calendar.hgv
         let floor = cal.dateInterval(of: .minute, for: t)?.start ?? t
         return t.timeIntervalSince(floor) >= 30 ? floor.addingTimeInterval(60) : floor
+    }
+
+    private func flushDistance() {
+        guard let context, pendingKm > 0 else { return }
+        ActivityController.addGPSDistance(pendingKm, at: .now, context: context, vehicleID: settings.currentVehicleID)
+        pendingKm = 0
     }
 
     // MARK: Overspeed

@@ -15,6 +15,7 @@ struct TodayView: View {
     @State private var confirmEndShift = false
     @State private var detector = AutoDriveDetector.shared
     @State private var help: HelpMessage?
+    @State private var nightRefresh = 0
     /// What the "Wrong time?" bar under the help message adjusts.
     @State private var adjustEntryID: UUID?
     @State private var adjustCard: CardEvent?
@@ -85,6 +86,7 @@ struct TodayView: View {
                         SectionHeader(title: "Job & vehicle")
                         todaysPlan(now: timeline.date)
                         CurrentVehicleCard()
+                        DayMileageCard(now: timeline.date)
                     }
                     .padding()
                 }
@@ -120,9 +122,10 @@ struct TodayView: View {
 
     private func nightOutButton(now: Date) -> some View {
         let tonight = Calendar.hgv.startOfDay(for: now)
-        let hasNightOut = nightOuts.contains { Calendar.hgv.isDate($0.date, inSameDayAs: tonight) }
+        _ = nightRefresh // re-read after each tap
+        let hasNightOut = !ActivityController.nightOuts(on: tonight, context: context).isEmpty
         return Button {
-            toggleNightOut(on: tonight, existing: hasNightOut)
+            toggleNightOut(on: tonight)
         } label: {
             Label(hasNightOut ? "Night out logged for tonight" : "Log a night out tonight",
                   systemImage: hasNightOut ? "checkmark.circle.fill" : "bed.double.circle")
@@ -359,15 +362,18 @@ struct TodayView: View {
 
     // MARK: Actions
 
-    private func toggleNightOut(on day: Date, existing: Bool) {
-        if existing {
-            for night in nightOuts where Calendar.hgv.isDate(night.date, inSameDayAs: day) {
-                context.delete(night)
-            }
-        } else {
+    /// Adds or removes tonight's night out. Reads the database directly, so repeated taps can never
+    /// add more than one night out for the same day.
+    private func toggleNightOut(on day: Date) {
+        let existing = ActivityController.nightOuts(on: day, context: context)
+        if existing.isEmpty {
             context.insert(NightOut(date: day))
+        } else {
+            existing.forEach { context.delete($0) }
         }
         try? context.save()
+        nightRefresh += 1
+        ActivityController.refreshSideEffects(context: context, settings: store.settings)
     }
 
     // MARK: Driver card
@@ -488,6 +494,9 @@ struct TodayView: View {
                 Button { planningToday = true } label: {
                     Label("Plan today's job", systemImage: "calendar.badge.plus")
                 }
+                Button { startUnplannedJob() } label: {
+                    Label("Arrived", systemImage: "mappin.and.ellipse")
+                }
                 Spacer()
                 if let next {
                     Button { editingPlan = next } label: {
@@ -499,8 +508,34 @@ struct TodayView: View {
             .tint(.indigo)
         } else {
             ForEach(todays) { plan in
-                PlanCard(plan: plan, title: "Today's job")
-                    .onTapGesture { editingPlan = plan }
+                TodayJobCard(plan: plan) { editingPlan = plan }
+            }
+        }
+    }
+
+    /// "Arrived" with no plan: makes today's job (from now) and records an arrival here.
+    private func startUnplannedJob() {
+        let now = Date.now
+        let plan = WorkPlan(start: now, end: now.addingTimeInterval(10 * 3600))
+        plan.vehicleID = store.settings.currentVehicleID
+        plan.trailerID = store.settings.currentTrailerID
+        var stop = PlanStop(kind: .other)
+        stop.arrivedAt = now
+        stop.place = "Locating…"
+        plan.stops = [stop]
+        context.insert(plan)
+        try? context.save()
+        let id = stop.id
+        Task {
+            let location = await LocationOnce.shared.current()
+            let name = location != nil ? await LocationOnce.shared.placeName(for: location!) : "Unplanned stop"
+            var stops = plan.stops
+            if let i = stops.firstIndex(where: { $0.id == id }) {
+                stops[i].place = name
+                stops[i].latitude = location?.coordinate.latitude
+                stops[i].longitude = location?.coordinate.longitude
+                plan.stops = stops
+                try? context.save()
             }
         }
     }

@@ -8,6 +8,9 @@ struct VehiclesView: View {
     @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
     @State private var editing: Vehicle?
     @State private var adding: VehicleKind?
+    @State private var scanning = false
+    @State private var addingScanned: ScannedReg?
+    @State private var matchMessage: String?
 
     var body: some View {
         let units = vehicles.filter { $0.kind != .trailer }
@@ -33,8 +36,16 @@ struct VehiclesView: View {
             }
         }
         .navigationTitle("Vehicles & trailers")
+        .toolbar {
+            Button { scanning = true } label: { Label("Scan number plate", systemImage: "camera.viewfinder") }
+        }
         .sheet(item: $editing) { VehicleEditor(vehicle: $0) }
         .sheet(item: $adding) { VehicleEditor(vehicle: nil, newKind: $0) }
+        .sheet(isPresented: $scanning) { PlateScanSheet { reg in found(reg) } }
+        .sheet(item: $addingScanned) { VehicleEditor(vehicle: nil, newKind: .tractor, registration: $0.reg) }
+        .alert(matchMessage ?? "", isPresented: Binding(get: { matchMessage != nil }, set: { if !$0 { matchMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
     }
 
     private func row(_ v: Vehicle, current: Bool, select: @escaping () -> Void) -> some View {
@@ -60,6 +71,20 @@ struct VehiclesView: View {
         .swipeActions {
             Button("Delete", systemImage: "trash", role: .destructive) { remove(v) }
             Button("Edit", systemImage: "pencil") { editing = v }.tint(.blue)
+        }
+    }
+
+    /// Selects a saved vehicle/trailer with this registration, or offers to add it.
+    private func found(_ reg: String) {
+        if let match = vehicles.first(where: { normalisedReg($0.registration) == reg || normalisedReg($0.fleetNumber) == reg }) {
+            if match.kind == .trailer {
+                store.settings.currentTrailerID = match.id.uuidString
+            } else {
+                store.settings.currentVehicleID = match.id.uuidString
+            }
+            matchMessage = "\(match.displayName) selected as your current \(match.kind == .trailer ? "trailer" : "vehicle")."
+        } else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { addingScanned = ScannedReg(reg: reg) }
         }
     }
 
@@ -96,11 +121,15 @@ struct VehicleEditor: View {
     @State private var notes: String
     @State private var confirmDelete = false
 
-    init(vehicle: Vehicle?, newKind: VehicleKind = .tractor) {
+    @State private var odometer: Double
+    @State private var inFeet = false
+
+    init(vehicle: Vehicle?, newKind: VehicleKind = .tractor, registration: String = "") {
         self.vehicle = vehicle
         let k = vehicle?.kind ?? newKind
         _kind = State(initialValue: k)
-        _registration = State(initialValue: vehicle?.registration ?? "")
+        _registration = State(initialValue: vehicle?.registration ?? registration)
+        _odometer = State(initialValue: vehicle?.odometerKm ?? 0)
         _fleetNumber = State(initialValue: vehicle?.fleetNumber ?? "")
         _make = State(initialValue: vehicle?.make ?? "")
         _model = State(initialValue: vehicle?.model ?? "")
@@ -136,6 +165,11 @@ struct VehicleEditor: View {
                     }
                 }
                 Section {
+                    Picker("Enter in", selection: $inFeet) {
+                        Text("Metres").tag(false)
+                        Text("Feet & inches").tag(true)
+                    }
+                    .pickerStyle(.segmented)
                     measure("Height", value: $height, unit: "m")
                     measure("Width", value: $width, unit: "m")
                     measure("Length", value: $length, unit: "m")
@@ -149,10 +183,26 @@ struct VehicleEditor: View {
                     Text("Check the height plate in the cab. Height shows on the Today screen as a reminder for low bridges.")
                 }
                 if kind != .trailer {
-                    Section("Fuel") {
+                    Section {
                         Picker("Fuel", selection: $fuel) {
                             ForEach(FuelType.allCases) { Text($0.title).tag($0) }
                         }
+                        LabeledContent("Odometer") {
+                            HStack(spacing: 4) {
+                                TextField("0", value: Binding(
+                                    get: { store.settings.useMiles ? (odometer / 1.609344).rounded() : odometer.rounded() },
+                                    set: { odometer = store.settings.useMiles ? $0 * 1.609344 : $0 }),
+                                          format: .number.precision(.fractionLength(0)))
+                                    .keyboardType(.numberPad)
+                                    .multilineTextAlignment(.trailing)
+                                    .frame(maxWidth: 110)
+                                Text(store.settings.useMiles ? "mi" : "km").foregroundStyle(.secondary)
+                            }
+                        }
+                    } header: {
+                        Text("Fuel & mileage")
+                    } footer: {
+                        Text("The odometer updates when you enter end-of-day mileage on the Today screen.")
                     }
                 }
                 Section("Notes") {
@@ -182,12 +232,38 @@ struct VehicleEditor: View {
 
     private func measure(_ title: String, value: Binding<Double>, unit: String) -> some View {
         LabeledContent(title) {
-            HStack(spacing: 4) {
-                TextField("0.00", value: value, format: .number.precision(.fractionLength(0...2)))
-                    .keyboardType(.decimalPad)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: 80)
-                Text(unit).foregroundStyle(.secondary)
+            if unit == "m" && inFeet {
+                HStack(spacing: 4) {
+                    TextField("ft", value: Binding(
+                        get: { Double(Int((value.wrappedValue / 0.0254).rounded()) / 12) },
+                        set: { ft in
+                            let inches = Double(Int((value.wrappedValue / 0.0254).rounded()) % 12)
+                            value.wrappedValue = (ft * 12 + inches) * 0.0254
+                        }), format: .number.precision(.fractionLength(0)))
+                        .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 44)
+                    Text("ft").foregroundStyle(.secondary)
+                    TextField("in", value: Binding(
+                        get: { Double(Int((value.wrappedValue / 0.0254).rounded()) % 12) },
+                        set: { inches in
+                            let ft = Double(Int((value.wrappedValue / 0.0254).rounded()) / 12)
+                            value.wrappedValue = (ft * 12 + min(max(inches, 0), 11)) * 0.0254
+                        }), format: .number.precision(.fractionLength(0)))
+                        .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 40)
+                    Text("in").foregroundStyle(.secondary)
+                    Text(value.wrappedValue > 0 ? String(format: "%.2f m", value.wrappedValue) : "")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                HStack(spacing: 4) {
+                    TextField("0.00", value: value, format: .number.precision(.fractionLength(0...2)))
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 80)
+                    Text(unit).foregroundStyle(.secondary)
+                    if unit == "m" && value.wrappedValue > 0 {
+                        Text(Fmt.feetInches(value.wrappedValue)).font(.caption).foregroundStyle(.secondary)
+                    }
+                }
             }
         }
     }
@@ -208,6 +284,7 @@ struct VehicleEditor: View {
         v.fuel = fuel
         v.body = trailerBody
         v.notes = notes
+        v.odometerKm = odometer
         try? context.save()
         // First vehicle/trailer added becomes the current one.
         if kind == .trailer, store.settings.currentTrailerID.isEmpty { store.settings.currentTrailerID = v.id.uuidString }
@@ -228,11 +305,11 @@ struct CurrentVehicleCard: View {
         HStack(spacing: 10) {
             if maxHeight > 0 {
                 VStack(spacing: 0) {
-                    Text(String(format: "%.2f", maxHeight)).font(.headline.weight(.heavy).monospacedDigit())
-                    Text("m").font(.caption2.weight(.bold))
+                    Text(String(format: "%.2f m", maxHeight)).font(.caption.weight(.heavy).monospacedDigit())
+                    Text(Fmt.feetInches(maxHeight)).font(.caption2.weight(.bold).monospacedDigit())
                 }
                 .foregroundStyle(.black)
-                .frame(width: 54, height: 54)
+                .frame(width: 62, height: 62)
                 .background(Circle().fill(.white))
                 .overlay(Circle().stroke(.red, lineWidth: 5))
                 .accessibilityLabel(String(format: "Height %.2f metres", maxHeight))
@@ -268,4 +345,9 @@ struct CurrentVehicleCard: View {
         .padding(12)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
     }
+}
+
+struct ScannedReg: Identifiable {
+    var reg: String
+    var id: String { reg }
 }

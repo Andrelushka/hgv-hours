@@ -46,7 +46,9 @@ struct SettingsView: View {
                 Section("Pay") {
                     NavigationLink { PaySettingsView() } label: {
                         SettingsRow(title: "Pay rates", symbol: "sterlingsign.circle.fill", color: .green,
-                                    value: Fmt.money(s.pay.baseRate, symbol: s.pay.currencySymbol) + "/h")
+                                    value: s.pay.basis == .salary
+                                        ? Fmt.money(s.pay.salaryAmount, symbol: s.pay.currencySymbol) + " " + s.pay.salaryPer.title
+                                        : Fmt.money(s.pay.basis == .daily ? s.pay.dayRate : s.pay.baseRate, symbol: s.pay.currencySymbol) + s.pay.basis.unit)
                     }
                     NavigationLink { OvertimeSettingsView() } label: {
                         SettingsRow(title: "Overtime", symbol: "clock.badge.checkmark.fill", color: .pink,
@@ -65,6 +67,12 @@ struct SettingsView: View {
                     NavigationLink { VehiclesView() } label: {
                         SettingsRow(title: "Vehicles & trailers", symbol: "box.truck.fill", color: .brown,
                                     value: "Height, fuel, specs")
+                    }
+                    NavigationLink { ResourcesView() } label: {
+                        SettingsRow(title: "Fuel & resources", symbol: "fuelpump.fill", color: .orange, value: "Diesel, AdBlue, tacho rolls")
+                    }
+                    Toggle(isOn: Binding(get: { store.settings.useMiles }, set: { store.settings.useMiles = $0 })) {
+                        SettingsRow(title: "Distances in miles", symbol: "road.lanes", color: .gray, value: "")
                     }
                     NavigationLink { DriverSettingsView() } label: {
                         SettingsRow(title: "Driver details", symbol: "person.crop.circle.fill", color: .gray,
@@ -351,7 +359,11 @@ struct OvertimeSettingsView: View {
     @Environment(SettingsStore.self) private var store
 
     private func hourlyBase(_ p: PaySettings) -> Double {
-        p.basis == .daily ? (p.dayRateHours > 0 ? p.dayRate / p.dayRateHours : 0) : p.baseRate
+        switch p.basis {
+        case .daily: p.dayRateHours > 0 ? p.dayRate / p.dayRateHours : 0
+        case .salary: p.salaryHourly
+        case .hourly: p.baseRate
+        }
     }
 
     static func summary(_ p: PaySettings) -> String {
@@ -418,6 +430,25 @@ struct PaySettingsView: View {
                     Stepper(value: $store.settings.pay.minimumPaidHoursPerShift, in: 0...12, step: 0.5) {
                         LabeledContent("Guaranteed hours / shift", value: hoursText(p.minimumPaidHoursPerShift))
                     }
+                    Stepper(value: $store.settings.pay.minimumPaidHoursPerWeek, in: 0...70, step: 1) {
+                        LabeledContent("Guaranteed hours / week", value: hoursText(p.minimumPaidHoursPerWeek))
+                    }
+                    Stepper(value: $store.settings.pay.minimumPaidHoursPerMonth, in: 0...300, step: 5) {
+                        LabeledContent("Guaranteed hours / month", value: hoursText(p.minimumPaidHoursPerMonth))
+                    }
+                } else if p.basis == .salary {
+                    moneyField("Salary", value: $store.settings.pay.salaryAmount, symbol: symbol, unit: "")
+                    Picker("Per", selection: $store.settings.pay.salaryPeriod) {
+                        ForEach(SalaryPeriod.allCases) { Text($0.title).tag($0.rawValue) }
+                    }
+                    Stepper(value: $store.settings.pay.contractedHoursPerWeek, in: 10...70, step: 0.5) {
+                        LabeledContent("Contracted hours / week", value: Fmt.hm(p.contractedHoursPerWeek * 3600))
+                    }
+                    Stepper(value: $store.settings.pay.contractedDaysPerWeek, in: 1...7, step: 1) {
+                        LabeledContent("Days / week", value: "\(Int(p.contractedDaysPerWeek))")
+                    }
+                    LabeledContent("Works out at", value: "\(Fmt.money(p.weeklySalary, symbol: symbol))/week · \(Fmt.money(p.salaryHourly, symbol: symbol))/h")
+                        .foregroundStyle(.secondary)
                 } else {
                     moneyField("Day rate", value: $store.settings.pay.dayRate, symbol: symbol, unit: "/day")
                     Stepper(value: $store.settings.pay.dayRateHours, in: 4...16, step: 0.5) {
@@ -427,9 +458,14 @@ struct PaySettingsView: View {
             } header: {
                 Text("How you're paid")
             } footer: {
-                Text(p.basis == .hourly
-                     ? "Not sure? Check your contract or a payslip."
-                     : "Each shift is paid the day rate. Paid hours past what the day rate covers are paid as overtime (Settings → Overtime).")
+                switch p.basis {
+                case .hourly:
+                    Text("Guaranteed hours are topped up at your hourly rate when you work less (per shift, per week or per calendar month). Not sure? Check your contract or a payslip.")
+                case .daily:
+                    Text("Each shift is paid the day rate. Paid hours past what the day rate covers are paid as overtime (Settings → Overtime).")
+                case .salary:
+                    Text("Your salary is paid whatever hours you work. Hours past your contracted hours per week are paid as overtime at the hourly value of your salary (Settings → Overtime).")
+                }
             }
 
             Section {

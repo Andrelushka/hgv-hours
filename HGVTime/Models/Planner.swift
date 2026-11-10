@@ -62,6 +62,8 @@ final class Vehicle {
     var body: String = ""
     var notes: String = ""
     var createdAt: Date = Date()
+    /// Latest odometer reading in km (0 = not set).
+    var odometerKm: Double = 0
 
     init(kind: VehicleKind = .tractor) {
         self.kindRaw = kind.rawValue
@@ -86,8 +88,8 @@ final class Vehicle {
     /// e.g. "4.95 m high · 16.5 m long · 44 t"
     var specsLine: String {
         var parts: [String] = []
-        if height > 0 { parts.append(String(format: "%.2f m high", height)) }
-        if length > 0 { parts.append(String(format: "%.1f m long", length)) }
+        if height > 0 { parts.append(String(format: "%.2f m (%@) high", height, Fmt.feetInches(height))) }
+        if length > 0 { parts.append(String(format: "%.1f m (%@) long", length, Fmt.feetInches(length))) }
         if weight > 0 { parts.append(String(format: "%g t", weight)) }
         if kind != .trailer { parts.append(fuel.title) }
         if !body.isEmpty { parts.append(body) }
@@ -127,6 +129,11 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var reference: String = ""
     var pallets: String = ""
     var notes: String = ""
+    // Recorded on the day with the Arrived / Departed buttons.
+    var arrivedAt: Date?
+    var departedAt: Date?
+    var latitude: Double?
+    var longitude: Double?
 }
 
 /// A custom "label: value" line.
@@ -249,4 +256,89 @@ final class SpeedEvent {
     var duration: TimeInterval { end.timeIntervalSince(start) }
     var isInfringement: Bool { duration > 60 }
     var hasLocation: Bool { latitude != 0 || longitude != 0 }
+}
+
+// MARK: Day records and resources
+
+/// Per-day vehicle and distance record (one per calendar day).
+@Model
+final class DayRecord {
+    var day: Date = Date()
+    var vehicleID: String = ""
+    /// Odometer at start and end of the day, in km (0 = not entered).
+    var startOdometerKm: Double = 0
+    var endOdometerKm: Double = 0
+    /// Distance measured by GPS in in-cab mode, km.
+    var gpsKm: Double = 0
+    var notes: String = ""
+
+    init(day: Date) {
+        self.day = Calendar.hgv.startOfDay(for: day)
+    }
+
+    /// Odometer distance if both readings are there, otherwise GPS distance.
+    var distanceKm: Double {
+        if startOdometerKm > 0 && endOdometerKm > startOdometerKm { return endOdometerKm - startOdometerKm }
+        return gpsKm
+    }
+}
+
+enum ResourceKind: String, Codable, CaseIterable, Identifiable {
+    case diesel, petrol, adblue, gas, electricity, tachoRoll, oil, other
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .diesel: "Diesel"
+        case .petrol: "Petrol"
+        case .adblue: "AdBlue"
+        case .gas: "Gas (LNG/CNG)"
+        case .electricity: "Electricity"
+        case .tachoRoll: "Tacho roll"
+        case .oil: "Oil"
+        case .other: "Other"
+        }
+    }
+    var unit: String {
+        switch self {
+        case .diesel, .petrol, .adblue, .oil: "L"
+        case .gas: "kg"
+        case .electricity: "kWh"
+        case .tachoRoll: "rolls"
+        case .other: ""
+        }
+    }
+    var symbol: String {
+        switch self {
+        case .diesel, .petrol: "fuelpump.fill"
+        case .adblue: "drop.fill"
+        case .gas: "flame.fill"
+        case .electricity: "bolt.fill"
+        case .tachoRoll: "scroll.fill"
+        case .oil: "oilcan.fill"
+        case .other: "shippingbox.fill"
+        }
+    }
+}
+
+/// Fuel, AdBlue, tacho rolls and other things used.
+@Model
+final class ResourceLog {
+    var date: Date = Date()
+    var kindRaw: String = ResourceKind.diesel.rawValue
+    var quantity: Double = 0
+    var cost: Double = 0
+    var odometerKm: Double = 0
+    var location: String = ""
+    var vehicleID: String = ""
+    var notes: String = ""
+
+    init(date: Date = .now, kind: ResourceKind) {
+        self.date = date
+        self.kindRaw = kind.rawValue
+    }
+
+    var kind: ResourceKind {
+        get { ResourceKind(rawValue: kindRaw) ?? .other }
+        set { kindRaw = newValue.rawValue }
+    }
 }

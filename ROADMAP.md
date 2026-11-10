@@ -21,23 +21,23 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 ### Interface
 - ✅ Today reorganised: card → status → help → buttons → in-cab → earnings → job & vehicle
 - ✅ Hours reorganised: Right now · Next break · Coming up · Extensions & rest rules · All limits
-- ⬜ Further polish of the remaining pages (History, Calendar, Notebook, Settings)
+- 🚧 Further polish of the remaining pages (History row layout fixed; Calendar, Notebook, Settings to review)
 
 ## V1.2 — Earnings, Vehicles & Working Records
 ### Earnings and salary
-- ⬜ Fix: night-out button changes earnings unexpectedly
-- ⬜ Guaranteed hours per week / month
-- ⬜ Guaranteed salary: annual, monthly, weekly, daily
-- ⬜ Earnings per week, month and year
-- ⬜ Estimated earnings for week, month and year
+- ✅ Fix: night-out button added a night out on every tap (now toggles, and duplicates are cleaned up)
+- ✅ Guaranteed hours per shift, week and calendar month
+- ✅ Salary pay type: per year, month, week or day, with contracted hours and overtime
+- ✅ Earnings screen: week / month / year with chart and breakdown
+- ✅ Estimated total for the current week / month / year (planned shifts or recent history)
 ### Vehicles and resources
-- ⬜ Find a vehicle by registration number and add it to the list
-- ⬜ Vehicle dimensions in metres and feet
-- ⬜ Total km / miles
-- ⬜ Resources used: diesel, petrol, AdBlue, tacho rolls
+- ✅ Scan a number plate with the camera (or type it) to select or add a vehicle — DVLA online lookup still to do (needs an API key)
+- ✅ Vehicle dimensions in metres and feet/inches (enter in either)
+- ✅ Odometer per vehicle, start/end mileage per day, GPS distance in in-cab mode; km or miles
+- ✅ Fuel & resources log (diesel, petrol, AdBlue, gas, electricity, tacho rolls, oil) with monthly totals
 ### Journey and activity records
-- ⬜ "Arrived" button linked to the plan and location; daily debrief / journey table
-- ⬜ Summary page with a matrix of all recorded data
+- ✅ Arrived / Departed per stop (time + location), unplanned stops, and a day Debrief table you can share
+- ✅ Summary table: every day's times, activities, distance, fuel, pay and infringements, with CSV export
 
 ## V1.3 — Personalisation, Notifications & Beta Release
 - ⬜ Multiple and custom reminders

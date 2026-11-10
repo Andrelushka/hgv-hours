@@ -35,7 +35,7 @@ struct PayCounterCard: View {
         let shiftPay = shift.map { PayCalculator.calculate(shifts: [$0], nightOuts: 0, settings: p) }
 
         return NavigationLink {
-            WeeksView()
+            EarningsView()
         } label: {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
