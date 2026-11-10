@@ -67,11 +67,8 @@ struct TodayView: View {
                             }
                             adjustBar
                         }
-                        PayCounterCard(now: timeline.date, currentShiftStart: onShift ? status.currentShift?.period.start : nil)
                         controls(status)
                         inCabCard
-                        CurrentVehicleCard()
-                        todaysPlan(now: timeline.date)
                         let urgent = status.warnings.filter { $0.severity == .violation }
                         if !urgent.isEmpty {
                             VStack(spacing: 10) {
@@ -82,7 +79,12 @@ struct TodayView: View {
                             .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
                         }
                         if !status.hasData { emptyState }
+                        SectionHeader(title: "Earnings")
+                        PayCounterCard(now: timeline.date, currentShiftStart: onShift ? status.currentShift?.period.start : nil)
                         nightOutButton(now: timeline.date)
+                        SectionHeader(title: "Job & vehicle")
+                        todaysPlan(now: timeline.date)
+                        CurrentVehicleCard()
                     }
                     .padding()
                 }
@@ -321,6 +323,10 @@ struct TodayView: View {
                 if detector.needsAlwaysPermission {
                     Button("Allow location “Always” so it works with the phone locked") { detector.requestAlways() }
                         .font(.caption)
+                }
+                if detector.isOverspeeding {
+                    Label("Over \(Int(store.settings.overspeedLimitKmh)) km/h — overspeed being recorded", systemImage: "gauge.with.dots.needle.100percent")
+                        .font(.caption.weight(.bold)).foregroundStyle(.red)
                 }
                 if let event = detector.lastEvent {
                     Text(event).font(.caption2).foregroundStyle(.secondary)

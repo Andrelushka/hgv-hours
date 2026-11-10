@@ -183,6 +183,24 @@ struct InCabSettingsView: View {
             } footer: {
                 Text("Speed needed for 8 seconds before driving starts. Raise it if walking or GPS drift is recorded as driving.")
             }
+            Section {
+                Toggle("Record overspeed", isOn: $store.settings.recordOverspeed)
+                if store.settings.recordOverspeed {
+                    Stepper(value: $store.settings.overspeedLimitKmh, in: 30...130, step: 1) {
+                        LabeledContent("Overspeed above", value: "\(Int(store.settings.overspeedLimitKmh)) km/h (\(Int((store.settings.overspeedLimitKmh / 1.609).rounded())) mph)")
+                    }
+                }
+            } header: {
+                Text("Speed")
+            } footer: {
+                Text("Like the tachograph: more than 60 seconds in a row above this speed is an overspeed infringement. Shorter ones are recorded but not counted as infringements. Each event is saved with its time, top speed and location. HGV limiters and tachographs are usually set at 90 km/h (56 mph).")
+            }
+            Section {
+                Text("Each minute is recorded as whichever activity filled most of it, as on a digital tachograph. A short movement during a break — e.g. moving up in a queue — doesn't interrupt the break.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            } header: {
+                Text("Tachograph minute rule")
+            }
             Section("Status") {
                 LabeledContent("Location access", value: permissionText)
                 if detector.needsAlwaysPermission {

@@ -33,6 +33,12 @@ final class AutoDriveDetector: NSObject {
     private(set) var inVehicle = false
     private(set) var lastFix: Date?
     private(set) var lastEvent: String?
+    /// Above the overspeed threshold right now.
+    private(set) var isOverspeeding = false
+
+    @ObservationIgnored private var overspeedStart: Date?
+    @ObservationIgnored private var overspeedMax: Double = 0
+    @ObservationIgnored private var overspeedCoordinate: CLLocationCoordinate2D?
 
     var isRunning: Bool { state != .off && state != .denied && state != .needsPermission }
 
@@ -138,6 +144,7 @@ final class AutoDriveDetector: NSObject {
             manager.allowsBackgroundLocationUpdates = false
             motion.stopActivityUpdates()
         }
+        if let start = overspeedStart { finishOverspeed(start: start, end: .now) }
         stopTimer?.invalidate()
         stopTimer = nil
         started = false
@@ -160,6 +167,8 @@ final class AutoDriveDetector: NSObject {
         speedKmh = location.speed >= 0 ? kmh : nil
         let time = location.timestamp
 
+        if speedValid && settings.recordOverspeed { trackOverspeed(kmh: kmh, at: time, coordinate: location.coordinate) }
+
         let fastEnough = speedValid && kmh >= settings.autoMovingSpeedKmh
         // At lower speeds also require the motion chip to say "vehicle", when it's available.
         let confirmed = kmh >= gpsOnlySpeedKmh || inVehicle || !CMMotionActivityManager.isActivityAvailable()
@@ -167,10 +176,11 @@ final class AutoDriveDetector: NSObject {
         if fastEnough && confirmed {
             stoppedSince = nil
             if movingSince == nil { movingSince = time }
-            if let since = movingSince, time.timeIntervalSince(since) >= movingConfirmSeconds {
+            if let since = movingSince, time.timeIntervalSince(since) >= movingConfirmSeconds,
+               time >= Self.minuteRuleStart(since) {
                 isMoving = true
                 state = .moving
-                record(.drive, at: since)
+                record(.drive, at: Self.minuteRuleStart(since))
             }
         } else if !speedValid || kmh < stoppedSpeedKmh {
             movingSince = nil
@@ -190,7 +200,62 @@ final class AutoDriveDetector: NSObject {
             state = .stopped
         }
         guard let context, let open = ActivityController.openEntries(context: context).last, open.kind == .drive else { return }
-        record(settings.autoStoppedKind, at: since)
+        let driveEnd = Self.minuteRuleEnd(since)
+        if driveEnd <= open.start {
+            // Tacho minute rule: the movement never filled most of a minute, so it isn't driving.
+            ActivityController.discardShortDrive(open, context: context, settings: settings)
+            lastEvent = "Short movement ignored (tacho minute rule)"
+            return
+        }
+        record(settings.autoStoppedKind, at: driveEnd)
+    }
+
+    // MARK: Tachograph minute rule
+
+    /// Each calendar minute (:00–:59) gets the activity that filled most of it. A drive starting at :20
+    /// fills 40 s of that minute, so the whole minute is driving; starting at :40 it only fills 20 s,
+    /// so driving starts at the next minute. Ties go to driving.
+    static func minuteRuleStart(_ t: Date) -> Date {
+        let cal = Calendar.hgv
+        let floor = cal.dateInterval(of: .minute, for: t)?.start ?? t
+        return t.timeIntervalSince(floor) <= 30 ? floor : floor.addingTimeInterval(60)
+    }
+
+    /// Driving that stops at :40 filled 40 s of that minute, so it counts to the end of the minute;
+    /// stopping at :20 it filled only 20 s, so driving ends at the start of the minute.
+    static func minuteRuleEnd(_ t: Date) -> Date {
+        let cal = Calendar.hgv
+        let floor = cal.dateInterval(of: .minute, for: t)?.start ?? t
+        return t.timeIntervalSince(floor) >= 30 ? floor.addingTimeInterval(60) : floor
+    }
+
+    // MARK: Overspeed
+
+    private func trackOverspeed(kmh: Double, at time: Date, coordinate: CLLocationCoordinate2D) {
+        if kmh > settings.overspeedLimitKmh {
+            if overspeedStart == nil {
+                overspeedStart = time
+                overspeedMax = kmh
+                overspeedCoordinate = coordinate
+            }
+            overspeedMax = max(overspeedMax, kmh)
+            isOverspeeding = true
+        } else if let start = overspeedStart {
+            finishOverspeed(start: start, end: time)
+        }
+    }
+
+    private func finishOverspeed(start: Date, end: Date) {
+        overspeedStart = nil
+        isOverspeeding = false
+        guard let context, end.timeIntervalSince(start) >= 1 else { return }
+        let event = SpeedEvent(start: start, end: end, maxKmh: overspeedMax, limitKmh: settings.overspeedLimitKmh,
+                               latitude: overspeedCoordinate?.latitude ?? 0, longitude: overspeedCoordinate?.longitude ?? 0)
+        context.insert(event)
+        try? context.save()
+        lastEvent = event.isInfringement
+            ? "Overspeed infringement: \(Int(event.maxKmh)) km/h for \(Int(event.duration)) s"
+            : "Short overspeed recorded: \(Int(event.maxKmh)) km/h for \(Int(event.duration)) s"
     }
 
     private func record(_ kind: DutyKind, at time: Date) {

@@ -24,10 +24,22 @@ struct HoursView: View {
                 let dash = Dashboard.make(status: status, settings: store.settings, openEntry: openEntry)
                 ScrollView {
                     VStack(spacing: 14) {
+                        if status.hasData { SectionHeader(title: "Right now") }
                         if onShift {
                             dashboardTiles(dash, status)
                         } else if status.hasData {
                             restCard(status)
+                        }
+                        if onShift, let plan = Deadlines.breakPlan(status, applyWorkingTime: store.settings.applyWorkingTime) {
+                            SectionHeader(title: "Next break")
+                            BreakPlanCard(plan: plan, now: status.now)
+                        }
+                        if status.hasData {
+                            SectionHeader(title: "Coming up")
+                            DeadlineList(deadlines: Deadlines.all(status, applyWorkingTime: store.settings.applyWorkingTime), now: status.now)
+                            SectionHeader(title: "Extensions & rest rules")
+                            extensionCards(status)
+                            RestRulesCard(status: status, allowConsecutiveReduced: store.settings.allowConsecutiveReducedWeekly)
                         }
                         if !status.warnings.isEmpty {
                             VStack(spacing: 10) {
@@ -37,6 +49,7 @@ struct HoursView: View {
                             .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
                         }
                         if status.hasData {
+                            SectionHeader(title: "All limits")
                             limitsGrid(status)
                         } else {
                             ContentUnavailableView("No hours yet", systemImage: "gauge.with.dots.needle.0percent",
@@ -97,7 +110,6 @@ struct HoursView: View {
                 .padding(12)
                 .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
             }
-            extensionCards(s)
             HStack(spacing: 10) {
                 MiniStat(title: "Break due in", value: Fmt.hm(d.breakDueIn), tint: d.breakDueIn < 1800 ? .orange : .primary)
                 MiniStat(title: "Driven today", value: "\(Fmt.hm(d.dailyDriving))/\(Fmt.hm(d.dailyDrivingLimit))")

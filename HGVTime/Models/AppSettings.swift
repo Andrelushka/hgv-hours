@@ -148,6 +148,9 @@ struct AppSettings: Codable, Equatable {
     var autoStopDelaySeconds: Int = 60
     /// What is recorded when the vehicle stops.
     var autoStoppedKind: DutyKind = .otherWork
+    /// Record speed above this as overspeed (tachographs are usually set at 90 km/h for HGVs).
+    var overspeedLimitKmh: Double = 90
+    var recordOverspeed = true
 
     var pay = PaySettings()
 

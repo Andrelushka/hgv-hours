@@ -14,7 +14,14 @@ enum TodayHelp {
                 lines.append("You still need \(Fmt.hm(s.breakRemaining)) of break before driving again. Driving now is an infringement.")
             } else {
                 lines.append("You can drive \(Fmt.hm(canDrive)) — until about \(Fmt.time(now.addingTimeInterval(canDrive))).")
-                lines.append("Then take a 45 min break (or 15 min + 30 min, in that order).")
+                if let plan = Deadlines.breakPlan(s, applyWorkingTime: settings.applyWorkingTime) {
+                    lines.append("Next break: \(Fmt.hm(plan.recommended)) by \(Fmt.time(now.addingTimeInterval(plan.dueBy.timeIntervalSince(s.now)))) (\(plan.reason) rule).")
+                } else {
+                    lines.append("Then take a 45 min break (or 15 min + 30 min, in that order).")
+                }
+                if canDrive < s.driveAvailableBeforeWorkingTime - 1 {
+                    lines.append("Limited by working time: driving counts as work, and you can't work more than 6h without a break.")
+                }
             }
             lines.append("Today: \(Fmt.hm(s.stats.euDriving)) of \(Fmt.hm(s.dailyDrivingLimit)) driven. 10h days left this week: \(tenLeft) of 2.")
             return HelpMessage(symbol: "steeringwheel", color: .blue, title: "Driving", lines: lines)
@@ -22,7 +29,7 @@ enum TodayHelp {
         case .otherWork:
             var lines = ["Loading, unloading, checks, cleaning, paperwork. Counts as working time, not driving."]
             if settings.applyWorkingTime {
-                lines.append("You can work \(Fmt.hm(s.wtdWorkBeforeBreak)) more before a working-time break (no more than 6h in a row).")
+                lines.append("You can work \(Fmt.hm(s.wtdWorkBeforeBreak)) more before a working-time break — by \(Fmt.time(now.addingTimeInterval(s.wtdWorkBeforeBreak))) (no more than 6h in a row).")
                 lines.append("Breaks needed today: 30 min if you work 6–9h, 45 min over 9h, in pieces of 15 min or more.")
             }
             return HelpMessage(symbol: "hammer.fill", color: .orange, title: "Other work", lines: lines)
@@ -107,22 +114,23 @@ enum TodayHelp {
                     : "Next: 45h regular weekly rest at \(Fmt.dayTime(s.currentSince.addingTimeInterval(Limits.regularWeeklyRest)))"
             }
             if rest < Limits.reducedDailyRest {
-                return "Next: 9h rest at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.reducedDailyRest))) · 11h at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.regularDailyRest)))"
+                return "Next shift from: 9h at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.reducedDailyRest))) · 11h at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.regularDailyRest)))"
             }
             return rest < Limits.regularDailyRest
-                ? "Next: full 11h rest at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.regularDailyRest)))"
+                ? "Next: full 11h rest at \(Fmt.time(s.currentSince.addingTimeInterval(Limits.regularDailyRest))) — you can already start (9h done)"
                 : "Rest complete — you can start your shift"
         }
         switch open.kind {
-        case .drive:
-            return "Next: break due at \(Fmt.time(now.addingTimeInterval(s.continuousDrivingRemaining))) (in \(Fmt.hm(s.continuousDrivingRemaining)))"
+        case .drive, .otherWork:
+            if let plan = Deadlines.breakPlan(s, applyWorkingTime: true) {
+                return "Next: \(Fmt.hm(plan.recommended)) break by \(Fmt.time(plan.dueBy)) (in \(Fmt.hm(plan.dueBy.timeIntervalSince(now))), \(plan.reason))"
+            }
+            return nil
         case .rest:
             if s.breakRemaining > 0 {
                 return "Break done at \(Fmt.time(now.addingTimeInterval(s.breakRemaining))) (\(Fmt.hm(s.breakRemaining)) to go)"
             }
             return "Break complete — 4h30 driving available"
-        case .otherWork:
-            return "Next: working-time break needed by \(Fmt.time(now.addingTimeInterval(s.wtdWorkBeforeBreak)))"
         case .availability:
             return s.restStartByLatest.map { "Start daily rest by \(Fmt.time($0))" }
         }

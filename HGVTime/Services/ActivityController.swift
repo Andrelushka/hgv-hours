@@ -81,6 +81,17 @@ enum ActivityController {
         return target
     }
 
+    /// Removes a driving entry that the tacho minute rule says never happened, and lets the
+    /// activity before it (e.g. a break) carry on as if it was never interrupted.
+    static func discardShortDrive(_ entry: ActivityEntry, context: ModelContext, settings: AppSettings) {
+        let all = (try? context.fetch(FetchDescriptor<ActivityEntry>(sortBy: [SortDescriptor(\.start)]))) ?? []
+        let previous = all.last { $0 !== entry && $0.start < entry.start && abs(($0.end ?? .distantFuture).timeIntervalSince(entry.start)) < 2 }
+        context.delete(entry)
+        previous?.end = nil
+        try? context.save()
+        refreshSideEffects(context: context, settings: settings)
+    }
+
     // MARK: Driver card
 
     /// Latest card event: inserted or not, and since when.

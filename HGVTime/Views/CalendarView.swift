@@ -220,6 +220,7 @@ struct CalendarHistoryView: View {
                 }
             } else {
                 DayTimelineBar(entries: dayEntries, day: selectedDay, height: 28)
+                SpeedEventsSection(from: cal.startOfDay(for: selectedDay), to: cal.startOfDay(for: selectedDay).addingTimeInterval(86_400))
                 HStack(spacing: 6) {
                     MiniStat(title: "Drive", value: Fmt.hm(totals.driving), tint: DutyKind.drive.color)
                     MiniStat(title: "Work", value: Fmt.hm(totals.otherWork), tint: DutyKind.otherWork.color)

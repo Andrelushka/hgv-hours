@@ -223,3 +223,30 @@ final class CardEvent {
         self.inserted = inserted
     }
 }
+
+// MARK: Speed events
+
+/// A period above the overspeed threshold, recorded in in-cab mode.
+/// Like a tachograph, more than 60 seconds in a row counts as an overspeed infringement.
+@Model
+final class SpeedEvent {
+    var start: Date = Date()
+    var end: Date = Date()
+    var maxKmh: Double = 0
+    var limitKmh: Double = 90
+    var latitude: Double = 0
+    var longitude: Double = 0
+
+    init(start: Date, end: Date, maxKmh: Double, limitKmh: Double, latitude: Double, longitude: Double) {
+        self.start = start
+        self.end = end
+        self.maxKmh = maxKmh
+        self.limitKmh = limitKmh
+        self.latitude = latitude
+        self.longitude = longitude
+    }
+
+    var duration: TimeInterval { end.timeIntervalSince(start) }
+    var isInfringement: Bool { duration > 60 }
+    var hasLocation: Bool { latitude != 0 || longitude != 0 }
+}

@@ -14,8 +14,9 @@ extension Dashboard {
 
         // Driving
         d.driveLeft = s.driveAvailableNow
-        d.breakDueIn = s.continuousDrivingRemaining
+        d.breakDueIn = settings.applyWorkingTime ? min(s.continuousDrivingRemaining, s.wtdWorkBeforeBreak) : s.continuousDrivingRemaining
         var driveReasons: [String] = []
+        if s.driveAvailableNow < s.driveAvailableBeforeWorkingTime - 1 { driveReasons.append("working-time break (6h rule)") }
         if s.driveAvailableNow == s.continuousDrivingRemaining { driveReasons.append("45 min break due") }
         if s.driveAvailableNow == s.dailyDrivingRemaining { driveReasons.append("daily driving limit") }
         if s.driveAvailableNow == s.weeklyDrivingRemaining { driveReasons.append("weekly driving limit") }

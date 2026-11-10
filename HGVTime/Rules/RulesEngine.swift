@@ -123,6 +123,8 @@ struct ComplianceStatus {
 
     /// The most you can drive right now before hitting any limit.
     var driveAvailableNow: TimeInterval = Limits.continuousDriving
+    /// Driving available under drivers' hours only (before working-time limits are applied).
+    var driveAvailableBeforeWorkingTime: TimeInterval = Limits.continuousDriving
 
     // Daily rest
     var restStartByFull: Date?
@@ -547,6 +549,14 @@ enum RulesEngine {
         }
         if st.nightWork { s.nightWorkRemaining = max(0, config.nightWorkLimit - st.workingTime) }
         s.weeklyWorkingTime = total(segments, from: s.weekStart, to: weekEnd) { $0.isWork }
+
+        // Driving is also working time: you can't drive past a working-time limit either.
+        s.driveAvailableBeforeWorkingTime = s.driveAvailableNow
+        if config.applyWorkingTime && s.currentShift != nil {
+            var workLimit = min(s.wtdWorkBeforeBreak, max(0, Limits.wtdWeeklyMaximum - s.weeklyWorkingTime))
+            if let night = s.nightWorkRemaining { workLimit = min(workLimit, night) }
+            s.driveAvailableNow = min(s.driveAvailableNow, workLimit)
+        }
         let refWeeks = analysis.weeks.suffix(max(1, config.wtdReferenceWeeks))
         s.averageWeeks = refWeeks.count
         if !refWeeks.isEmpty {

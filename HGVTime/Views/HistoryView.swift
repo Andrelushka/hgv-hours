@@ -164,6 +164,9 @@ struct ShiftDetailView: View {
                         LabeledContent("Rest after", value: "\(kind.rawValue) · \(Fmt.hm(rest.duration))")
                     }
                 }
+                Section {
+                    SpeedEventsSection(from: shift.period.start, to: shift.period.isOpen ? .distantFuture : shift.period.end)
+                }
                 if !shift.issues.isEmpty {
                     Section("Infringements") {
                         ForEach(shift.issues) { IssueRow(issue: $0) }

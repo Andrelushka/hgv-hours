@@ -274,4 +274,51 @@ final class RulesEngineTests: XCTestCase {
         XCTAssertEqual(BankHolidays.dates(year: 2027, calendar: cal).map(f.string(from:)),
                        ["2027-01-01", "2027-03-26", "2027-03-29", "2027-05-03", "2027-05-31", "2027-08-30", "2027-12-27", "2027-12-28"])
     }
+
+    // MARK: Combined driving + working time
+
+    func testDrivingLeftIsCappedByWorkingTime() {
+        // 4h other work, then 1h driving: drivers' hours allow 3h30 more driving,
+        // but working time allows only 1h more before a 6h break is due.
+        let entries = [e(.otherWork, t(6), t(10)), e(.drive, t(10), nil)]
+        let s = RulesEngine.status(entries, now: t(11), config: config)
+        XCTAssertEqual(s.driveAvailableBeforeWorkingTime, 3.5 * 3600, accuracy: 61)
+        XCTAssertEqual(s.driveAvailableNow, 1 * 3600, accuracy: 61)
+    }
+
+    func testBreakPlanPicksWorkingTimeWhenItComesFirst() {
+        let entries = [e(.otherWork, t(6), t(10)), e(.drive, t(10), nil)]
+        let s = RulesEngine.status(entries, now: t(11), config: config)
+        let plan = Deadlines.breakPlan(s, applyWorkingTime: true)
+        XCTAssertEqual(plan?.reason, "6h working time")
+        XCTAssertEqual(plan?.dueBy ?? .distantPast, t(12), "due after 6h of work")
+        XCTAssertGreaterThanOrEqual(plan?.recommended ?? 0, 30 * 60, "a 6–9h day needs 30 min of breaks")
+    }
+
+    func testBreakPlanPicksDrivingWhenItComesFirst() {
+        let entries = [e(.drive, t(6), nil)]
+        let s = RulesEngine.status(entries, now: t(9), config: config)
+        let plan = Deadlines.breakPlan(s, applyWorkingTime: true)
+        XCTAssertEqual(plan?.reason, "4h30 driving")
+        XCTAssertEqual(plan?.dueBy ?? .distantPast, t(10, 30))
+        XCTAssertEqual(plan?.recommended ?? 0, 45 * 60, accuracy: 1)
+    }
+
+    // MARK: Tachograph minute rule
+
+    @MainActor
+    func testMinuteRule() {
+        let start20 = t(10, 15).addingTimeInterval(20)
+        let start40 = t(10, 15).addingTimeInterval(40)
+        XCTAssertEqual(AutoDriveDetector.minuteRuleStart(start20), t(10, 15), "40 s of driving in the minute → whole minute is driving")
+        XCTAssertEqual(AutoDriveDetector.minuteRuleStart(start40), t(10, 16), "only 20 s of driving → starts next minute")
+        XCTAssertEqual(AutoDriveDetector.minuteRuleEnd(start20), t(10, 15), "stopped at :20 → driving ends at start of minute")
+        XCTAssertEqual(AutoDriveDetector.minuteRuleEnd(start40), t(10, 16), "stopped at :40 → driving fills the minute")
+        // 10:15:20 → 10:15:25: inside one minute, mostly rest → no driving.
+        XCTAssertLessThanOrEqual(AutoDriveDetector.minuteRuleEnd(t(10, 15).addingTimeInterval(25)), AutoDriveDetector.minuteRuleStart(start20).addingTimeInterval(0))
+        // 10:15:58 → 10:16:03 crosses two minutes, each mostly rest → no driving.
+        let a = AutoDriveDetector.minuteRuleStart(t(10, 15).addingTimeInterval(58))
+        let b = AutoDriveDetector.minuteRuleEnd(t(10, 16).addingTimeInterval(3))
+        XCTAssertLessThanOrEqual(b, a)
+    }
 }
