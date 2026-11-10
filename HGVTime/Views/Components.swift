@@ -17,10 +17,14 @@ struct LimitCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label(title, systemImage: symbol)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            HStack(spacing: 2) {
+                Label(title, systemImage: symbol)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if let info = RuleInfo.text(for: title) { InfoDot(title: title, text: info).padding(-6) }
+            }
             Text(value)
                 .font(.title3.weight(.bold).monospacedDigit())
                 .foregroundStyle(progress >= 1 ? .red : .primary)
@@ -50,10 +54,14 @@ struct InfoCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label(title, systemImage: symbol)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
+            HStack(spacing: 2) {
+                Label(title, systemImage: symbol)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if let info = RuleInfo.text(for: title) { InfoDot(title: title, text: info).padding(-6) }
+            }
             Text(value)
                 .font(.title3.weight(.bold).monospacedDigit())
                 .foregroundStyle(tint)
@@ -174,6 +182,10 @@ struct RingTile: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                .frame(maxWidth: .infinity)
+                .overlay(alignment: .trailing) {
+                    if let info = RuleInfo.text(for: title) { InfoDot(title: title, text: info).padding(-6) }
+                }
             ZStack {
                 Circle().stroke(tint.opacity(0.15), lineWidth: 10)
                 Circle()
@@ -313,7 +325,11 @@ struct CountCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            HStack(spacing: 2) {
+                Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                if let info = RuleInfo.text(for: title) { InfoDot(title: title, text: info).padding(-6) }
+            }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text("\(left)").font(.title.weight(.bold).monospacedDigit()).foregroundStyle(left == 0 ? .red : .primary)
                 Text("of \(of) left").font(.subheadline).foregroundStyle(.secondary)
@@ -400,5 +416,91 @@ struct CardButton: View {
         .buttonStyle(.plain)
         .sensoryFeedback(.impact, trigger: inserted)
         .accessibilityLabel(inserted ? "Driver card inserted. Tap to record withdrawing it." : "Driver card not inserted. Tap to record inserting it.")
+    }
+}
+
+/// An ⓘ that shows an explanation in a small pop-over.
+struct InfoDot: View {
+    var title: String
+    var text: String
+    var highlighted = false
+    var onOpen: (() -> Void)? = nil
+    @State private var showing = false
+
+    var body: some View {
+        Button { showing = true; onOpen?() } label: {
+            Image(systemName: highlighted ? "info.circle.fill" : "info.circle")
+                .font(.subheadline)
+                .foregroundStyle(highlighted ? Color.accentColor : .secondary)
+                .symbolEffect(.pulse, isActive: highlighted)
+                .frame(width: 28, height: 28)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("About \(title)")
+        .popover(isPresented: $showing) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title).font(.headline)
+                    Text(text).font(.subheadline).fixedSize(horizontal: false, vertical: true)
+                }
+                .padding()
+            }
+            .frame(minWidth: 260, maxWidth: 340, maxHeight: 360)
+            .presentationCompactAdaptation(.popover)
+        }
+    }
+}
+
+/// Plain-English explanations for the limits shown on cards.
+enum RuleInfo {
+    static func text(for title: String) -> String? {
+        let t = title.lowercased()
+        if t.contains("before break") || t.contains("driving left") {
+            return "After 4h30 of driving you must take a 45-minute break. You can split it: at least 15 minutes, then at least 30 minutes later (in that order). The break also counts towards your working-time breaks."
+        }
+        if t.contains("daily driving") {
+            return "Normally 9 hours of driving between daily rests. Twice a week you may drive 10 hours."
+        }
+        if t.contains("this week") && !t.contains("work") || t.contains("week driving") {
+            return "No more than 56 hours of driving in a fixed week (Monday 00:00 to Sunday 24:00)."
+        }
+        if t.contains("fortnight") {
+            return "No more than 90 hours of driving in any two consecutive fixed weeks."
+        }
+        if t.contains("6h break") || t.contains("working left") || t.contains("working-time") {
+            return "Working Time rules: no more than 6 hours of work without a break. Breaks must total 30 minutes if you work 6–9 hours, 45 minutes over 9 hours, taken in pieces of at least 15 minutes. POA and breaks are not working time."
+        }
+        if t.contains("week working") {
+            return "No more than 60 hours of working time in any week."
+        }
+        if t.contains("average") {
+            return "Your working time must average no more than 48 hours a week over the reference period (17 weeks unless an agreement says 26)."
+        }
+        if t.contains("night") {
+            return "If your shift includes any time between 00:00 and 04:00, you may work no more than 10 hours in that shift, unless a collective or workforce agreement allows more."
+        }
+        if t.contains("rest by") || t.contains("daily rest") || t.contains("resting") {
+            return "Daily rest must be completed within 24 hours of the start of your shift: 11 hours normally, 9 hours reduced (up to 3 times between weekly rests), or split 3h + 9h."
+        }
+        if t.contains("reduced rest") || t.contains("15h day") {
+            return "A 9-hour reduced daily rest lets your day stretch to 15 hours. You can use up to 3 between weekly rests."
+        }
+        if t.contains("10h driving") {
+            return "You may extend daily driving to 10 hours twice in a fixed week."
+        }
+        if t.contains("weekly rest") {
+            return "A weekly rest of 45 hours (or reduced 24 hours) must start no later than 6 × 24 hours after the end of the previous one. A reduced weekly rest must be paid back in one block within 3 weeks."
+        }
+        if t.contains("compensation") {
+            return "Hours missing from a reduced weekly rest must be added to a rest of 9 hours or more before the end of the third week after it."
+        }
+        if t.contains("gb") || t.contains("duty") {
+            return "GB domestic rules: no more than 10 hours of driving and 11 hours of duty in a working day."
+        }
+        if t.contains("earned") || t.contains("pay") {
+            return "An estimate before tax and deductions, from your pay settings (Earnings tab ⚙︎). Check your payslip."
+        }
+        return nil
     }
 }

@@ -10,23 +10,25 @@ struct HistoryView: View {
     @State private var addingEntry = false
     @State private var exporting = false
 
+    /// Shown inside the Driver log (no own navigation stack or title).
+    var embedded = false
+
     var body: some View {
-        NavigationStack {
-            shiftList
-            .navigationTitle("History")
+        if embedded {
+            content
+        } else {
+            NavigationStack { content.navigationTitle("History") }
+        }
+    }
+
+    private var content: some View {
+        shiftList
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { exporting = true } label: { Label("Export", systemImage: "square.and.arrow.up") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { addingEntry = true } label: { Label("Add activity", systemImage: "plus") }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        NavigationLink { SummaryView() } label: { Label("Summary table", systemImage: "tablecells") }
-                        NavigationLink { EventLogView(day: nil) } label: { Label("Event log", systemImage: "list.bullet.rectangle") }
-                        NavigationLink { MapScreen(day: .now) } label: { Label("Map", systemImage: "map") }
-                    } label: { Image(systemName: "ellipsis.circle") }
                 }
             }
             .sheet(item: Binding(get: { addingAt.map(HistoryDate.init) }, set: { addingAt = $0?.date })) { item in
@@ -39,7 +41,7 @@ struct HistoryView: View {
                                                    context: context, settings: store.settings)
                 }
             } message: { shift in
-                Text("All activities from \(Fmt.dayTime(shift.period.start)) to \(shift.period.isOpen ? "now" : Fmt.dayTime(shift.period.end)) will be removed. This can't be undone.")
+                Text("All activities from \(Fmt.dayTime(shift.period.start)) to \(shift.period.isOpen ? "now" : Fmt.dayTime(shift.period.end)) will be removed. The deletion is recorded under Changes.")
             }
             .sheet(isPresented: $addingEntry) {
                 EntryEditor(entry: nil, defaultStart: Date.now.addingTimeInterval(-3600), defaultRegime: store.settings.currentRegime)
@@ -47,7 +49,6 @@ struct HistoryView: View {
             .sheet(isPresented: $exporting) {
                 ExportView()
             }
-        }
     }
 
     private var shiftList: some View {

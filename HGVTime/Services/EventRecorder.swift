@@ -6,9 +6,10 @@ import SwiftData
 @MainActor
 enum EventRecorder {
     static func log(_ kind: EventKind, title: String = "", detail: String = "", speedKmh: Double = 0, duration: Double = 0,
-                    at time: Date = .now, coordinate: CLLocationCoordinate2D? = nil, key: String = "",
+                    at time: Date = .now, coordinate: CLLocationCoordinate2D? = nil, key: String = "", activity: String = "",
                     context: ModelContext, settings: AppSettings) {
         let event = EventLog(time: time, kind: kind, title: title, detail: detail)
+        event.activityRaw = activity
         event.speedKmh = speedKmh
         event.duration = duration
         event.key = key

@@ -31,6 +31,34 @@ enum KeychainKey {
     static var hasKey: Bool { load()?.isEmpty == false }
 }
 
+/// Stores the optional DVLA Vehicle Enquiry API key in the Keychain.
+enum DVLAKey {
+    private static let service = "com.andreikotlyarenko.hgvhours.dvla"
+
+    static func save(_ key: String) {
+        delete()
+        guard !key.isEmpty else { return }
+        let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+                                kSecAttrAccount as String: "api-key", kSecValueData as String: Data(key.utf8),
+                                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly]
+        SecItemAdd(q as CFDictionary, nil)
+    }
+
+    static func load() -> String? {
+        let q: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+                                kSecAttrAccount as String: "api-key", kSecReturnData as String: true]
+        var out: AnyObject?
+        guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func delete() {
+        SecItemDelete([kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service] as CFDictionary)
+    }
+
+    static var hasKey: Bool { load()?.isEmpty == false }
+}
+
 /// Everything the assistant knows about your day, as plain facts.
 struct AssistantFacts {
     var now: Date

@@ -15,6 +15,7 @@ struct TodayView: View {
     @State private var confirmEndShift = false
     @State private var detector = AutoDriveDetector.shared
     @State private var help: HelpMessage?
+    @State private var helpSeen = true
     @State private var nightRefresh = 0
     /// What the "Wrong time?" bar under the help message adjusts.
     @State private var adjustEntryID: UUID?
@@ -39,6 +40,7 @@ struct TodayView: View {
     private func show(_ message: HelpMessage, adjustable: Bool = true, rebuild: ((Date) -> HelpMessage)? = nil) {
         withAnimation(.snappy) {
             help = message
+            helpSeen = false
             helpBuilder = rebuild
             adjustCard = nil
             adjustEntryID = adjustable ? ActivityController.openEntries(context: context).last?.id : nil
@@ -62,34 +64,15 @@ struct TodayView: View {
                 let dash = Dashboard.make(status: status, settings: store.settings, openEntry: openEntry)
                 ScrollView {
                     VStack(spacing: 14) {
-                        CardButton(inserted: cardIn, since: cardSince) { toggleCard() }
-                        ExpiryBanner()
-                        currentCard(status, dash)
-                        if let help {
-                            HelpBanner(message: help) {
-                                withAnimation(.snappy) { self.help = nil; adjustEntryID = nil; adjustCard = nil }
-                            }
-                            adjustBar
-                        }
-                        controls(status)
-                        inCabCard
-                        let urgent = status.warnings.filter { $0.severity == .violation }
-                        if !urgent.isEmpty {
-                            VStack(spacing: 10) {
-                                ForEach(urgent) { IssueRow(issue: $0) }
-                                Text("See the Hours tab for all your limits.").font(.caption2).foregroundStyle(.secondary)
-                            }
-                            .padding()
-                            .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                        ForEach(store.settings.todayModules) { module in
+                            moduleView(module, status: status, dash: dash, now: timeline.date)
                         }
                         if !status.hasData { emptyState }
-                        SectionHeader(title: "Earnings")
-                        PayCounterCard(now: timeline.date, currentShiftStart: onShift ? status.currentShift?.period.start : nil)
-                        nightOutButton(now: timeline.date)
-                        SectionHeader(title: "Job & vehicle")
-                        todaysPlan(now: timeline.date)
-                        CurrentVehicleCard()
-                        DayMileageCard(now: timeline.date)
+                        NavigationLink { TodayCustomiseView() } label: {
+                            Label("Customise Today", systemImage: "slider.horizontal.below.square.and.square.filled")
+                                .font(.caption)
+                        }
+                        .padding(.top, 4)
                     }
                     .padding()
                 }
@@ -97,7 +80,6 @@ struct TodayView: View {
             .navigationTitle("Today")
             .toolbar { toolbarContent }
             .sheet(item: $editingPlan) { PlanEditor(plan: $0) }
-            .sheet(isPresented: $pickingTime) { timePickerSheet }
             .sheet(isPresented: $planningToday) {
                 PlanEditor(plan: nil, day: .now, defaultVehicleID: store.settings.currentVehicleID,
                            defaultTrailerID: store.settings.currentTrailerID)
@@ -108,12 +90,16 @@ struct TodayView: View {
             .confirmationDialog("End shift and start…", isPresented: $confirmEndShift, titleVisibility: .visible) {
                 Button("Daily rest (9h or 11h)") {
                     let s = currentStatus()
+                    let started = s.currentShift?.period.start
                     ActivityController.endShift(.daily, context: context, settings: store.settings)
+                    ActivityController.resetAfterShift(context: context, store: store, shiftStart: started)
                     show(TodayHelp.afterEndShift(.daily, status: s), rebuild: { TodayHelp.afterEndShift(.daily, status: s, now: $0) })
                 }
                 Button("Weekly rest (24h or 45h)") {
                     let s = currentStatus()
+                    let started = s.currentShift?.period.start
                     ActivityController.endShift(.weekly, context: context, settings: store.settings)
+                    ActivityController.resetAfterShift(context: context, store: store, shiftStart: started)
                     show(TodayHelp.afterEndShift(.weekly, status: s), rebuild: { TodayHelp.afterEndShift(.weekly, status: s, now: $0) })
                 }
                 Button("Cancel", role: .cancel) {}
@@ -139,60 +125,130 @@ struct TodayView: View {
 
     // MARK: Current activity
 
+    @ViewBuilder
+    private func moduleView(_ module: TodayModule, status: ComplianceStatus, dash: Dashboard, now: Date) -> some View {
+        switch module {
+        case .card: CardButton(inserted: cardIn, since: cardSince) { toggleCard() }
+        case .expiry: ExpiryBanner()
+        case .status: currentCard(status, dash)
+        case .buttons:
+            controls(status)
+            subtypeChips(status)
+        case .inCab: inCabCard
+        case .warnings:
+            let urgent = status.warnings.filter { $0.severity == .violation }
+            if !urgent.isEmpty {
+                VStack(spacing: 10) {
+                    ForEach(urgent) { IssueRow(issue: $0) }
+                    Text("See the Hours tab for all your limits.").font(.caption2).foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+            }
+        case .earnings: PayCounterCard(now: now, currentShiftStart: onShift ? status.currentShift?.period.start : nil)
+        case .nightOut: nightOutButton(now: now)
+        case .job: if onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty { todaysPlan(now: now) }
+        case .vehicle: if onShift { CurrentVehicleCard() }
+        case .mileage: if onShift { DayMileageCard(now: now) }
+        }
+    }
+
+    /// Loading, unloading, waiting… chips for the current other work / POA.
+    @ViewBuilder
+    private func subtypeChips(_ status: ComplianceStatus) -> some View {
+        if onShift, let open = openEntry, open.kind == .otherWork || open.kind == .availability {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 6) {
+                    ForEach(ActivitySubtype.options(for: open.kind)) { sub in
+                        let on = open.subtype == sub
+                        Button {
+                            ActivityController.setSubtype(on ? nil : sub, context: context, settings: store.settings)
+                        } label: {
+                            Label(sub.title, systemImage: sub.symbol)
+                                .font(.caption.weight(.semibold))
+                                .padding(.horizontal, 10).padding(.vertical, 6)
+                                .foregroundStyle(on ? .white : open.kind.color)
+                                .background(on ? AnyShapeStyle(open.kind.color) : AnyShapeStyle(open.kind.color.opacity(0.12)), in: Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
     private func currentCard(_ status: ComplianceStatus, _ dash: Dashboard) -> some View {
         let restType = openEntry?.restType
-        let symbol = restType?.symbol ?? (status.hasData ? status.currentKind.symbol : "moon.zzz.fill")
+        let symbol = openEntry?.subtype?.symbol ?? restType?.symbol ?? (status.hasData ? status.currentKind.symbol : "moon.zzz.fill")
         let color = restType?.color ?? (status.hasData ? status.currentKind.color : .gray)
         let title: String = {
             guard status.hasData, let open = openEntry else { return "Off duty" }
             return open.displayTitle
         }()
-        return Button {
-            editing = openEntry
-        } label: {
-            HStack(spacing: 14) {
-                Image(systemName: symbol)
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 60, height: 60)
-                    .background(color.gradient, in: RoundedRectangle(cornerRadius: 16))
-                VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(title).font(.headline)
-                        if onShift {
-                            Text("ON SHIFT")
-                                .font(.caption2.weight(.bold))
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(Color.accentColor.opacity(0.15), in: Capsule())
-                        }
-                    }
-                    if status.hasData {
-                        Text(status.currentSince, style: .timer)
-                            .font(.system(.largeTitle, design: .rounded).weight(.bold).monospacedDigit())
-                        Text("since \(Fmt.time(status.currentSince)) · \(store.settings.currentRegime.shortTitle)\(store.settings.multiManned ? " · double-manned" : "")")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                        if let next = TodayHelp.next(status: status, openEntry: openEntry) {
-                            Text(next)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.tint)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    } else {
-                        Text("Tap Start shift when you begin work").font(.subheadline).foregroundStyle(.secondary)
+        let helpText = help.map { $0.lines.joined(separator: "\n\n") }
+            ?? TodayHelp.next(status: status, openEntry: openEntry)
+            ?? "Tap Start shift when you begin work, then the activity buttons as you change activity."
+        return HStack(alignment: .top, spacing: 14) {
+            Image(systemName: symbol)
+                .font(.system(size: 30, weight: .semibold))
+                .foregroundStyle(.white)
+                .frame(width: 60, height: 60)
+                .background(color.gradient, in: RoundedRectangle(cornerRadius: 16))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(title).font(.headline)
+                    if onShift {
+                        Text("ON SHIFT")
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Color.accentColor.opacity(0.15), in: Capsule())
                     }
                 }
-                Spacer()
-                if openEntry != nil {
-                    Image(systemName: "pencil.circle").font(.title2).foregroundStyle(.secondary)
+                if status.hasData {
+                    Text(status.currentSince, style: .timer)
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold).monospacedDigit())
+                    HStack(spacing: 4) {
+                        Text("since").font(.caption).foregroundStyle(.secondary)
+                        if let open = openEntry {
+                            // Tap the time to correct it straight away.
+                            DatePicker("Start time", selection: Binding(
+                                get: { open.start },
+                                set: { ActivityController.adjustStart(of: open, to: $0, context: context, settings: store.settings) }),
+                                       in: (Date.now.addingTimeInterval(-24 * 3600))...Date.now,
+                                       displayedComponents: [.hourAndMinute])
+                                .labelsHidden()
+                                .datePickerStyle(.compact)
+                                .scaleEffect(0.85, anchor: .leading)
+                                .frame(height: 28)
+                        }
+                        Text("· \(store.settings.currentRegime.shortTitle)\(store.settings.multiManned ? " · 2-man" : "")")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    if let next = TodayHelp.next(status: status, openEntry: openEntry) {
+                        Text(next)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tint)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } else {
+                    Text("Tap Start shift when you begin work").font(.subheadline).foregroundStyle(.secondary)
                 }
             }
-            .padding()
-            .frame(maxWidth: .infinity)
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+            Spacer(minLength: 0)
+            VStack(spacing: 4) {
+                InfoDot(title: help?.title ?? title, text: helpText, highlighted: help != nil && !helpSeen) { helpSeen = true }
+                if openEntry != nil {
+                    Button { editing = openEntry } label: {
+                        Image(systemName: "pencil.circle").font(.title3).foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Edit the current activity")
+                }
+            }
         }
-        .buttonStyle(.plain)
-        .accessibilityHint("Edit the current activity")
+        .padding()
+        .frame(maxWidth: .infinity)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
     }
 
     // MARK: Buttons
@@ -397,6 +453,7 @@ struct TodayView: View {
             : ["Recorded at \(Fmt.time(.now)).", "Make sure your activities are complete before you leave the vehicle. Keep your card safe."]
         withAnimation(.snappy) {
             helpBuilder = nil
+            helpSeen = false
             help = HelpMessage(symbol: "creditcard.fill", color: inserting ? .green : .red,
                                title: inserting ? "Driver card inserted" : "Driver card withdrawn", lines: lines)
             adjustEntryID = nil
@@ -492,7 +549,7 @@ struct TodayView: View {
     @ViewBuilder
     private func todaysPlan(now: Date) -> some View {
         let cal = Calendar.hgv
-        let todays = plans.filter { cal.isDate($0.plannedStart, inSameDayAs: now) || ($0.plannedStart <= now && $0.plannedEnd >= now) }
+        let todays = plans.filter { !$0.completed && (cal.isDate($0.plannedStart, inSameDayAs: now) || ($0.plannedStart <= now && $0.plannedEnd >= now)) }
         if todays.isEmpty {
             let next = plans.first { $0.plannedStart > now }
             HStack {

@@ -28,12 +28,12 @@ struct RootView: View {
                 .tabItem { Label("Today", systemImage: "play.circle") }
             HoursView()
                 .tabItem { Label("Hours", systemImage: "gauge.with.dots.needle.67percent") }
-            HistoryView()
-                .tabItem { Label("History", systemImage: "list.bullet.rectangle") }
-            CalendarTab()
-                .tabItem { Label("Calendar", systemImage: "calendar") }
-            NotebookView()
-                .tabItem { Label("Notebook", systemImage: "note.text") }
+            DriverLogView()
+                .tabItem { Label("Driver log", systemImage: "list.bullet.rectangle.portrait") }
+            JobsTab()
+                .tabItem { Label("Jobs", systemImage: "shippingbox") }
+            EarningsTab()
+                .tabItem { Label("Earnings", systemImage: "sterlingsign.circle") }
         }
         .sheet(isPresented: .constant(!store.settings.hasAcceptedDisclaimer)) {
             DisclaimerView()

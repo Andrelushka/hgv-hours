@@ -59,6 +59,17 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.1 (3.1.0) — Reorganisation, driver log, navigation & voice
+- ✅ Tabs: Today · Hours · Driver log · Jobs · Earnings, with per-tab settings
+- ✅ Driver log with change records; sub-activities (loading, unloading, waiting…) with map pins
+- ✅ Customisable Today, keep screen on, ⓘ info buttons, tap-to-edit start time, end-of-shift reset
+- ✅ Redesigned stops, postcode/address search, DVLA registration lookup
+- ✅ Map with plan stops and planned route; in-app voice navigation with traffic delays and parking suggestions
+- ✅ Assistant voice mode and voice commands
+- ⬜ Live road-incident feed (closures, accidents) — needs a paid traffic data service
+- ⬜ Verified HGV parking database and truck-legal routing — needs a paid truck service
+- ⬜ Royal Mail address list per postcode — needs a paid postcode service
+
 ## V3.0 (3.0.0) — AI & International Expansion
 - ✅ Assistant: offline answers from your records (driving left, breaks, rest, next start, 15h/10h days, earnings, weekly rest, height); optional Claude AI for any question with your own Anthropic API key (stored in the Keychain)
 - ✅ Country & rules: UK, EU/EEA/Switzerland, AETR, USA (FMCSA), Canada (south of 60°), Australia (NHVR standard hours), New Zealand — live limits, alerts and infringements; rules matrix and country list

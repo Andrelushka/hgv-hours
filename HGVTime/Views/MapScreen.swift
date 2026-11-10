@@ -18,8 +18,14 @@ struct MapScreen: View {
     @State private var selected: EventLog?
     @State private var showingList = false
     @State private var navigating: NavTarget?
+    @State private var navigatingInApp: NavTarget?
+    @State private var showPlannedRoute = true
+    @State private var geocoded: [UUID: CLLocationCoordinate2D] = [:]
+    @State private var plannedRoutes: [MKRoute] = []
 
-    struct NavTarget: Identifiable {
+    struct NavTarget: Identifiable, Hashable {
+        static func == (a: NavTarget, b: NavTarget) -> Bool { a.id == b.id }
+        func hash(into h: inout Hasher) { h.combine(id) }
         let id = UUID()
         var name: String
         var coordinate: CLLocationCoordinate2D?
@@ -38,7 +44,11 @@ struct MapScreen: View {
             .filter { !problemsOnly || $0.kind.isProblem }
             .filter { showActivity || $0.kind != .activity }
         let plan = plans.first { cal.isDate($0.plannedStart, inSameDayAs: day) }
-        let stopsWithPlace = (plan?.stops ?? []).filter { $0.latitude != nil }
+        let planStops: [(stop: PlanStop, index: Int, coordinate: CLLocationCoordinate2D)] = (plan?.stops ?? []).enumerated().compactMap { i, st in
+            if let lat = st.latitude, let lon = st.longitude { return (st, i, CLLocationCoordinate2D(latitude: lat, longitude: lon)) }
+            if let c = geocoded[st.id] { return (st, i, c) }
+            return nil
+        }
 
         Map(position: $position, selection: .constant(nil as Int?)) {
             UserAnnotation()
@@ -46,11 +56,18 @@ struct MapScreen: View {
                 MapPolyline(coordinates: route.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
                     .stroke(.blue.gradient, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             }
-            ForEach(stopsWithPlace) { stop in
-                Annotation(stop.place, coordinate: CLLocationCoordinate2D(latitude: stop.latitude ?? 0, longitude: stop.longitude ?? 0)) {
-                    Image(systemName: stop.kind.symbol)
-                        .font(.caption.weight(.bold)).foregroundStyle(.white)
-                        .padding(6).background(Circle().fill(.indigo))
+            if showPlannedRoute {
+                ForEach(Array(plannedRoutes.enumerated()), id: \.offset) { _, r in
+                    MapPolyline(r.polyline).stroke(.indigo.opacity(0.7), style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [8, 6]))
+                }
+            }
+            ForEach(planStops, id: \.stop.id) { item in
+                Annotation("\(item.index + 1). \(item.stop.displayName)", coordinate: item.coordinate) {
+                    ZStack {
+                        Circle().fill(item.stop.departedAt != nil ? Color.gray : (item.stop.kind == .collection ? Color.orange : .indigo)).frame(width: 30, height: 30)
+                        Text("\(item.index + 1)").font(.caption.weight(.bold)).foregroundStyle(.white)
+                    }
+                    .overlay(Circle().stroke(.white, lineWidth: 2))
                 }
             }
             ForEach(dayEvents) { e in
@@ -72,7 +89,8 @@ struct MapScreen: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    Toggle("Route", isOn: $showRoute)
+                    Toggle("Route driven", isOn: $showRoute)
+                    Toggle("Planned route", isOn: $showPlannedRoute)
                     Toggle("Activity changes", isOn: $showActivity)
                     Toggle("Problems only", isOn: $problemsOnly)
                 } label: { Image(systemName: "line.3.horizontal.decrease.circle") }
@@ -92,7 +110,9 @@ struct MapScreen: View {
         } message: { _ in
             Text(heightWarning)
         }
-        .onChange(of: day) { _, _ in position = .automatic }
+        .onChange(of: day) { _, _ in position = .automatic; plannedRoutes = [] }
+        .task(id: day) { await preparePlan(plan) }
+        .fullScreenCover(item: $navigatingInApp) { NavigationModeView(target: $0) }
     }
 
     // MARK: Panel
@@ -104,6 +124,8 @@ struct MapScreen: View {
         }
         let problems = events.filter { $0.kind.isProblem }.count
         let next = plan?.stops.first { $0.departedAt == nil }
+        let plannedKm = plannedRoutes.reduce(0) { $0 + $1.distance } / 1000
+        let plannedTime = plannedRoutes.reduce(0) { $0 + $1.expectedTravelTime }
         return VStack(spacing: 8) {
             HStack {
                 Button { day = Calendar.hgv.date(byAdding: .day, value: -1, to: day) ?? day } label: { Image(systemName: "chevron.left") }
@@ -120,17 +142,23 @@ struct MapScreen: View {
             HStack(spacing: 8) {
                 Button { showingList = true } label: { Label("Event log", systemImage: "list.bullet") }
                 if let next {
-                    Button {
-                        navigating = NavTarget(name: next.place.isEmpty ? next.kind.title : next.place,
-                                               coordinate: next.latitude.map { CLLocationCoordinate2D(latitude: $0, longitude: next.longitude ?? 0) },
-                                               address: next.place)
-                    } label: { Label("Navigate to next stop", systemImage: "arrow.triangle.turn.up.right.diamond.fill") }
+                    let target = NavTarget(name: next.displayName,
+                                           coordinate: next.latitude.map { CLLocationCoordinate2D(latitude: $0, longitude: next.longitude ?? 0) } ?? geocoded[next.id],
+                                           address: next.fullAddress)
+                    Button { navigatingInApp = target } label: {
+                        Label("Navigate", systemImage: "location.north.line.fill")
+                    }
                     .buttonStyle(.borderedProminent)
+                    Button { navigating = target } label: { Label("Other app", systemImage: "arrow.up.forward.app") }
                 }
             }
             .buttonStyle(.bordered)
             .font(.caption.weight(.semibold))
-            if route.isEmpty && events.isEmpty {
+            if plannedKm > 0 {
+                Text("Planned: \(plan?.stops.count ?? 0) stops · \(Fmt.distance(plannedKm, miles: store.settings.useMiles)) · about \(Fmt.hm(plannedTime)) driving")
+                    .font(.caption).foregroundStyle(.indigo)
+            }
+            if route.isEmpty && events.isEmpty && plannedKm == 0 {
                 Text("Nothing with a location on this day. Turn on In cab mode to record your route; events are pinned where they happen.")
                     .font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center)
             }
@@ -139,6 +167,33 @@ struct MapScreen: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
         .padding(.horizontal)
         .padding(.bottom, 6)
+    }
+
+    /// Looks up stops without a map location, saves it to the plan, and draws the planned route between stops.
+    private func preparePlan(_ plan: WorkPlan?) async {
+        guard let plan else { return }
+        var stops = plan.stops
+        var changed = false
+        for i in stops.indices where stops[i].latitude == nil && !stops[i].fullAddress.isEmpty {
+            if let c = try? await CLGeocoder().geocodeAddressString(stops[i].fullAddress).first?.location?.coordinate {
+                geocoded[stops[i].id] = c
+                stops[i].latitude = c.latitude
+                stops[i].longitude = c.longitude
+                changed = true
+            }
+        }
+        if changed { plan.stops = stops }
+        let coords = stops.compactMap { s in s.latitude.map { CLLocationCoordinate2D(latitude: $0, longitude: s.longitude ?? 0) } }
+        guard coords.count >= 2 else { return }
+        var routes: [MKRoute] = []
+        for (a, b) in zip(coords, coords.dropFirst()) {
+            let r = MKDirections.Request()
+            r.source = MKMapItem(placemark: MKPlacemark(coordinate: a))
+            r.destination = MKMapItem(placemark: MKPlacemark(coordinate: b))
+            r.transportType = .automobile
+            if let route = try? await MKDirections(request: r).calculate().routes.first { routes.append(route) }
+        }
+        plannedRoutes = routes
     }
 
     // MARK: Navigation
@@ -187,7 +242,7 @@ struct MapScreen: View {
 struct EventPin: View {
     var event: EventLog
     var body: some View {
-        Image(systemName: event.kind.symbol)
+        Image(systemName: event.activitySubtype?.symbol ?? (event.kind == .activity ? (event.activityKind?.symbol ?? event.kind.symbol) : event.kind.symbol))
             .font(.caption.weight(.bold))
             .foregroundStyle(.white)
             .padding(6)
@@ -203,8 +258,16 @@ struct EventPin: View {
         case .shiftEnd: .teal
         case .arrived, .departed: .indigo
         case .fuel: .orange
-        case .activity: .blue
+        case .activity:
+            switch event.activityKind {
+            case .drive: .blue
+            case .otherWork: .orange
+            case .availability: .purple
+            case .rest: .green
+            case nil: .blue
+            }
         case .note: .gray
+        case .correction: .gray
         }
     }
 }

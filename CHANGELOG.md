@@ -2,6 +2,21 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.1.0 — Reorganised app, driver log, navigation & voice
+- New layout: Today · Hours · Driver log · Jobs · Earnings. Each tab has its own ⚙︎ for its settings; Settings (gear on Today) keeps the general ones.
+- Driver log: all activity tracking kept separately from planning — Days (chart, activities, events, overspeed), Shifts, Events, and Changes (every edit, addition and deletion is recorded and can't be removed).
+- Sub-activities: Loading, Unloading, Vehicle check, Fuelling, Paperwork, Cleaning, Waiting to load/unload, Ferry/train, Double-manned — chips on Today, logged with their own map pins.
+- Today is customisable: switch each block on/off and drag to reorder; keep the screen on (always / on shift / never).
+- Help and rule explanations moved into ⓘ buttons in the corner of cards.
+- Correct a start time by tapping the time on the status card (replaces the "Wrong time?" bar).
+- End shift now clears the vehicle/trailer in use and completes the day's job; earnings, route and debrief stay.
+- Jobs: planner calendar (plans, holidays, bank holidays only), vehicles, fuel and notes in one tab.
+- Stops redesigned: site, address search by postcode/company (Apple Maps), booking time and reference, collection/delivery reference, pallets, weight, contact, notes.
+- DVLA registration lookup (with your free DVLA key) fills make, fuel, weight, colour, year, MOT and tax.
+- Map: every plan stop (addresses looked up), planned route with distance and time, numbered stop pins.
+- Navigation mode: spoken turn-by-turn, rerouting, traffic delay announcements and route notices; warns when your driving time won't reach the destination and offers services/lorry parks within reach.
+- Assistant voice: speak questions, hands-free talk mode, and voice commands (start shift, drive, break, loading, waiting, insert card, end shift…).
+
 ## 3.0.0 — AI assistant & worldwide rules
 - Assistant (✨ on Today): ask about driving left, breaks, rest, next start, 15h/10h days, earnings, weekly rest, infringements or vehicle height — answered offline from your records. Turn on Claude AI with your own Anthropic API key (kept in the iPhone Keychain) for any question; it's sent with a summary of your hours and pay, never your name, locations or notes.
 - Country & rules: choose UK, EU/EEA/Switzerland, AETR, USA (FMCSA 11h/14h/30-min/60-70h), Canada south of 60° (13h/14h/16h/70h), Australia (NHVR standard hours) or New Zealand (5½h/13h/70h). Hours, alerts, widgets, the Watch and the event log follow your choice.

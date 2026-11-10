@@ -41,6 +41,8 @@ final class ActivityEntry {
     var endsShift: Bool = false
     /// For end-of-shift rest: "daily" or "weekly" as chosen by the driver ("" = not set).
     var plannedRestRaw: String = ""
+    /// Loading, unloading, waiting… ("" = none).
+    var subtypeRaw: String = ""
 
     init(kind: DutyKind, regime: Regime, start: Date, end: Date? = nil, multiManned: Bool = false, note: String = "", endsShift: Bool = false) {
         self.endsShift = endsShift
@@ -70,8 +72,10 @@ final class ActivityEntry {
         return plannedRestRaw == RestType.weekly.rawValue ? .weekly : .daily
     }
 
-    /// Label shown in lists: "Break", "Daily rest", "Weekly rest" or the activity name.
-    var displayTitle: String { restType?.title ?? kind.title }
+    var subtype: ActivitySubtype? { ActivitySubtype(rawValue: subtypeRaw) }
+
+    /// Label shown in lists: "Break", "Daily rest", "Weekly rest", "Loading" or the activity name.
+    var displayTitle: String { restType?.title ?? subtype?.title ?? kind.title }
 
     var snapshot: EntrySnapshot {
         EntrySnapshot(kind: kind, regime: regime, start: start, end: end, multiManned: multiManned)

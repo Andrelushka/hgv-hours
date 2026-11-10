@@ -123,6 +123,8 @@ struct VehicleEditor: View {
 
     @State private var odometer: Double
     @State private var inFeet = false
+    @State private var lookingUp = false
+    @State private var lookupMessage: String?
 
     init(vehicle: Vehicle?, newKind: VehicleKind = .tractor, registration: String = "") {
         self.vehicle = vehicle
@@ -150,8 +152,22 @@ struct VehicleEditor: View {
                     Picker("Type", selection: $kind) {
                         ForEach(VehicleKind.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
                     }
-                    TextField(kind == .trailer ? "Trailer number / ID" : "Registration", text: $registration)
-                        .textInputAutocapitalization(.characters)
+                    HStack {
+                        TextField(kind == .trailer ? "Trailer number / ID" : "Registration", text: $registration)
+                            .textInputAutocapitalization(.characters)
+                        if kind != .trailer {
+                            Button {
+                                Task { await lookUp() }
+                            } label: {
+                                if lookingUp { ProgressView() } else { Label("Look up", systemImage: "magnifyingglass") }
+                            }
+                            .buttonStyle(.bordered)
+                            .disabled(normalisedReg(registration).count < 2 || lookingUp)
+                        }
+                    }
+                    if let lookupMessage {
+                        Text(lookupMessage).font(.caption).foregroundStyle(.secondary)
+                    }
                     TextField("Fleet number", text: $fleetNumber)
                     if kind != .trailer {
                         TextField("Make, e.g. DAF", text: $make)
@@ -265,6 +281,24 @@ struct VehicleEditor: View {
                     }
                 }
             }
+        }
+    }
+
+    /// Fills in details from the DVLA (UK registrations).
+    private func lookUp() async {
+        lookingUp = true
+        defer { lookingUp = false }
+        do {
+            let info = try await DVLALookup.lookup(registration)
+            registration = normalisedReg(registration)
+            if !info.make.isEmpty { make = info.make.capitalized }
+            if let f = info.fuel { fuel = f }
+            if info.revenueWeightKg > 0 { weight = Double(info.revenueWeightKg) / 1000 }
+            let summary = info.summary
+            if !summary.isEmpty && !notes.contains(summary) { notes = notes.isEmpty ? summary : notes + "\n" + summary }
+            lookupMessage = "Found: \(info.make.capitalized) · \(summary)"
+        } catch {
+            lookupMessage = error.localizedDescription
         }
     }
 

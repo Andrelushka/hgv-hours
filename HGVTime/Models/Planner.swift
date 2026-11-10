@@ -101,6 +101,25 @@ final class Vehicle {
 
 /// A stop on a planned job.
 struct PlanStop: Codable, Equatable, Identifiable {
+    /// Short name for lists and the map: company, then place.
+    var displayName: String {
+        let c = company ?? ""
+        if !c.isEmpty { return c }
+        if !place.isEmpty { return place }
+        return kind.title
+    }
+
+    /// Address line(s) for navigation and geocoding.
+    var fullAddress: String {
+        [address ?? place, postcode ?? ""].filter { !$0.isEmpty }.joined(separator: ", ")
+    }
+
+    /// Booking time as text (new date field, or the old free-text time).
+    var bookingText: String {
+        if let b = bookingTime { return Fmt.time(b) }
+        return time
+    }
+
     enum Kind: String, Codable, CaseIterable, Identifiable {
         case collection, delivery, depot, other
         var id: String { rawValue }
@@ -129,6 +148,15 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var reference: String = ""
     var pallets: String = ""
     var notes: String = ""
+    // More detail (optional so older plans still load).
+    var company: String?
+    var address: String?
+    var postcode: String?
+    var bookingTime: Date?
+    var orderReference: String?
+    var weight: String?
+    var contactName: String?
+    var contactPhone: String?
     // Recorded on the day with the Arrived / Departed buttons.
     var arrivedAt: Date?
     var departedAt: Date?
@@ -160,6 +188,8 @@ final class WorkPlan {
     var stopsData: Data = Data()
     var linesData: Data = Data()
     var createdAt: Date = Date()
+    /// Set when the shift ends: the job leaves the Today screen (still in the planner and debrief).
+    var completed: Bool = false
 
     init(start: Date, end: Date) {
         self.plannedStart = start
@@ -461,7 +491,7 @@ final class Reminder {
 // MARK: Event log and route
 
 enum EventKind: String, Codable, CaseIterable, Identifiable {
-    case shiftStart, shiftEnd, activity, cardIn, cardOut, arrived, departed, fuel, overspeed, infringement, note
+    case shiftStart, shiftEnd, activity, cardIn, cardOut, arrived, departed, fuel, overspeed, infringement, note, correction
 
     var id: String { rawValue }
 
@@ -478,6 +508,7 @@ enum EventKind: String, Codable, CaseIterable, Identifiable {
         case .overspeed: "Overspeed"
         case .infringement: "Infringement"
         case .note: "Note"
+        case .correction: "Record changed"
         }
     }
 
@@ -493,6 +524,7 @@ enum EventKind: String, Codable, CaseIterable, Identifiable {
         case .overspeed: "gauge.with.dots.needle.100percent"
         case .infringement: "exclamationmark.octagon.fill"
         case .note: "note.text"
+        case .correction: "pencil.circle.fill"
         }
     }
 
@@ -514,6 +546,8 @@ final class EventLog {
     var duration: Double = 0
     /// Prevents logging the same infringement twice.
     var key: String = ""
+    /// For activity events: the DutyKind raw value, or "kind:subtype".
+    var activityRaw: String = ""
 
     init(time: Date = .now, kind: EventKind, title: String = "", detail: String = "") {
         self.time = time
@@ -528,6 +562,12 @@ final class EventLog {
     }
 
     var hasLocation: Bool { latitude != 0 || longitude != 0 }
+
+    var activityKind: DutyKind? { DutyKind(rawValue: activityRaw.components(separatedBy: ":").first ?? "") }
+    var activitySubtype: ActivitySubtype? {
+        let parts = activityRaw.components(separatedBy: ":")
+        return parts.count > 1 ? ActivitySubtype(rawValue: parts[1]) : nil
+    }
 }
 
 /// A point on the route, saved while in-cab mode runs.
@@ -544,4 +584,52 @@ final class TrackPoint {
         self.longitude = longitude
         self.speedKmh = speedKmh
     }
+}
+
+// MARK: Sub-activities
+
+/// What kind of other work or POA it was, for the driver log and map.
+enum ActivitySubtype: String, Codable, CaseIterable, Identifiable {
+    case loading, unloading, vehicleCheck, fuelling, paperwork, cleaning
+    case waitingLoad, waitingUnload, ferryTrain, doubleManned
+
+    var id: String { rawValue }
+
+    var kind: DutyKind {
+        switch self {
+        case .waitingLoad, .waitingUnload, .ferryTrain, .doubleManned: .availability
+        default: .otherWork
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .loading: "Loading"
+        case .unloading: "Unloading"
+        case .vehicleCheck: "Vehicle check"
+        case .fuelling: "Fuelling"
+        case .paperwork: "Paperwork"
+        case .cleaning: "Cleaning"
+        case .waitingLoad: "Waiting to load"
+        case .waitingUnload: "Waiting to unload"
+        case .ferryTrain: "Ferry / train"
+        case .doubleManned: "Double-manned"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .loading: "arrow.up.bin.fill"
+        case .unloading: "arrow.down.to.line.compact"
+        case .vehicleCheck: "checklist"
+        case .fuelling: "fuelpump.fill"
+        case .paperwork: "doc.text.fill"
+        case .cleaning: "sparkles"
+        case .waitingLoad, .waitingUnload: "hourglass"
+        case .ferryTrain: "ferry.fill"
+        case .doubleManned: "person.2.fill"
+        }
+    }
+
+    static func options(for kind: DutyKind) -> [ActivitySubtype] { allCases.filter { $0.kind == kind } }
 }

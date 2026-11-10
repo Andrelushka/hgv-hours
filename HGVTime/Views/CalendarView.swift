@@ -45,6 +45,8 @@ struct CalendarHistoryView: View {
     @Query(sort: \PayItem.date) private var payItems: [PayItem]
     @Query(sort: \WorkPlan.plannedStart) private var plans: [WorkPlan]
 
+    /// Planner only: show plans, holidays and bank holidays, not driving records (those are in the Driver log).
+    var planningOnly = false
     @State private var editingPlan: WorkPlan?
     @State private var planningDay: Date?
     @State private var month = Calendar.hgv.startOfMonth(for: .now)
@@ -63,7 +65,7 @@ struct CalendarHistoryView: View {
             VStack(spacing: 12) {
                 monthHeader
                 monthGrid(issueDays: issueDays)
-                ActivityLegend().padding(.horizontal, 4)
+                if !planningOnly { ActivityLegend().padding(.horizontal, 4) }
                 dayDetail(analysis: analysis)
                 upcoming
             }
@@ -118,7 +120,7 @@ struct CalendarHistoryView: View {
             }
             ForEach(days, id: \.self) { day in
                 let inMonth = cal.isDate(day, equalTo: month, toGranularity: .month)
-                let totals = DayTotals.compute(entriesTouching(day), day: day)
+                let totals = planningOnly ? DayTotals() : DayTotals.compute(entriesTouching(day), day: day)
                 DayCell(day: day, totals: totals, inMonth: inMonth,
                         isToday: cal.isDateInToday(day),
                         isSelected: cal.isDate(day, inSameDayAs: selectedDay),
@@ -214,7 +216,12 @@ struct CalendarHistoryView: View {
                 .font(.subheadline)
                 .foregroundStyle(.orange)
             }
-            if dayEntries.isEmpty {
+            if planningOnly {
+                NavigationLink { DriverDayLink(day: selectedDay) } label: {
+                    Label("Driver log for this day", systemImage: "list.bullet.rectangle")
+                }
+                .font(.subheadline)
+            } else if dayEntries.isEmpty {
                 Text(holiday == nil ? "Nothing recorded." : "No driving or work recorded.").foregroundStyle(.secondary)
                 Button {
                     addingOn = cal.date(bySettingHour: 8, minute: 0, second: 0, of: selectedDay)

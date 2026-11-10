@@ -18,7 +18,7 @@ struct TodayJobCard: View {
                 HStack(spacing: 8) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind == .collection ? .orange : .blue)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(stop.place.isEmpty ? stop.kind.title : stop.place).font(.caption.weight(.semibold)).lineLimit(1)
+                        Text(stop.displayName).font(.caption.weight(.semibold)).lineLimit(1)
                         Text(statusText(stop)).font(.caption2).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -46,7 +46,7 @@ struct TodayJobCard: View {
 
     private func statusText(_ stop: PlanStop) -> String {
         var parts: [String] = []
-        if !stop.time.isEmpty { parts.append("Booked \(stop.time)") }
+        if !stop.bookingText.isEmpty { parts.append("Booked \(stop.bookingText)") }
         if let a = stop.arrivedAt { parts.append("Arrived \(Fmt.time(a))") }
         if let d = stop.departedAt {
             parts.append("Left \(Fmt.time(d))")
@@ -198,7 +198,7 @@ struct DebriefView: View {
 
 /// Everything shown in a debrief, also as plain text for sharing.
 struct DebriefData {
-    static let stopHeader = ["#", "Type", "Place", "Booked", "Arrived", "Left", "On site", "Ref", "Pallets"]
+    static let stopHeader = ["#", "Type", "Site", "Address", "Booked", "Arrived", "Left", "On site", "Booking ref", "Order ref", "Pallets"]
 
     var company = "", vehicle = "", trailer = "", shift = "", card = "", pay = ""
     var stops: [[String]] = []
@@ -231,8 +231,8 @@ struct DebriefData {
 
         for (i, s) in (plan?.stops ?? []).enumerated() {
             let onSite = (s.arrivedAt != nil && s.departedAt != nil) ? Fmt.hm(s.departedAt!.timeIntervalSince(s.arrivedAt!)) : ""
-            d.stops.append(["\(i + 1)", s.kind.title, s.place, s.time, s.arrivedAt.map(Fmt.time) ?? "", s.departedAt.map(Fmt.time) ?? "",
-                            onSite, s.reference, s.pallets])
+            d.stops.append(["\(i + 1)", s.kind.title, s.displayName, s.fullAddress, s.bookingText, s.arrivedAt.map(Fmt.time) ?? "",
+                            s.departedAt.map(Fmt.time) ?? "", onSite, s.reference, s.orderReference ?? "", s.pallets])
             if let lat = s.latitude, let lon = s.longitude {
                 d.mapPoints.append((s.place.isEmpty ? "Stop \(i + 1)" : s.place, CLLocationCoordinate2D(latitude: lat, longitude: lon)))
             }

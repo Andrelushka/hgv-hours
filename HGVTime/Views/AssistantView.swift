@@ -24,6 +24,9 @@ struct AssistantView: View {
     @State private var input = ""
     @State private var thinking = false
     @State private var showingSettings = false
+    @State private var voice = VoiceInput()
+    /// Hands-free: answers are spoken and it listens again.
+    @State private var talkMode = false
 
     private var claudeOn: Bool { store.settings.assistantUseClaude && KeychainKey.hasKey }
 
@@ -51,8 +54,22 @@ struct AssistantView: View {
         .navigationTitle("Assistant")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            Button { showingSettings = true } label: { Image(systemName: "slider.horizontal.3") }
+            ToolbarItem(placement: .topBarTrailing) {
+                Toggle(isOn: Binding(get: { talkMode }, set: { on in
+                    talkMode = on
+                    if on { VoiceService.shared.say("Talk mode on. Ask me anything, or say a command like start driving.", force: true); listen() }
+                    else { voice.cancel() }
+                })) {
+                    Image(systemName: talkMode ? "person.wave.2.fill" : "person.wave.2")
+                }
+                .toggleStyle(.button)
+                .accessibilityLabel("Talk mode")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showingSettings = true } label: { Image(systemName: "slider.horizontal.3") }
+            }
         }
+        .onDisappear { voice.cancel(); talkMode = false }
         .sheet(isPresented: $showingSettings) { NavigationStack { AssistantSettingsView() } }
     }
 
@@ -64,6 +81,8 @@ struct AssistantView: View {
             Text(claudeOn
                  ? "Ask anything about your hours, rest, pay or jobs. Your question and a summary of your records are sent to Anthropic to answer it."
                  : "Ask about driving left, breaks, rest, next start, 15h days, earnings, weekly rest or vehicle height. Answers come from your records on this iPhone. Turn on Claude AI (⚙︎ top right) for any other question.")
+            Text("🎙 Tap the mic to speak, or turn on talk mode (👤 top right) for hands-free: answers are read out and it listens again. Say commands like \"start driving\", \"take a break\", \"loading\", \"insert card\" or \"end shift\".")
+                .font(.caption).foregroundStyle(.secondary)
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(10)
@@ -102,7 +121,16 @@ struct AssistantView: View {
 
     private var inputBar: some View {
         HStack(spacing: 8) {
-            TextField("Ask a question…", text: $input, axis: .vertical)
+            Button {
+                if voice.isListening { voice.finish() } else { listen() }
+            } label: {
+                Image(systemName: voice.isListening ? "waveform.circle.fill" : "mic.circle.fill")
+                    .font(.title2)
+                    .foregroundStyle(voice.isListening ? .red : .accentColor)
+                    .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
+            }
+            .accessibilityLabel(voice.isListening ? "Stop listening" : "Speak")
+            TextField(voice.isListening ? "Listening…" : "Ask or say a command…", text: voice.isListening ? .constant(voice.transcript) : $input, axis: .vertical)
                 .lineLimit(1...4)
                 .textFieldStyle(.roundedBorder)
                 .submitLabel(.send)
@@ -146,11 +174,37 @@ struct AssistantView: View {
                               vehicleHeight: height, recentDays: recent.map { (day: $0.0, drive: $0.1, work: $0.2) })
     }
 
+    private func listen() {
+        Task {
+            await voice.start { heard in send(heard) }
+            if let e = voice.error { lines.append(ChatLine(role: .notice, text: e)) }
+        }
+    }
+
+    /// Adds an answer, speaks it in talk mode, then listens again.
+    private func reply(_ line: ChatLine) {
+        lines.append(line)
+        guard talkMode, line.role != .user else { return }
+        let plain = line.text.replacingOccurrences(of: "**", with: "")
+        VoiceService.shared.say(plain, force: true)
+        // Listen again after the answer has been read out.
+        let words = Double(plain.split(separator: " ").count)
+        Task {
+            try? await Task.sleep(for: .seconds(min(30, 1.5 + words * 0.38)))
+            if talkMode && !voice.isListening && !thinking { listen() }
+        }
+    }
+
     private func send(_ text: String) {
         let q = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !q.isEmpty, !thinking else { return }
         input = ""
         lines.append(ChatLine(role: .user, text: q))
+        if let command = VoiceCommand.parse(q) {
+            ActivityController.perform(command, context: context, store: store)
+            reply(ChatLine(role: .assistant, text: command.confirmation))
+            return
+        }
         let f = facts()
         if claudeOn {
             thinking = true
@@ -160,20 +214,20 @@ struct AssistantView: View {
                     let reply = try await ClaudeAssistant.ask(q, facts: f, history: history)
                     apiHistory.append(["role": "user", "content": "My data right now:\n\(f.summary)\n\nQuestion: \(q)"])
                     apiHistory.append(["role": "assistant", "content": reply.rawContent])
-                    lines.append(ChatLine(role: .assistant, text: reply.text, byClaude: true))
+                    self.reply(ChatLine(role: .assistant, text: reply.text, byClaude: true))
                 } catch {
                     // Fall back to the offline answer if there is one.
                     if let offline = OfflineAssistant.answer(q, f) {
-                        lines.append(ChatLine(role: .assistant, text: offline))
+                        self.reply(ChatLine(role: .assistant, text: offline))
                     }
                     lines.append(ChatLine(role: .notice, text: error.localizedDescription))
                 }
                 thinking = false
             }
         } else if let offline = OfflineAssistant.answer(q, f) {
-            lines.append(ChatLine(role: .assistant, text: offline))
+            reply(ChatLine(role: .assistant, text: offline))
         } else {
-            lines.append(ChatLine(role: .notice, text: "I can answer questions about driving left, breaks, rest, next start, 15h and 10h days, earnings, weekly rest, infringements and vehicle height. For anything else, turn on Claude AI with ⚙︎ (top right)."))
+            reply(ChatLine(role: .notice, text: "I can answer questions about driving left, breaks, rest, next start, 15h and 10h days, earnings, weekly rest, infringements and vehicle height. For anything else, turn on Claude AI with ⚙︎ (top right). You can also say commands like start driving, take a break, loading, or end shift."))
         }
     }
 }

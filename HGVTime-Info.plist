@@ -9,6 +9,10 @@
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>In-cab mode uses your speed to record driving when the vehicle moves and other work when it stops, like a tachograph.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Talk to the assistant: ask questions and give commands like "start driving" or "take a break" by voice.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Turns what you say to the assistant into text.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Unlock HGV Hours with Face ID so only you can see your records.</string>
 	<key>NSCameraUsageDescription</key>

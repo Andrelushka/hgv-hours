@@ -24,6 +24,13 @@ struct PlanEditor: View {
     @State private var lines: [PlanLine]
     @State private var notes: String
     @State private var confirmDelete = false
+    @State private var editingStop: EditableStop?
+
+    struct EditableStop: Identifiable {
+        var stop: PlanStop
+        var isNew: Bool
+        var id: UUID { stop.id }
+    }
 
     init(plan: WorkPlan?, day: Date = .now, defaultVehicleID: String = "", defaultTrailerID: String = "") {
         self.plan = plan
@@ -86,29 +93,20 @@ struct PlanEditor: View {
                     if vehicles.isEmpty { Text("Add vehicles and trailers in Settings → Vehicles & trailers.") }
                 }
 
-                Section("Stops") {
-                    ForEach($stops) { $stop in
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Picker("", selection: $stop.kind) {
-                                    ForEach(PlanStop.Kind.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
-                                }
-                                .labelsHidden()
-                                .fixedSize()
-                                TextField("Time", text: $stop.time).frame(maxWidth: 70)
-                            }
-                            TextField("Place / address / postcode", text: $stop.place)
-                            HStack {
-                                TextField("Reference", text: $stop.reference)
-                                TextField("Pallets", text: $stop.pallets).frame(maxWidth: 80)
-                            }
-                            TextField("Notes", text: $stop.notes)
-                        }
-                        .font(.subheadline)
+                Section {
+                    ForEach(Array(stops.enumerated()), id: \.element.id) { i, stop in
+                        Button { editingStop = EditableStop(stop: stop, isNew: false) } label: { StopRow(stop: stop, number: i + 1) }
+                            .foregroundStyle(.primary)
                     }
                     .onDelete { stops.remove(atOffsets: $0) }
                     .onMove { stops.move(fromOffsets: $0, toOffset: $1) }
-                    Button { stops.append(PlanStop()) } label: { Label("Add stop", systemImage: "plus.circle.fill") }
+                    Button {
+                        editingStop = EditableStop(stop: PlanStop(kind: stops.isEmpty ? .collection : .delivery), isNew: true)
+                    } label: { Label("Add stop", systemImage: "plus.circle.fill") }
+                } header: {
+                    Text("Stops")
+                } footer: {
+                    Text("Tap a stop to fill in the site, address (search by postcode), booking time and reference, load references, pallets, weight and contact. Swipe to delete, hold and drag to reorder.")
                 }
 
                 Section("Load") {
@@ -161,6 +159,13 @@ struct PlanEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save) }
+            }
+            .sheet(item: $editingStop) { item in
+                StopEditor(stop: item.stop, isNew: item.isNew, onSave: { saved in
+                    if let i = stops.firstIndex(where: { $0.id == saved.id }) { stops[i] = saved } else { stops.append(saved) }
+                }, onDelete: {
+                    stops.removeAll { $0.id == item.stop.id }
+                })
             }
             .confirmationDialog("Delete this plan?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
@@ -261,8 +266,10 @@ struct PlanCard: View {
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind == .collection ? .orange : .blue)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text([stop.time, stop.place].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption.weight(.semibold))
-                        let extra = [stop.reference.isEmpty ? "" : "Ref \(stop.reference)", stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.notes]
+                        Text([stop.bookingText, stop.displayName].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption.weight(.semibold))
+                        let extra = [stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
+                                     (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
+                                     stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.notes]
                             .filter { !$0.isEmpty }.joined(separator: " · ")
                         if !extra.isEmpty { Text(extra).font(.caption2).foregroundStyle(.secondary) }
                     }

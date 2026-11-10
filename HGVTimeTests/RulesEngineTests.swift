@@ -459,4 +459,52 @@ final class RulesEngineTests: XCTestCase {
         XCTAssertNil(OfflineAssistant.answer("what's the weather in Leeds", f))
         XCTAssertTrue(f.summary.contains("Driving left: 1h30"))
     }
+
+    // MARK: 3.1
+
+    func testVoiceCommands() {
+        XCTAssertEqual(VoiceCommand.parse("Start driving"), .activity(.drive))
+        XCTAssertEqual(VoiceCommand.parse("take a break"), .activity(.rest))
+        XCTAssertEqual(VoiceCommand.parse("I'm loading now"), .subtype(.loading))
+        XCTAssertEqual(VoiceCommand.parse("unloading"), .subtype(.unloading))
+        XCTAssertEqual(VoiceCommand.parse("waiting to tip"), .subtype(.waitingUnload))
+        XCTAssertEqual(VoiceCommand.parse("end shift weekly rest"), .endShift(.weekly))
+        XCTAssertEqual(VoiceCommand.parse("start shift"), .startShift)
+        XCTAssertEqual(VoiceCommand.parse("insert card"), .cardIn)
+        XCTAssertNil(VoiceCommand.parse("How long can I drive?"), "questions go to the assistant, not commands")
+    }
+
+    func testTodayModulesOrderAndHidden() {
+        var s = AppSettings()
+        s.todayOrder = ["earnings", "status"]
+        s.todayHidden = ["card"]
+        let m = s.todayModules
+        XCTAssertEqual(m.first, .earnings)
+        XCTAssertEqual(m[1], .status)
+        XCTAssertFalse(m.contains(.card))
+        XCTAssertTrue(m.contains(.buttons), "modules missing from the saved order are added at the end")
+    }
+
+    @MainActor
+    func testEndOfShiftResetClearsVehicleAndCompletesJob() throws {
+        let schema = StoreSetup.schema
+        let c = try ModelContainer(for: schema, configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: true))
+        let ctx = ModelContext(c)
+        let plan = WorkPlan(start: Date.now.addingTimeInterval(-3 * 3600), end: Date.now.addingTimeInterval(3600))
+        ctx.insert(plan)
+        try ctx.save()
+        let store = SettingsStore(defaults: UserDefaults(suiteName: "hgv.test.\(UUID())")!)
+        store.settings.currentVehicleID = "abc"
+        store.settings.currentTrailerID = "def"
+        ActivityController.resetAfterShift(context: ctx, store: store, shiftStart: Date.now.addingTimeInterval(-4 * 3600))
+        XCTAssertEqual(store.settings.currentVehicleID, "")
+        XCTAssertEqual(store.settings.currentTrailerID, "")
+        XCTAssertTrue(plan.completed)
+    }
+
+    func testRuleInfoExplainsCards() {
+        XCTAssertNotNil(RuleInfo.text(for: "Before break"))
+        XCTAssertNotNil(RuleInfo.text(for: "Daily driving"))
+        XCTAssertNotNil(RuleInfo.text(for: "Week working"))
+    }
 }

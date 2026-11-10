@@ -35,7 +35,7 @@ enum ActivityController {
         refreshSideEffects(context: context, settings: settings)
         VoiceService.shared.activityChanged(to: entry.displayTitle + (entry.endsShift ? " started. Shift ended." : ""))
         if !entry.endsShift {
-            EventRecorder.log(.activity, title: entry.displayTitle, at: now, context: context, settings: settings)
+            EventRecorder.log(.activity, title: entry.displayTitle, at: now, activity: entry.kindRaw, context: context, settings: settings)
         }
     }
 
@@ -54,6 +54,19 @@ enum ActivityController {
         ReminderService.shared.fire(.shiftEnd, context: context)
     }
 
+    /// After a shift ends: clear the vehicle/trailer in use and mark the day's job done,
+    /// so tomorrow starts clean. Earnings, the route and the debrief are kept.
+    static func resetAfterShift(context: ModelContext, store: SettingsStore, shiftStart: Date?) {
+        store.settings.currentVehicleID = ""
+        store.settings.currentTrailerID = ""
+        let from = (shiftStart ?? Calendar.hgv.startOfDay(for: .now)).addingTimeInterval(-6 * 3600)
+        let plans = (try? context.fetch(FetchDescriptor<WorkPlan>())) ?? []
+        for p in plans where p.plannedStart >= from && p.plannedStart <= .now && !p.completed {
+            p.completed = true
+        }
+        try? context.save()
+    }
+
     /// True when the driver is on a shift (the last activity isn't a daily/weekly rest).
     static func isOnShift(context: ModelContext) -> Bool {
         guard let last = openEntries(context: context).last else { return false }
@@ -67,9 +80,27 @@ enum ActivityController {
 
     /// Deletes one activity.
     static func delete(_ entry: ActivityEntry, context: ModelContext, settings: AppSettings) {
+        EventRecorder.log(.correction, title: "Deleted \(entry.displayTitle)",
+                          detail: "\(Fmt.dayTime(entry.start))–\(entry.end.map(Fmt.time) ?? "now")", context: context, settings: settings)
         context.delete(entry)
         try? context.save()
         refreshSideEffects(context: context, settings: settings)
+    }
+
+    /// Marks the current activity as loading, unloading, waiting… (or clears it with nil).
+    static func setSubtype(_ subtype: ActivitySubtype?, context: ModelContext, settings: AppSettings) {
+        guard let open = openEntries(context: context).last, !open.endsShift else { return }
+        if let subtype, subtype.kind != open.kind {
+            // e.g. tapping "Loading" while driving: switch to other work first.
+            switchTo(subtype.kind, context: context, settings: settings)
+        }
+        guard let current = openEntries(context: context).last else { return }
+        current.subtypeRaw = subtype?.rawValue ?? ""
+        try? context.save()
+        if let subtype {
+            EventRecorder.log(.activity, title: subtype.title, activity: "\(subtype.kind.rawValue):\(subtype.rawValue)", context: context, settings: settings)
+            VoiceService.shared.activityChanged(to: subtype.title)
+        }
     }
 
     // MARK: Start time correction
@@ -83,6 +114,10 @@ enum ActivityController {
         var target = min(newStart, entry.end ?? .now, .now)
         if let previous { target = max(target, previous.start.addingTimeInterval(60)) }
         if let previous { previous.end = target }
+        if abs(target.timeIntervalSince(entry.start)) >= 30 {
+            EventRecorder.log(.correction, title: "\(entry.displayTitle) start changed", detail: "\(Fmt.time(entry.start)) → \(Fmt.time(target))",
+                              context: context, settings: settings)
+        }
         entry.start = target
         try? context.save()
         refreshSideEffects(context: context, settings: settings)
@@ -120,6 +155,37 @@ enum ActivityController {
         r.gpsKm += km
         if r.vehicleID.isEmpty { r.vehicleID = vehicleID }
         try? context.save()
+    }
+
+    /// Card inserted / withdrawn (Today button, watch, voice).
+    static func setCard(inserted: Bool, context: ModelContext, store: SettingsStore) {
+        store.settings.cardInserted = inserted
+        store.settings.cardChangedAt = Date.now.timeIntervalSince1970
+        store.save()
+        context.insert(CardEvent(time: .now, inserted: inserted))
+        try? context.save()
+        EventRecorder.log(inserted ? .cardIn : .cardOut, context: context, settings: store.settings)
+        if inserted { ReminderService.shared.fire(.cardInserted, context: context) }
+        refreshSideEffects(context: context, settings: store.settings)
+    }
+
+    /// Runs a spoken command.
+    static func perform(_ command: VoiceCommand, context: ModelContext, store: SettingsStore) {
+        let settings = store.settings
+        switch command {
+        case .activity(let k): switchTo(k, context: context, settings: settings)
+        case .subtype(let s): setSubtype(s, context: context, settings: settings)
+        case .startShift: startShift(context: context, settings: settings)
+        case .endShift(let r):
+            let started = RulesEngine.status(recentSnapshots(context: context, settings: settings), now: .now, config: settings.ruleConfig).currentShift?.period.start
+            endShift(r, context: context, settings: settings)
+            resetAfterShift(context: context, store: store, shiftStart: started)
+        case .cardIn: setCard(inserted: true, context: context, store: store)
+        case .cardOut: setCard(inserted: false, context: context, store: store)
+        case .arrived:
+            EventRecorder.log(.arrived, detail: "By voice", context: context, settings: settings)
+            ReminderService.shared.fire(.arrived, context: context)
+        }
     }
 
     // MARK: Nights out
@@ -161,6 +227,8 @@ enum ActivityController {
 
     /// Removes everything between two times (e.g. a whole shift). Activities crossing the edges are trimmed.
     static func deleteRange(from start: Date, to end: Date, context: ModelContext, settings: AppSettings) {
+        EventRecorder.log(.correction, title: "Deleted shift", detail: "\(Fmt.dayTime(start))–\(end == .distantFuture ? "now" : Fmt.dayTime(end))",
+                          context: context, settings: settings)
         let all = (try? context.fetch(FetchDescriptor<ActivityEntry>(sortBy: [SortDescriptor(\.start)]))) ?? []
         for entry in all {
             let eEnd = entry.end ?? .distantFuture
@@ -185,6 +253,7 @@ enum ActivityController {
 
     /// Removes everything recorded on a calendar day. Activities that cross midnight are trimmed, not deleted.
     static func deleteDay(_ day: Date, context: ModelContext, settings: AppSettings) {
+        EventRecorder.log(.correction, title: "Deleted day", detail: Fmt.day(day), context: context, settings: settings)
         let cal = Calendar.hgv
         let dayStart = cal.startOfDay(for: day)
         guard let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) else { return }
@@ -240,6 +309,7 @@ enum ActivityController {
             : WorldRules.status(snaps, now: now, region: settings.region, usCycle70: settings.usCycle70)
         let last = openEntries(context: context).last
         let shiftEnded = last?.endsShift ?? true
+        ScreenAwake.apply(settings, onShift: !shiftEnded)
         if let world = WorldRulesCache.status {
             NotificationService.shared.rescheduleWorld(world, settings: settings, shiftEnded: shiftEnded)
         } else {

@@ -24,7 +24,7 @@ enum BackupService {
         var track: [Track] = []
     }
 
-    struct Entry: Codable { var id: UUID; var kind, regime: String; var start: Date; var end: Date?; var multi: Bool; var note: String; var endsShift: Bool; var plannedRest: String }
+    struct Entry: Codable { var id: UUID; var kind, regime: String; var start: Date; var end: Date?; var multi: Bool; var note: String; var endsShift: Bool; var plannedRest: String; var subtype: String? }
     struct Night: Codable { var date: Date; var note: String }
     struct Pay: Codable { var date: Date; var kind, title: String; var amount, hours: Double }
     struct Veh: Codable {
@@ -44,7 +44,7 @@ enum BackupService {
         var id: UUID; var title, message, trigger: String; var time: Date; var repeatRule: String; var offset: Int
         var enabled, speak: Bool; var createdAt: Date
     }
-    struct Event: Codable { var time: Date; var kind, title, detail: String; var lat, lon, speed, duration: Double; var key: String }
+    struct Event: Codable { var time: Date; var kind, title, detail: String; var lat, lon, speed, duration: Double; var key: String; var activity: String? }
     struct Track: Codable { var time: Date; var lat, lon, speed: Double }
 
     private static func all<T: PersistentModel>(_ type: T.Type, _ context: ModelContext) -> [T] {
@@ -56,7 +56,7 @@ enum BackupService {
         var b = Backup(settings: settings)
         b.entries = all(ActivityEntry.self, context).map {
             Entry(id: $0.id, kind: $0.kindRaw, regime: $0.regimeRaw, start: $0.start, end: $0.end, multi: $0.multiManned,
-                  note: $0.note, endsShift: $0.endsShift, plannedRest: $0.plannedRestRaw)
+                  note: $0.note, endsShift: $0.endsShift, plannedRest: $0.plannedRestRaw, subtype: $0.subtypeRaw)
         }
         b.nights = all(NightOut.self, context).map { Night(date: $0.date, note: $0.note) }
         b.payItems = all(PayItem.self, context).map { Pay(date: $0.date, kind: $0.kindRaw, title: $0.title, amount: $0.amount, hours: $0.hours) }
@@ -91,7 +91,7 @@ enum BackupService {
         }
         b.events = all(EventLog.self, context).map {
             Event(time: $0.time, kind: $0.kindRaw, title: $0.title, detail: $0.detail, lat: $0.latitude, lon: $0.longitude,
-                  speed: $0.speedKmh, duration: $0.duration, key: $0.key)
+                  speed: $0.speedKmh, duration: $0.duration, key: $0.key, activity: $0.activityRaw)
         }
         b.track = all(TrackPoint.self, context).map { Track(time: $0.time, lat: $0.latitude, lon: $0.longitude, speed: $0.speedKmh) }
 
@@ -134,6 +134,7 @@ enum BackupService {
                                   start: e.start, end: e.end, multiManned: e.multi, note: e.note, endsShift: e.endsShift)
             x.id = e.id
             x.plannedRestRaw = e.plannedRest
+            x.subtypeRaw = e.subtype ?? ""
             context.insert(x)
         }
         b.nights.forEach { context.insert(NightOut(date: $0.date, note: $0.note)) }
@@ -177,6 +178,7 @@ enum BackupService {
         for e in b.events {
             let x = EventLog(time: e.time, kind: EventKind(rawValue: e.kind) ?? .note, title: e.title, detail: e.detail)
             x.latitude = e.lat; x.longitude = e.lon; x.speedKmh = e.speed; x.duration = e.duration; x.key = e.key
+            x.activityRaw = e.activity ?? ""
             context.insert(x)
         }
         b.track.forEach { context.insert(TrackPoint(time: $0.time, latitude: $0.lat, longitude: $0.lon, speedKmh: $0.speed)) }

@@ -7,11 +7,17 @@ struct NotebookView: View {
     @Query(sort: \NoteItem.updatedAt, order: .reverse) private var items: [NoteItem]
     @State private var search = ""
     @State private var opened: NoteItem?
+    /// Inside the Jobs tab (no own navigation stack).
+    var embedded = false
 
     var body: some View {
+        if embedded { content } else { NavigationStack { content } }
+    }
+
+    private var content: some View {
         let notes = items.filter { !$0.isTemplate && matches($0) }
         let templates = items.filter { $0.isTemplate }
-        NavigationStack {
+        return Group {
             List {
                 if notes.isEmpty && search.isEmpty {
                     ContentUnavailableView {

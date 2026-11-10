@@ -44,21 +44,16 @@ final class PhoneWatchBridge: NSObject {
         case .availability: ActivityController.switchTo(.availability, context: context, settings: settings)
         case .breakTime: ActivityController.switchTo(.rest, context: context, settings: settings)
         case .startShift: ActivityController.startShift(context: context, settings: settings)
-        case .endShiftDaily: ActivityController.endShift(.daily, context: context, settings: settings)
-        case .endShiftWeekly: ActivityController.endShift(.weekly, context: context, settings: settings)
+        case .endShiftDaily, .endShiftWeekly:
+            let started = RulesEngine.status(ActivityController.recentSnapshots(context: context, settings: settings), now: .now,
+                                             config: settings.ruleConfig).currentShift?.period.start
+            ActivityController.endShift(command == .endShiftWeekly ? .weekly : .daily, context: context, settings: settings)
+            ActivityController.resetAfterShift(context: context, store: store, shiftStart: started)
         case .autoOn: store.settings.autoDetectEnabled = true
         case .autoOff: store.settings.autoDetectEnabled = false
         case .refresh: ActivityController.refreshSideEffects(context: context, settings: settings)
         case .cardIn, .cardOut:
-            let inserting = command == .cardIn
-            store.settings.cardInserted = inserting
-            store.settings.cardChangedAt = Date.now.timeIntervalSince1970
-            store.save()
-            context.insert(CardEvent(time: .now, inserted: inserting))
-            try? context.save()
-            EventRecorder.log(inserting ? .cardIn : .cardOut, context: context, settings: store.settings)
-            if inserting { ReminderService.shared.fire(.cardInserted, context: context) }
-            ActivityController.refreshSideEffects(context: context, settings: store.settings)
+            ActivityController.setCard(inserted: command == .cardIn, context: context, store: store)
         }
         if command == .autoOn || command == .autoOff {
             store.save()

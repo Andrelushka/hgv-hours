@@ -107,10 +107,18 @@ struct EntryEditor: View {
     private func save() {
         let target: ActivityEntry
         if let entry {
+            let before = "\(entry.displayTitle) \(Fmt.dayTime(entry.start))–\(entry.end.map(Fmt.time) ?? "now")"
+            let after = "\(kind == .rest ? restType.title : kind.title) \(Fmt.dayTime(start))–\(isOpen ? "now" : Fmt.time(end))"
+            if before != after {
+                EventRecorder.log(.correction, title: "Edited activity", detail: "\(before) → \(after)", context: context, settings: store.settings)
+            }
             target = entry
         } else {
             target = ActivityEntry(kind: kind, regime: regime, start: start)
             context.insert(target)
+            EventRecorder.log(.correction, title: "Added activity by hand",
+                              detail: "\(kind == .rest ? restType.title : kind.title) \(Fmt.dayTime(start))–\(isOpen ? "now" : Fmt.time(end))",
+                              context: context, settings: store.settings)
         }
         target.kind = kind
         target.regime = regime

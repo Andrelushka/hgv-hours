@@ -47,17 +47,12 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Pay") {
-                    NavigationLink { PaySettingsView() } label: {
-                        SettingsRow(title: "Pay rates", symbol: "sterlingsign.circle.fill", color: .green,
-                                    value: s.pay.basis == .salary
-                                        ? Fmt.money(s.pay.salaryAmount, symbol: s.pay.currencySymbol) + " " + s.pay.salaryPer.title
-                                        : Fmt.money(s.pay.basis == .daily ? s.pay.dayRate : s.pay.baseRate, symbol: s.pay.currencySymbol) + s.pay.basis.unit)
+                Section {
+                    NavigationLink { TodayCustomiseView() } label: {
+                        SettingsRow(title: "Customise Today", symbol: "slider.horizontal.below.square.and.square.filled", color: .indigo, value: "")
                     }
-                    NavigationLink { OvertimeSettingsView() } label: {
-                        SettingsRow(title: "Overtime", symbol: "clock.badge.checkmark.fill", color: .pink,
-                                    value: OvertimeSettingsView.summary(s.pay))
-                    }
+                } footer: {
+                    Text("Pay settings are in the Earnings tab (⚙︎). Vehicles, fuel and lookups are in the Jobs tab (⚙︎).")
                 }
 
                 Section("Alerts") {
@@ -74,17 +69,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Driver & vehicles") {
-                    NavigationLink { VehiclesView() } label: {
-                        SettingsRow(title: "Vehicles & trailers", symbol: "box.truck.fill", color: .brown,
-                                    value: "Height, fuel, specs")
-                    }
-                    NavigationLink { ResourcesView() } label: {
-                        SettingsRow(title: "Fuel & resources", symbol: "fuelpump.fill", color: .orange, value: "Diesel, AdBlue, tacho rolls")
-                    }
-                    Toggle(isOn: Binding(get: { store.settings.useMiles }, set: { store.settings.useMiles = $0 })) {
-                        SettingsRow(title: "Distances in miles", symbol: "road.lanes", color: .gray, value: "")
-                    }
+                Section("Driver & security") {
                     NavigationLink { LockSettingsView() } label: {
                         SettingsRow(title: "App lock", symbol: "faceid", color: .green, value: s.lockEnabled ? "On" : "Off")
                     }

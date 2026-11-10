@@ -8,6 +8,8 @@ struct EventLogView: View {
     @Query(sort: \EventLog.time, order: .reverse) private var events: [EventLog]
     /// nil = all days.
     var day: Date?
+    /// Only these kinds (nil = all).
+    var kinds: Set<EventKind>? = nil
     @State private var filter: EventKind?
     @State private var selected: EventLog?
 
@@ -15,6 +17,7 @@ struct EventLogView: View {
         let cal = Calendar.hgv
         let list = events.filter { e in
             (day.map { cal.isDate(e.time, inSameDayAs: $0) } ?? true) && (filter == nil || e.kind == filter)
+                && (kinds.map { $0.contains(e.kind) } ?? true)
         }
         let byDay = Dictionary(grouping: list) { cal.startOfDay(for: $0.time) }
         List {
@@ -42,7 +45,10 @@ struct EventLogView: View {
                         }
                         .foregroundStyle(.primary)
                         .swipeActions {
-                            Button("Delete", systemImage: "trash", role: .destructive) { context.delete(e); try? context.save() }
+                            // Change records are kept so the driver log stays trustworthy.
+                            if e.kind != .correction {
+                                Button("Delete", systemImage: "trash", role: .destructive) { context.delete(e); try? context.save() }
+                            }
                         }
                     }
                 } header: {
@@ -55,7 +61,7 @@ struct EventLogView: View {
                 }
             }
         }
-        .navigationTitle(day == nil ? "Event log" : "Events \(Fmt.day(day!))")
+        .navigationTitle(kinds == [.correction] ? "Changes" : (day == nil ? "Event log" : "Events \(Fmt.day(day!))"))
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
