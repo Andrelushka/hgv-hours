@@ -64,6 +64,39 @@ enum ActivityController {
         refreshSideEffects(context: context, settings: settings)
     }
 
+    // MARK: Start time correction
+
+    /// Moves the start of `entry` (e.g. "I pressed Drive 3 minutes late"). The activity before it
+    /// is lengthened or shortened to match, so there's no gap or overlap. Returns the time actually set.
+    @discardableResult
+    static func adjustStart(of entry: ActivityEntry, to newStart: Date, context: ModelContext, settings: AppSettings) -> Date {
+        let all = (try? context.fetch(FetchDescriptor<ActivityEntry>(sortBy: [SortDescriptor(\.start)]))) ?? []
+        let previous = all.last { $0 !== entry && $0.start < entry.start && abs(($0.end ?? .distantFuture).timeIntervalSince(entry.start)) < 2 }
+        var target = min(newStart, entry.end ?? .now, .now)
+        if let previous { target = max(target, previous.start.addingTimeInterval(60)) }
+        if let previous { previous.end = target }
+        entry.start = target
+        try? context.save()
+        refreshSideEffects(context: context, settings: settings)
+        return target
+    }
+
+    // MARK: Driver card
+
+    /// Latest card event: inserted or not, and since when.
+    static func cardState(context: ModelContext) -> (inserted: Bool, since: Date?) {
+        var descriptor = FetchDescriptor<CardEvent>(sortBy: [SortDescriptor(\.time, order: .reverse)])
+        descriptor.fetchLimit = 1
+        guard let last = (try? context.fetch(descriptor))?.first else { return (false, nil) }
+        return (last.inserted, last.time)
+    }
+
+    static func setCard(inserted: Bool, at time: Date = .now, context: ModelContext, settings: AppSettings) {
+        context.insert(CardEvent(time: time, inserted: inserted))
+        try? context.save()
+        refreshSideEffects(context: context, settings: settings)
+    }
+
     /// Removes everything between two times (e.g. a whole shift). Activities crossing the edges are trimmed.
     static func deleteRange(from start: Date, to end: Date, context: ModelContext, settings: AppSettings) {
         let all = (try? context.fetch(FetchDescriptor<ActivityEntry>(sortBy: [SortDescriptor(\.start)]))) ?? []
@@ -148,6 +181,7 @@ enum ActivityController {
         Task { await LiveActivityService.shared.sync(state: state, driverName: name) }
         var dashboard = Dashboard.make(status: status, settings: settings, openEntry: last)
         addPayAndVehicle(to: &dashboard, context: context, settings: settings, now: now)
+        dashboard.cardInserted = settings.cardInserted
         PhoneWatchBridge.shared.send(dashboard)
         SharedStore.save(dashboard)
         WidgetCenter.shared.reloadAllTimelines()

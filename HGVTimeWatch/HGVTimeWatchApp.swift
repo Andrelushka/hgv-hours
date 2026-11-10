@@ -85,6 +85,7 @@ struct StatusPage: View {
                             Text("Start your shift from the buttons page or your iPhone.")
                                 .font(.footnote).foregroundStyle(.secondary)
                         }
+                        row("Driver card", d.cardInserted ? "Inserted" : "Not inserted", tint: d.cardInserted ? .green : .red)
                         row("Week driving", WFmt.hm(d.weeklyDriving))
                         row("Week working", WFmt.hm(d.weeklyWorking))
                         if !store.isReachable {

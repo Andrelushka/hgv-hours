@@ -132,9 +132,12 @@ final class AutoDriveDetector: NSObject {
     }
 
     private func stop() {
-        manager.stopUpdatingLocation()
-        if started { manager.allowsBackgroundLocationUpdates = false }
-        motion.stopActivityUpdates()
+        // Only touch location/motion if they were started, so nothing asks for permission while in-cab mode is off.
+        if started {
+            manager.stopUpdatingLocation()
+            manager.allowsBackgroundLocationUpdates = false
+            motion.stopActivityUpdates()
+        }
         stopTimer?.invalidate()
         stopTimer = nil
         started = false

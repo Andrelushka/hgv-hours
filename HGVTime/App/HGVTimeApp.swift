@@ -4,13 +4,14 @@ import SwiftData
 @main
 struct HGVTimeApp: App {
     @State private var settingsStore = SettingsStore()
+    private let container = StoreSetup.makeContainer()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(settingsStore)
         }
-        .modelContainer(for: [ActivityEntry.self, NightOut.self, PayItem.self, Vehicle.self, WorkPlan.self, NoteItem.self])
+        .modelContainer(container)
     }
 }
 

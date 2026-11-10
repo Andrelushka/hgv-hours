@@ -7,18 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A0C0FFEE000000000000004A /* HGVTimeWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000040 /* HGVTimeWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A0C0FFEE0000000000000001 /* HGVTimeWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000002 /* HGVTimeWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A0C0FFEE000000000000004A /* HGVTimeWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000040 /* HGVTimeWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		A0C0FFEE000000000000004C /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = A0C0FFEE0000000000000004 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A0C0FFEE0000000000000042;
-			remoteInfo = HGVTimeWatch;
-		};
 		A0C0FFEE0000000000000003 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A0C0FFEE0000000000000004 /* Project object */;
@@ -33,20 +26,16 @@
 			remoteGlobalIDString = A0C0FFEE0000000000000007;
 			remoteInfo = HGVTime;
 		};
+		A0C0FFEE000000000000004C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A0C0FFEE0000000000000004 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A0C0FFEE0000000000000042;
+			remoteInfo = HGVTimeWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		A0C0FFEE0000000000000049 /* Embed Watch Content */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
-			dstSubfolderSpec = 16;
-			files = (
-				A0C0FFEE000000000000004A /* HGVTimeWatch.app in Embed Watch Content */,
-			);
-			name = "Embed Watch Content";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A0C0FFEE0000000000000008 /* Embed Foundation Extensions */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -58,14 +47,25 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A0C0FFEE0000000000000049 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				A0C0FFEE000000000000004A /* HGVTimeWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A0C0FFEE0000000000000040 /* HGVTimeWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HGVTimeWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0C0FFEE0000000000000002 /* HGVTimeWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HGVTimeWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0C0FFEE0000000000000009 /* HGVTime.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HGVTime.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0C0FFEE000000000000000A /* HGVTimeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HGVTimeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0C0FFEE000000000000000B /* HGVTime.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HGVTime.entitlements; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000040 /* HGVTimeWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HGVTimeWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -79,11 +79,6 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		A0C0FFEE0000000000000041 /* HGVTimeWatch */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = HGVTimeWatch;
-			sourceTree = "<group>";
-		};
 		A0C0FFEE000000000000000D /* HGVTime */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = HGVTime;
@@ -107,16 +102,14 @@
 			path = HGVTimeTests;
 			sourceTree = "<group>";
 		};
+		A0C0FFEE0000000000000041 /* HGVTimeWatch */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = HGVTimeWatch;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		A0C0FFEE0000000000000044 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A0C0FFEE0000000000000011 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -132,6 +125,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A0C0FFEE0000000000000013 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A0C0FFEE0000000000000044 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -168,29 +168,6 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A0C0FFEE0000000000000042 /* HGVTimeWatch */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A0C0FFEE0000000000000046 /* Build configuration list for PBXNativeTarget "HGVTimeWatch" */;
-			buildPhases = (
-				A0C0FFEE0000000000000043 /* Sources */,
-				A0C0FFEE0000000000000044 /* Frameworks */,
-				A0C0FFEE0000000000000045 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				A0C0FFEE0000000000000041 /* HGVTimeWatch */,
-				A0C0FFEE000000000000000E /* Shared */,
-			);
-			name = HGVTimeWatch;
-			packageProductDependencies = (
-			);
-			productName = HGVTimeWatch;
-			productReference = A0C0FFEE0000000000000040 /* HGVTimeWatch.app */;
-			productType = "com.apple.product-type.application";
-		};
 		A0C0FFEE0000000000000005 /* HGVTimeWidgetExtension */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A0C0FFEE000000000000001A /* Build configuration list for PBXNativeTarget "HGVTimeWidgetExtension" */;
@@ -264,6 +241,29 @@
 			productReference = A0C0FFEE000000000000000A /* HGVTimeTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		A0C0FFEE0000000000000042 /* HGVTimeWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A0C0FFEE0000000000000046 /* Build configuration list for PBXNativeTarget "HGVTimeWatch" */;
+			buildPhases = (
+				A0C0FFEE0000000000000043 /* Sources */,
+				A0C0FFEE0000000000000044 /* Frameworks */,
+				A0C0FFEE0000000000000045 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A0C0FFEE000000000000000E /* Shared */,
+				A0C0FFEE0000000000000041 /* HGVTimeWatch */,
+			);
+			name = HGVTimeWatch;
+			packageProductDependencies = (
+			);
+			productName = HGVTimeWatch;
+			productReference = A0C0FFEE0000000000000040 /* HGVTimeWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -280,12 +280,12 @@
 					A0C0FFEE0000000000000007 = {
 						CreatedOnToolsVersion = 16.0;
 					};
-					A0C0FFEE0000000000000042 = {
-						CreatedOnToolsVersion = 16.0;
-					};
 					A0C0FFEE000000000000001D = {
 						CreatedOnToolsVersion = 16.0;
 						TestTargetID = A0C0FFEE0000000000000007;
+					};
+					A0C0FFEE0000000000000042 = {
+						CreatedOnToolsVersion = 16.0;
 					};
 				};
 			};
@@ -312,13 +312,6 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		A0C0FFEE0000000000000045 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A0C0FFEE0000000000000018 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -340,16 +333,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		A0C0FFEE0000000000000043 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
+		A0C0FFEE0000000000000045 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
 		A0C0FFEE0000000000000017 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -371,14 +364,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A0C0FFEE0000000000000043 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		A0C0FFEE000000000000004B /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A0C0FFEE0000000000000042 /* HGVTimeWatch */;
-			targetProxy = A0C0FFEE000000000000004C /* PBXContainerItemProxy */;
-		};
 		A0C0FFEE0000000000000019 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A0C0FFEE0000000000000005 /* HGVTimeWidgetExtension */;
@@ -389,67 +384,14 @@
 			target = A0C0FFEE0000000000000007 /* HGVTime */;
 			targetProxy = A0C0FFEE0000000000000006 /* PBXContainerItemProxy */;
 		};
+		A0C0FFEE000000000000004B /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A0C0FFEE0000000000000042 /* HGVTimeWatch */;
+			targetProxy = A0C0FFEE000000000000004C /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		A0C0FFEE0000000000000047 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KDSU2CWMX9;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "HGV Hours";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.andreikotlyarenko.hgvhours;
-				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andreikotlyarenko.hgvhours.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
-			};
-			name = Debug;
-		};
-		A0C0FFEE0000000000000048 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = KDSU2CWMX9;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "HGV Hours";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
-				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.andreikotlyarenko.hgvhours;
-				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.andreikotlyarenko.hgvhours.watchkitapp;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = watchos;
-				SKIP_INSTALL = YES;
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
-			};
-			name = Release;
-		};
 		A0C0FFEE0000000000000023 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -630,10 +572,10 @@
 		A0C0FFEE0000000000000027 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = HGVTimeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				CODE_SIGN_ENTITLEMENTS = HGVTimeWidget.entitlements;
 				INFOPLIST_FILE = HGVTimeWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "HGV Hours";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -656,10 +598,10 @@
 		A0C0FFEE0000000000000028 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = HGVTimeWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				CODE_SIGN_ENTITLEMENTS = HGVTimeWidget.entitlements;
 				INFOPLIST_FILE = HGVTimeWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "HGV Hours";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -715,18 +657,67 @@
 			};
 			name = Release;
 		};
+		A0C0FFEE0000000000000047 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KDSU2CWMX9;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "HGV Hours";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.andreikotlyarenko.hgvhours;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andreikotlyarenko.hgvhours.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		A0C0FFEE0000000000000048 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = KDSU2CWMX9;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "HGV Hours";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.andreikotlyarenko.hgvhours;
+				INFOPLIST_KEY_WKRunsIndependentlyOfCompanionApp = NO;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.andreikotlyarenko.hgvhours.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A0C0FFEE0000000000000046 /* Build configuration list for PBXNativeTarget "HGVTimeWatch" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				A0C0FFEE0000000000000047 /* Debug */,
-				A0C0FFEE0000000000000048 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A0C0FFEE0000000000000016 /* Build configuration list for PBXNativeTarget "HGVTime" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -759,6 +750,15 @@
 			buildConfigurations = (
 				A0C0FFEE0000000000000023 /* Debug */,
 				A0C0FFEE0000000000000024 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A0C0FFEE0000000000000046 /* Build configuration list for PBXNativeTarget "HGVTimeWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A0C0FFEE0000000000000047 /* Debug */,
+				A0C0FFEE0000000000000048 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

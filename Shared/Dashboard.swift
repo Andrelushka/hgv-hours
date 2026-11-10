@@ -30,6 +30,8 @@ struct Dashboard: Codable, Equatable {
     var restLength: TimeInterval = 0
 
     var autoDetect = false
+    /// Driver card in the tachograph.
+    var cardInserted = false
 
     // Pay (for widgets)
     var earnedShift: Double = 0

@@ -154,6 +154,9 @@ struct StatusWidgetView: View {
                 Spacer(minLength: 2)
                 Text(WFormat.money(d.earnedShift, d.currency)).font(.title2.weight(.bold).monospacedDigit()).foregroundStyle(.green)
                 Text("today · \(WFormat.money(d.earnedWeek, d.currency)) week").font(.caption2).foregroundStyle(.secondary)
+                Label(d.cardInserted ? "Card in" : "No card", systemImage: "creditcard.fill")
+                    .font(.caption2.weight(.bold))
+                    .foregroundStyle(d.cardInserted ? .green : .red)
                 if d.vehicleHeight > 0 {
                     Text(String(format: "Height %.2f m", d.vehicleHeight)).font(.caption2.weight(.bold)).foregroundStyle(.red)
                 }

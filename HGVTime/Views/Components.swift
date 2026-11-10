@@ -366,3 +366,39 @@ struct HelpBanner: View {
         .transition(.move(edge: .top).combined(with: .opacity))
     }
 }
+
+/// Big green/red driver card button: tap to record inserting or withdrawing the card.
+struct CardButton: View {
+    var inserted: Bool
+    var since: Date?
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(inserted ? Color.green : Color.red).frame(width: 26, height: 26)
+                    Image(systemName: inserted ? "checkmark" : "xmark").font(.caption.weight(.heavy)).foregroundStyle(.white)
+                }
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(inserted ? "Driver card inserted" : "Driver card not inserted")
+                        .font(.subheadline.weight(.bold))
+                    Text(inserted ? (since.map { "Since \(Fmt.dayTime($0))" } ?? "") : "Tap when you insert your card")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Text(inserted ? "Withdraw" : "Insert")
+                    .font(.caption.weight(.bold))
+                    .padding(.horizontal, 10).padding(.vertical, 6)
+                    .background((inserted ? Color.red : Color.green).opacity(0.18), in: Capsule())
+                    .foregroundStyle(inserted ? .red : .green)
+            }
+            .padding(12)
+            .background((inserted ? Color.green : Color.red).opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke((inserted ? Color.green : Color.red).opacity(0.5), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.impact, trigger: inserted)
+        .accessibilityLabel(inserted ? "Driver card inserted. Tap to record withdrawing it." : "Driver card not inserted. Tap to record inserting it.")
+    }
+}

@@ -209,3 +209,17 @@ final class NoteItem {
         return n
     }
 }
+
+// MARK: Driver card
+
+/// A driver card insert or withdrawal, recorded from the Today screen.
+@Model
+final class CardEvent {
+    var time: Date = Date()
+    var inserted: Bool = true
+
+    init(time: Date, inserted: Bool) {
+        self.time = time
+        self.inserted = inserted
+    }
+}

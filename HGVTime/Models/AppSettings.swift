@@ -126,6 +126,11 @@ struct AppSettings: Codable, Equatable {
 
     var hasAcceptedDisclaimer = false
 
+    // Driver card
+    var cardInserted = false
+    /// When the card was last inserted or withdrawn (seconds since 1970, 0 = never).
+    var cardChangedAt: Double = 0
+
     // Vehicle in use (Vehicle.id as text, "" = none)
     var currentVehicleID = ""
     var currentTrailerID = ""
