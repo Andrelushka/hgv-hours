@@ -34,10 +34,14 @@ enum ActivityController {
         try? context.save()
         refreshSideEffects(context: context, settings: settings)
         VoiceService.shared.activityChanged(to: entry.displayTitle + (entry.endsShift ? " started. Shift ended." : ""))
+        if !entry.endsShift {
+            EventRecorder.log(.activity, title: entry.displayTitle, at: now, context: context, settings: settings)
+        }
     }
 
     /// Starts a shift with the activity chosen in Settings (usually other work for the walk-round check).
     static func startShift(context: ModelContext, settings: AppSettings) {
+        EventRecorder.log(.shiftStart, detail: "Started with \(settings.shiftStartKind.title.lowercased())", context: context, settings: settings)
         switchTo(settings.shiftStartKind, context: context, settings: settings)
         ReminderService.shared.fire(.shiftStart, context: context)
     }
@@ -46,6 +50,7 @@ enum ActivityController {
     static func endShift(_ restType: RestType, context: ModelContext, settings: AppSettings) {
         switchTo(.rest, endShift: true, restType: restType == .breakTime ? .daily : restType,
                  context: context, settings: settings)
+        EventRecorder.log(.shiftEnd, detail: restType == .weekly ? "Weekly rest" : "Daily rest", context: context, settings: settings)
         ReminderService.shared.fire(.shiftEnd, context: context)
     }
 
@@ -234,6 +239,7 @@ enum ActivityController {
         let shiftEnded = last?.endsShift ?? true
         NotificationService.shared.reschedule(status: status, settings: settings, shiftEnded: shiftEnded)
         ReminderService.shared.schedule(context: context, status: status, settings: settings, shiftEnded: shiftEnded)
+        EventRecorder.logInfringements(status, context: context, settings: settings)
         VoiceService.shared.update(settings: settings)
         let state = LiveActivityService.contentState(status: status, settings: settings, shiftEnded: shiftEnded)
         let name = settings.driverName

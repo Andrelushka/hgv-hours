@@ -185,6 +185,12 @@ struct AppSettings: Codable, Equatable {
     var voiceWarningMinutes = 15
     var seededDefaultReminders = false
 
+    // Event log
+    /// Save where each event happened.
+    var recordEventLocations = true
+    /// Save the route while in-cab mode runs.
+    var recordRoute = true
+
     // Units
     /// Show distances in miles (UK) instead of km.
     var useMiles = true

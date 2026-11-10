@@ -387,6 +387,7 @@ struct TodayView: View {
         context.insert(event)
         try? context.save()
         if inserting { ReminderService.shared.fire(.cardInserted, context: context) }
+        EventRecorder.log(inserting ? .cardIn : .cardOut, context: context, settings: store.settings)
         ActivityController.refreshSideEffects(context: context, settings: store.settings)
         let lines = inserting
             ? ["Recorded at \(Fmt.time(.now)).", onShift ? "Remember to make a manual entry on the tacho for any work before you inserted it." : "Tap Start shift when you begin work."]
@@ -527,6 +528,7 @@ struct TodayView: View {
         context.insert(plan)
         try? context.save()
         ReminderService.shared.fire(.arrived, context: context)
+        EventRecorder.log(.arrived, detail: "Unplanned stop", context: context, settings: store.settings)
         let id = stop.id
         Task {
             let location = await LocationOnce.shared.current()
@@ -559,6 +561,11 @@ struct TodayView: View {
         ToolbarItem(placement: .topBarLeading) {
             NavigationLink { SettingsView(embedded: true) } label: {
                 Label("Settings", systemImage: "gearshape")
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            NavigationLink { MapScreen(day: .now) } label: {
+                Label("Map", systemImage: "map.fill")
             }
         }
         ToolbarItem(placement: .topBarTrailing) {

@@ -68,6 +68,8 @@ struct TodayJobCard: View {
                 } else {
                     stops[i].departedAt = now
                 }
+                EventRecorder.log(arrived ? .arrived : .departed, detail: stops[i].place, at: now,
+                                  coordinate: location?.coordinate, context: context, settings: store.settings)
                 if let location, stops[i].latitude == nil {
                     stops[i].latitude = location.coordinate.latitude
                     stops[i].longitude = location.coordinate.longitude
@@ -87,6 +89,7 @@ struct TodayJobCard: View {
         plan.stops.append(stop)
         try? context.save()
         ReminderService.shared.fire(.arrived, context: context)
+        EventRecorder.log(.arrived, detail: "Unplanned stop", context: context, settings: store.settings)
         let id = stop.id
         Task {
             guard let location = await LocationOnce.shared.current() else {

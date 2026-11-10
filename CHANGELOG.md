@@ -2,6 +2,12 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 2.0.0 — Map & location event log
+- Map: your route for any day (recorded in in-cab mode), a coloured pin for every event, job stops, and day-by-day browsing. Open it from the map button on Today, a Calendar day, or History.
+- Navigate to the next job stop in Apple Maps, Google Maps or Waze, with a reminder of your vehicle height (those apps don't route by lorry size).
+- Event log: shift start and end, activity changes, card in/out, arrived/departed, fuel, overspeed (top speed and duration) and infringements, each saved with where it happened. Filter by type and export as CSV.
+- Settings → In-cab automatic: choose whether to save your route and event locations (kept only on your iPhone).
+
 ## 1.3.0 — Personalisation, notifications & beta prep
 - Custom reminders: at a time (once, daily, weekdays, weekly), on a button press (start/end shift, Arrived, card inserted), or a set time before a driving break, working-time break, daily rest or weekly rest. Two starter reminders included (walk-round check, end of shift).
 - Spoken alerts: activity changes, warnings before limits, overspeed and reminders, with voice, speed and lead-time settings. Works while the app is open or in-cab mode is running.

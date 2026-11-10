@@ -49,9 +49,10 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ✅ About page: version, privacy, rules links, support the development (star, share, ideas; donate link when set up)
 
 ## V2.0 (2.0.0) — Smart Navigation & Advanced Event Tracking
-- ⬜ Map
-- ⬜ Location-based event log: infringements, overspeed and other events with place, date, time and details
+- ✅ Map: route driven (in-cab mode), event pins, job stops, day-by-day; navigate to the next stop in Apple Maps, Google Maps or Waze with a vehicle-height reminder
+- ✅ Event log with location: shift start/end, activity changes, card in/out, arrived/departed, fuel, overspeed (speed + duration) and infringements; filter and CSV export
 - ✅ Card inserted (done in V1.1)
+- ⬜ Lorry-specific routing (height/weight restrictions) — needs a paid truck-routing service
 
 ## V2.1 (2.1.0) — Accounts & Wearable Integration
 - ⬜ Driver account with login and registration

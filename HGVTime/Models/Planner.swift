@@ -457,3 +457,91 @@ final class Reminder {
     }
 
 }
+
+// MARK: Event log and route
+
+enum EventKind: String, Codable, CaseIterable, Identifiable {
+    case shiftStart, shiftEnd, activity, cardIn, cardOut, arrived, departed, fuel, overspeed, infringement, note
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .shiftStart: "Shift started"
+        case .shiftEnd: "Shift ended"
+        case .activity: "Activity"
+        case .cardIn: "Card inserted"
+        case .cardOut: "Card withdrawn"
+        case .arrived: "Arrived"
+        case .departed: "Departed"
+        case .fuel: "Fuel / resources"
+        case .overspeed: "Overspeed"
+        case .infringement: "Infringement"
+        case .note: "Note"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .shiftStart: "play.circle.fill"
+        case .shiftEnd: "stop.circle.fill"
+        case .activity: "arrow.triangle.swap"
+        case .cardIn, .cardOut: "creditcard.fill"
+        case .arrived: "mappin.circle.fill"
+        case .departed: "arrow.up.right.circle.fill"
+        case .fuel: "fuelpump.fill"
+        case .overspeed: "gauge.with.dots.needle.100percent"
+        case .infringement: "exclamationmark.octagon.fill"
+        case .note: "note.text"
+        }
+    }
+
+    var isProblem: Bool { self == .overspeed || self == .infringement }
+}
+
+/// Something that happened, where and when.
+@Model
+final class EventLog {
+    var time: Date = Date()
+    var kindRaw: String = EventKind.note.rawValue
+    var title: String = ""
+    var detail: String = ""
+    var latitude: Double = 0
+    var longitude: Double = 0
+    /// km/h at the time (0 = unknown).
+    var speedKmh: Double = 0
+    /// Seconds, for events that last (e.g. overspeed).
+    var duration: Double = 0
+    /// Prevents logging the same infringement twice.
+    var key: String = ""
+
+    init(time: Date = .now, kind: EventKind, title: String = "", detail: String = "") {
+        self.time = time
+        self.kindRaw = kind.rawValue
+        self.title = title.isEmpty ? kind.title : title
+        self.detail = detail
+    }
+
+    var kind: EventKind {
+        get { EventKind(rawValue: kindRaw) ?? .note }
+        set { kindRaw = newValue.rawValue }
+    }
+
+    var hasLocation: Bool { latitude != 0 || longitude != 0 }
+}
+
+/// A point on the route, saved while in-cab mode runs.
+@Model
+final class TrackPoint {
+    var time: Date = Date()
+    var latitude: Double = 0
+    var longitude: Double = 0
+    var speedKmh: Double = 0
+
+    init(time: Date, latitude: Double, longitude: Double, speedKmh: Double) {
+        self.time = time
+        self.latitude = latitude
+        self.longitude = longitude
+        self.speedKmh = speedKmh
+    }
+}

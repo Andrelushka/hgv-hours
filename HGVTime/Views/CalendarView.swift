@@ -153,6 +153,8 @@ struct CalendarHistoryView: View {
                 Menu {
                     Button("Plan work", systemImage: "calendar.badge.plus") { planningDay = selectedDay }
                     NavigationLink { DebriefView(day: selectedDay) } label: { Label("Day debrief", systemImage: "tablecells") }
+                    NavigationLink { MapScreen(day: selectedDay) } label: { Label("Day map", systemImage: "map") }
+                    NavigationLink { EventLogView(day: selectedDay) } label: { Label("Day events", systemImage: "list.bullet") }
                     Button("Add activity", systemImage: "plus") {
                         addingOn = cal.date(bySettingHour: 8, minute: 0, second: 0, of: selectedDay)
                     }

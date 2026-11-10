@@ -22,7 +22,11 @@ struct HistoryView: View {
                     Button { addingEntry = true } label: { Label("Add activity", systemImage: "plus") }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink { SummaryView() } label: { Label("Summary", systemImage: "tablecells") }
+                    Menu {
+                        NavigationLink { SummaryView() } label: { Label("Summary table", systemImage: "tablecells") }
+                        NavigationLink { EventLogView(day: nil) } label: { Label("Event log", systemImage: "list.bullet.rectangle") }
+                        NavigationLink { MapScreen(day: .now) } label: { Label("Map", systemImage: "map") }
+                    } label: { Image(systemName: "ellipsis.circle") }
                 }
             }
             .sheet(item: Binding(get: { addingAt.map(HistoryDate.init) }, set: { addingAt = $0?.date })) { item in

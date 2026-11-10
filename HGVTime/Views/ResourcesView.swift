@@ -177,7 +177,11 @@ struct ResourceEditor: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         let l = log ?? ResourceLog(date: date, kind: kind)
-                        if log == nil { context.insert(l) }
+                        if log == nil {
+                            context.insert(l)
+                            EventRecorder.log(.fuel, title: kind.title, detail: "\(String(format: "%g", quantity)) \(kind.unit)\(location.isEmpty ? "" : " at \(location)")",
+                                              at: date, context: context, settings: store.settings)
+                        }
                         l.kind = kind
                         l.date = date
                         l.quantity = quantity

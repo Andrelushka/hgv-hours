@@ -37,6 +37,14 @@ final class AutoDriveDetector: NSObject {
     private(set) var isOverspeeding = false
 
     @ObservationIgnored private var lastMovingLocation: CLLocation?
+    @ObservationIgnored private var lastFixLocation: CLLocation?
+    @ObservationIgnored private var lastTrackPoint: CLLocation?
+
+    /// Where the phone was in the last minute (in-cab mode only).
+    var recentCoordinate: CLLocationCoordinate2D? {
+        guard let l = lastFixLocation, abs(l.timestamp.timeIntervalSinceNow) < 60 else { return nil }
+        return l.coordinate
+    }
     @ObservationIgnored private var pendingKm: Double = 0
     @ObservationIgnored private var overspeedStart: Date?
     @ObservationIgnored private var overspeedMax: Double = 0
@@ -166,6 +174,8 @@ final class AutoDriveDetector: NSObject {
         guard location.horizontalAccuracy >= 0, location.horizontalAccuracy <= 50,
               abs(location.timestamp.timeIntervalSinceNow) < 15 else { return }
         lastFix = location.timestamp
+        lastFixLocation = location
+        recordTrack(location)
         let kmh = max(0, location.speed) * 3.6
         let speedValid = location.speed >= 0 && location.speedAccuracy >= 0 && location.speedAccuracy < 3
         speedKmh = location.speed >= 0 ? kmh : nil
@@ -246,6 +256,16 @@ final class AutoDriveDetector: NSObject {
         return t.timeIntervalSince(floor) >= 30 ? floor.addingTimeInterval(60) : floor
     }
 
+    /// Saves a route point every 150 m or 60 s while moving.
+    private func recordTrack(_ location: CLLocation) {
+        guard settings.recordRoute, let context, location.speed * 3.6 >= stoppedSpeedKmh else { return }
+        if let last = lastTrackPoint, location.distance(from: last) < 150, location.timestamp.timeIntervalSince(last.timestamp) < 60 { return }
+        lastTrackPoint = location
+        context.insert(TrackPoint(time: location.timestamp, latitude: location.coordinate.latitude,
+                                  longitude: location.coordinate.longitude, speedKmh: max(0, location.speed * 3.6)))
+        try? context.save()
+    }
+
     private func flushDistance() {
         guard let context, pendingKm > 0 else { return }
         ActivityController.addGPSDistance(pendingKm, at: .now, context: context, vehicleID: settings.currentVehicleID)
@@ -277,6 +297,10 @@ final class AutoDriveDetector: NSObject {
                                latitude: overspeedCoordinate?.latitude ?? 0, longitude: overspeedCoordinate?.longitude ?? 0)
         context.insert(event)
         try? context.save()
+        EventRecorder.log(.overspeed, title: event.isInfringement ? "Overspeed infringement" : "Overspeed",
+                          detail: "\(Int(event.maxKmh)) km/h max (limit \(Int(event.limitKmh))) for \(Int(event.duration)) s",
+                          speedKmh: event.maxKmh, duration: event.duration, at: start,
+                          coordinate: overspeedCoordinate, context: context, settings: settings)
         lastEvent = event.isInfringement
             ? "Overspeed infringement: \(Int(event.maxKmh)) km/h for \(Int(event.duration)) s"
             : "Short overspeed recorded: \(Int(event.maxKmh)) km/h for \(Int(event.duration)) s"

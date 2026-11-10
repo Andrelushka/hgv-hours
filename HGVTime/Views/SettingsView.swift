@@ -212,6 +212,14 @@ struct InCabSettingsView: View {
                 Text("Like the tachograph: more than 60 seconds in a row above this speed is an overspeed infringement. Shorter ones are recorded but not counted as infringements. Each event is saved with its time, top speed and location. HGV limiters and tachographs are usually set at 90 km/h (56 mph).")
             }
             Section {
+                Toggle("Save my route", isOn: $store.settings.recordRoute)
+                Toggle("Save where events happen", isOn: $store.settings.recordEventLocations)
+            } header: {
+                Text("Map & event log")
+            } footer: {
+                Text("Your route and event locations are kept only on this iPhone, to show on the Map and in the Event log.")
+            }
+            Section {
                 Text("Each minute is recorded as whichever activity filled most of it, as on a digital tachograph. A short movement during a break — e.g. moving up in a queue — doesn't interrupt the break.")
                     .font(.footnote).foregroundStyle(.secondary)
             } header: {
