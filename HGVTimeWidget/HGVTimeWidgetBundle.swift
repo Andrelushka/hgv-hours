@@ -5,6 +5,8 @@ import WidgetKit
 struct HGVTimeWidgetBundle: WidgetBundle {
     var body: some Widget {
         HGVStatusWidget()
+        HGVCountdownWidget()
+        HGVDashboardWidget()
         HGVLiveActivityWidget()
     }
 }

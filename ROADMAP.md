@@ -1,8 +1,10 @@
 # HGV Hours — Roadmap
 
+Versioning: **Major.Minor.Patch**. 1.x = the app and its regular updates; 2.0 = big, harder features (map, accounts, advanced event tracking); 3.0 = the biggest (AI, worldwide rules). Patch numbers are small fixes.
+
 Status key: ✅ done · 🚧 in progress · ⬜ planned
 
-## V1.1 — Fixes, Compliance & Core Improvements
+## V1.1 (1.1.0) — Fixes, Compliance & Core Improvements
 
 ### Driving hours, breaks and regulations
 - ✅ Correct the start time after pressing a button too early or too late ("Wrong time?" bar: −5 / −1 / +1 min or set an exact time)
@@ -23,7 +25,7 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ✅ Hours reorganised: Right now · Next break · Coming up · Extensions & rest rules · All limits
 - 🚧 Further polish of the remaining pages (History row layout fixed; Calendar, Notebook, Settings to review)
 
-## V1.2 — Earnings, Vehicles & Working Records
+## V1.2 (1.2.0) — Earnings, Vehicles & Working Records
 ### Earnings and salary
 - ✅ Fix: night-out button added a night out on every tap (now toggles, and duplicates are cleaned up)
 - ✅ Guaranteed hours per shift, week and calendar month
@@ -39,22 +41,25 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ✅ Arrived / Departed per stop (time + location), unplanned stops, and a day Debrief table you can share
 - ✅ Summary table: every day's times, activities, distance, fuel, pay and infringements, with CSV export
 
-## V1.3 — Personalisation, Notifications & Beta Release
-- ⬜ Multiple and custom reminders
-- ⬜ Spoken notifications, customisable by parameter or action
-- ⬜ More widget types and customisable widgets
-- ⬜ Report-a-problem button
-- ⬜ About page: version, support the development
+## V1.3 (1.3.0) — Personalisation, Notifications & Beta Release
+- ✅ Multiple custom reminders: at a time (once/daily/weekdays/weekly), on a button press (start/end shift, Arrived, card inserted) or before a break/rest is due
+- ✅ Spoken alerts: activity changes, warnings before limits, overspeed and reminders; choose voice, speed and lead time
+- ✅ New widgets: HGV Countdown (one number you choose) and HGV Dashboard (choose each block; medium and large)
+- ✅ Report a problem / suggest a feature (GitHub or share privately), with optional anonymous app details
+- ✅ About page: version, privacy, rules links, support the development (star, share, ideas; donate link when set up)
 
-## V2.0 — Smart Navigation & Advanced Event Tracking
+## V2.0 (2.0.0) — Smart Navigation & Advanced Event Tracking
 - ⬜ Map
 - ⬜ Location-based event log: infringements, overspeed and other events with place, date, time and details
 - ✅ Card inserted (done in V1.1)
 
-## V2.1 — Accounts & Wearable Integration
+## V2.1 (2.1.0) — Accounts & Wearable Integration
 - ⬜ Driver account with login and registration
 - ⬜ Apple Watch (incl. Ultra) interface redesign
 
-## V3.0 — AI & International Expansion
+## V3.0 (3.0.0) — AI & International Expansion
 - ⬜ AI assistant
 - ⬜ Rules for all countries, with their own limits matrix
+
+### Beta testing note
+Public beta testing through TestFlight needs a paid Apple Developer Program membership (£79/year). Until then the app is installed from Xcode with a free Apple ID (re-install every 7 days).

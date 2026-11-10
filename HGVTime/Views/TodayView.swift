@@ -386,6 +386,7 @@ struct TodayView: View {
         let event = CardEvent(time: now, inserted: inserting)
         context.insert(event)
         try? context.save()
+        if inserting { ReminderService.shared.fire(.cardInserted, context: context) }
         ActivityController.refreshSideEffects(context: context, settings: store.settings)
         let lines = inserting
             ? ["Recorded at \(Fmt.time(.now)).", onShift ? "Remember to make a manual entry on the tacho for any work before you inserted it." : "Tap Start shift when you begin work."]
@@ -525,6 +526,7 @@ struct TodayView: View {
         plan.stops = [stop]
         context.insert(plan)
         try? context.save()
+        ReminderService.shared.fire(.arrived, context: context)
         let id = stop.id
         Task {
             let location = await LocationOnce.shared.current()

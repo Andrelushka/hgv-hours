@@ -342,3 +342,118 @@ final class ResourceLog {
         set { kindRaw = newValue.rawValue }
     }
 }
+
+// MARK: Reminders
+
+/// What sets a reminder off.
+enum ReminderTrigger: String, Codable, CaseIterable, Identifiable {
+    case time
+    case shiftStart, shiftEnd, arrived, cardInserted
+    case beforeDrivingBreak, beforeWorkingBreak, beforeDailyRest, beforeWeeklyRest
+    case afterShiftStart, dailyRestComplete
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .time: "At a time"
+        case .shiftStart: "When I start a shift"
+        case .shiftEnd: "When I end a shift"
+        case .arrived: "When I tap Arrived"
+        case .cardInserted: "When I insert my card"
+        case .beforeDrivingBreak: "Before my driving break is due"
+        case .beforeWorkingBreak: "Before my working-time break is due"
+        case .beforeDailyRest: "Before I must start daily rest"
+        case .beforeWeeklyRest: "Before weekly rest is due"
+        case .afterShiftStart: "Some time after shift start"
+        case .dailyRestComplete: "When my daily rest is complete"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .time: "alarm.fill"
+        case .shiftStart: "play.circle.fill"
+        case .shiftEnd: "stop.circle.fill"
+        case .arrived: "mappin.and.ellipse"
+        case .cardInserted: "creditcard.fill"
+        case .beforeDrivingBreak: "cup.and.saucer.fill"
+        case .beforeWorkingBreak: "figure.walk"
+        case .beforeDailyRest: "moon.zzz.fill"
+        case .beforeWeeklyRest: "house.fill"
+        case .afterShiftStart: "timer"
+        case .dailyRestComplete: "sunrise.fill"
+        }
+    }
+
+    /// Uses a "minutes before/after" value.
+    var usesOffset: Bool {
+        switch self {
+        case .beforeDrivingBreak, .beforeWorkingBreak, .beforeDailyRest, .beforeWeeklyRest, .afterShiftStart: true
+        default: false
+        }
+    }
+
+    /// Happens because you pressed a button (fires straight away).
+    var isAction: Bool {
+        switch self {
+        case .shiftStart, .shiftEnd, .arrived, .cardInserted: true
+        default: false
+        }
+    }
+}
+
+enum ReminderRepeat: String, Codable, CaseIterable, Identifiable {
+    case once, daily, weekdays, weekly
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .once: "Once"
+        case .daily: "Every day"
+        case .weekdays: "Mon–Fri"
+        case .weekly: "Every week"
+        }
+    }
+}
+
+/// A reminder you set up yourself.
+@Model
+final class Reminder {
+    var id: UUID = UUID()
+    var title: String = ""
+    var message: String = ""
+    var triggerRaw: String = ReminderTrigger.time.rawValue
+    var time: Date = Date()
+    var repeatRaw: String = ReminderRepeat.daily.rawValue
+    var offsetMinutes: Int = 15
+    var enabled: Bool = true
+    var speak: Bool = true
+    var createdAt: Date = Date()
+
+    init(title: String, message: String = "", trigger: ReminderTrigger, offsetMinutes: Int = 15) {
+        self.title = title
+        self.message = message
+        self.triggerRaw = trigger.rawValue
+        self.offsetMinutes = offsetMinutes
+    }
+
+    var trigger: ReminderTrigger {
+        get { ReminderTrigger(rawValue: triggerRaw) ?? .time }
+        set { triggerRaw = newValue.rawValue }
+    }
+
+    var repeatRule: ReminderRepeat {
+        get { ReminderRepeat(rawValue: repeatRaw) ?? .once }
+        set { repeatRaw = newValue.rawValue }
+    }
+
+    /// e.g. "15 min before my driving break is due" / "07:00 every day"
+    var summary: String {
+        switch trigger {
+        case .time: return "\(Fmt.time(time)) · \(repeatRule == .once ? Fmt.day(time) : repeatRule.title)"
+        case .afterShiftStart: return "\(offsetMinutes) min after shift start"
+        default: return trigger.usesOffset ? "\(offsetMinutes) min \(trigger.title.lowercased())" : trigger.title
+        }
+    }
+
+}

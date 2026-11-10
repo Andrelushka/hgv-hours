@@ -33,17 +33,20 @@ enum ActivityController {
         context.insert(entry)
         try? context.save()
         refreshSideEffects(context: context, settings: settings)
+        VoiceService.shared.activityChanged(to: entry.displayTitle + (entry.endsShift ? " started. Shift ended." : ""))
     }
 
     /// Starts a shift with the activity chosen in Settings (usually other work for the walk-round check).
     static func startShift(context: ModelContext, settings: AppSettings) {
         switchTo(settings.shiftStartKind, context: context, settings: settings)
+        ReminderService.shared.fire(.shiftStart, context: context)
     }
 
     /// Ends the shift and starts daily or weekly rest.
     static func endShift(_ restType: RestType, context: ModelContext, settings: AppSettings) {
         switchTo(.rest, endShift: true, restType: restType == .breakTime ? .daily : restType,
                  context: context, settings: settings)
+        ReminderService.shared.fire(.shiftEnd, context: context)
     }
 
     /// True when the driver is on a shift (the last activity isn't a daily/weekly rest).
@@ -230,6 +233,8 @@ enum ActivityController {
         let last = openEntries(context: context).last
         let shiftEnded = last?.endsShift ?? true
         NotificationService.shared.reschedule(status: status, settings: settings, shiftEnded: shiftEnded)
+        ReminderService.shared.schedule(context: context, status: status, settings: settings, shiftEnded: shiftEnded)
+        VoiceService.shared.update(settings: settings)
         let state = LiveActivityService.contentState(status: status, settings: settings, shiftEnded: shiftEnded)
         let name = settings.driverName
         Task { await LiveActivityService.shared.sync(state: state, driverName: name) }

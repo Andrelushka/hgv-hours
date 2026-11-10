@@ -62,7 +62,12 @@ struct TodayJobCard: View {
             let location = await LocationOnce.shared.current()
             var stops = plan.stops
             if let i = stops.firstIndex(where: { $0.id == id }) {
-                if arrived { stops[i].arrivedAt = now } else { stops[i].departedAt = now }
+                if arrived {
+                    stops[i].arrivedAt = now
+                    ReminderService.shared.fire(.arrived, context: context)
+                } else {
+                    stops[i].departedAt = now
+                }
                 if let location, stops[i].latitude == nil {
                     stops[i].latitude = location.coordinate.latitude
                     stops[i].longitude = location.coordinate.longitude
@@ -81,6 +86,7 @@ struct TodayJobCard: View {
         stop.place = "Locating…"
         plan.stops.append(stop)
         try? context.save()
+        ReminderService.shared.fire(.arrived, context: context)
         let id = stop.id
         Task {
             guard let location = await LocationOnce.shared.current() else {

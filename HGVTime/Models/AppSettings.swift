@@ -171,6 +171,20 @@ struct AppSettings: Codable, Equatable {
 
     var hasAcceptedDisclaimer = false
 
+    // Spoken alerts
+    var voiceEnabled = false
+    /// 0.3 (slow) … 0.6 (fast)
+    var voiceRate: Double = 0.5
+    /// AVSpeechSynthesisVoice identifier ("" = default English voice).
+    var voiceIdentifier = ""
+    var speakActivityChanges = true
+    var speakWarnings = true
+    var speakOverspeed = true
+    var speakReminders = true
+    /// Minutes before a limit that the warning is spoken.
+    var voiceWarningMinutes = 15
+    var seededDefaultReminders = false
+
     // Units
     /// Show distances in miles (UK) instead of km.
     var useMiles = true

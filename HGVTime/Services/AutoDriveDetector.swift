@@ -257,6 +257,7 @@ final class AutoDriveDetector: NSObject {
     private func trackOverspeed(kmh: Double, at time: Date, coordinate: CLLocationCoordinate2D) {
         if kmh > settings.overspeedLimitKmh {
             if overspeedStart == nil {
+                VoiceService.shared.overspeed("Over \(Int(settings.overspeedLimitKmh)) kilometres an hour.")
                 overspeedStart = time
                 overspeedMax = kmh
                 overspeedCoordinate = coordinate

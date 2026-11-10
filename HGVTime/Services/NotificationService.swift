@@ -12,7 +12,8 @@ final class NotificationService {
     }
 
     func reschedule(status: ComplianceStatus, settings: AppSettings, shiftEnded: Bool) {
-        center.removeAllPendingNotificationRequests()
+        // Only replace the limit alerts; custom reminders are scheduled separately.
+        center.removePendingNotificationRequests(withIdentifiers: (0..<40).map { "hgv.alert.\($0)" })
         guard settings.notificationsEnabled, status.hasData else { return }
 
         let lead = TimeInterval(settings.warningLeadMinutes * 60)

@@ -39,6 +39,13 @@ struct RootView: View {
         }
         .task {
             ActivityController.removeDuplicateNightOuts(context: context)
+            ReminderService.shared.becomeDelegate()
+            ReminderService.shared.seedDefaults(context: context, store: store)
+            let ctx = context
+            let st = store
+            VoiceService.shared.configure(settings: store.settings) {
+                RulesEngine.status(ActivityController.recentSnapshots(context: ctx, settings: st.settings), now: .now, config: st.settings.ruleConfig)
+            }
             PhoneWatchBridge.shared.configure(context: context, store: store)
             AutoDriveDetector.shared.configure(context: context, settings: store.settings)
             ActivityController.refreshSideEffects(context: context, settings: store.settings)

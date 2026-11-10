@@ -61,6 +61,13 @@ struct SettingsView: View {
                         SettingsRow(title: "Notifications & Lock Screen", symbol: "bell.badge.fill", color: .red,
                                     value: s.notificationsEnabled ? "\(s.warningLeadMinutes) min before" : "Off")
                     }
+                    NavigationLink { RemindersView() } label: {
+                        SettingsRow(title: "Reminders", symbol: "alarm.fill", color: .orange, value: "")
+                    }
+                    NavigationLink { VoiceSettingsView() } label: {
+                        SettingsRow(title: "Spoken alerts", symbol: "speaker.wave.2.fill", color: .purple,
+                                    value: s.voiceEnabled ? "On" : "Off")
+                    }
                 }
 
                 Section("Driver & vehicles") {
@@ -88,15 +95,16 @@ struct SettingsView: View {
                     Button("Erase all activity data", role: .destructive) { confirmErase = true }
                 }
 
-                Section("About") {
-                    Link(destination: URL(string: "https://www.gov.uk/guidance/drivers-hours-goods-vehicles")!) {
-                        Label("GOV.UK: drivers' hours (goods vehicles)", systemImage: "link")
+                Section {
+                    NavigationLink { ReportProblemView(kind: .bug) } label: {
+                        SettingsRow(title: "Report a problem", symbol: "ant.fill", color: .red, value: "")
                     }
-                    Link(destination: URL(string: "https://www.gov.uk/guidance/drivers-hours-goods-vehicles/annex-2-working-time-rules")!) {
-                        Label("GOV.UK: working time rules", systemImage: "link")
+                    NavigationLink { AboutView() } label: {
+                        SettingsRow(title: "About HGV Hours", symbol: "info.circle.fill", color: .blue,
+                                    value: "Version \(AppInfo.version)")
                     }
-                    Button("Show disclaimer") { store.settings.hasAcceptedDisclaimer = false }
-                    LabeledContent("Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
+                } header: {
+                    Text("Help & about")
                 }
             }
             .navigationTitle("Settings")
