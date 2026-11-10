@@ -2,6 +2,13 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 2.1.0 — Driver profile, app lock, backup & Apple Watch redesign
+- Driver profile: registration on first launch (name, employer, phone, licence categories, card number) and expiry dates for driving licence, tacho card, Driver CPC and D4 medical, with a warning on Today and reminders before each expires.
+- App lock with Face ID (or your iPhone passcode), locking again after a time you choose.
+- Backup & restore: everything in one file to save or send, and restore on a new iPhone.
+- Apple Watch redesign, sized for Ultra: Now (big Drive/Work rings, rest progress, when you can start), Buttons (large tiles), Coming up (next break, rest deadlines, 10h/15h days left, week totals, earnings) and Card & cab (insert/withdraw card from the watch).
+- Fix: reminders could be cleared straight after being scheduled.
+
 ## 2.0.0 — Map & location event log
 - Map: your route for any day (recorded in in-cab mode), a coloured pin for every event, job stops, and day-by-day browsing. Open it from the map button on Today, a Calendar day, or History.
 - Navigate to the next job stop in Apple Maps, Google Maps or Waze, with a reminder of your vehicle height (those apps don't route by lorry size).

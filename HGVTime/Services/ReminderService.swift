@@ -26,9 +26,8 @@ final class ReminderService: NSObject {
 
     func schedule(context: ModelContext, status s: ComplianceStatus, settings: AppSettings, shiftEnded: Bool) {
         let all = ((try? context.fetch(FetchDescriptor<Reminder>())) ?? []).filter(\.enabled)
-        center.getPendingNotificationRequests { [prefix, center] requests in
-            center.removePendingNotificationRequests(withIdentifiers: requests.map(\.identifier).filter { $0.hasPrefix(prefix) })
-        }
+        var pending: [UNNotificationRequest] = []
+        scheduleExpiries(settings: settings, into: &pending)
         let now = s.now
         let onShift = s.currentShift != nil && !shiftEnded
         for r in all {
@@ -38,7 +37,7 @@ final class ReminderService: NSObject {
             var fireIn: TimeInterval?
             switch r.trigger {
             case .time:
-                scheduleTime(r, content: content, id: id)
+                scheduleTime(r, content: content, id: id, into: &pending)
             case .beforeDrivingBreak where onShift && s.currentKind == .drive:
                 fireIn = s.continuousDrivingRemaining - offset
             case .beforeWorkingBreak where onShift && (s.currentKind == .drive || s.currentKind == .otherWork) && settings.applyWorkingTime:
@@ -55,32 +54,59 @@ final class ReminderService: NSObject {
                 break
             }
             if let fireIn, fireIn > 5 {
-                center.add(UNNotificationRequest(identifier: id, content: content,
-                                                 trigger: UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false)))
+                pending.append(UNNotificationRequest(identifier: id, content: content,
+                                                     trigger: UNTimeIntervalNotificationTrigger(timeInterval: fireIn, repeats: false)))
+            }
+        }
+        // Clear our old ones first, then add the new set (in that order, so nothing new is removed).
+        let requests = pending
+        center.getPendingNotificationRequests { [prefix, center] existing in
+            let old = existing.map(\.identifier).filter { $0.hasPrefix(prefix) && !$0.hasPrefix(prefix + "now.") }
+            center.removePendingNotificationRequests(withIdentifiers: old)
+            requests.forEach { center.add($0) }
+        }
+    }
+
+    /// Licence, card, CPC and medical: a reminder when the warning window opens, a week before, and on the day.
+    private func scheduleExpiries(settings: AppSettings, into pending: inout [UNNotificationRequest]) {
+        let cal = Calendar.hgv
+        for item in settings.expiries {
+            let marks = [(settings.expiryWarningDays, "in \(settings.expiryWarningDays) days"), (7, "in a week"), (0, "today")]
+            for (days, when) in marks {
+                guard let day = cal.date(byAdding: .day, value: -days, to: item.date),
+                      let at = cal.date(bySettingHour: 9, minute: 0, second: 0, of: day), at > .now else { continue }
+                let c = UNMutableNotificationContent()
+                c.title = "\(item.title) expires \(when)"
+                c.body = "Expiry date: \(Fmt.day(item.date)). Update it in your driver profile when renewed."
+                c.sound = .default
+                c.userInfo = ["speak": true, "reminder": true]
+                let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: at)
+                pending.append(UNNotificationRequest(identifier: prefix + "expiry.\(item.title).\(days)", content: c,
+                                                     trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)))
             }
         }
     }
 
-    private func scheduleTime(_ r: Reminder, content: UNMutableNotificationContent, id: String) {
+    private func scheduleTime(_ r: Reminder, content: UNMutableNotificationContent, id: String, into pending: inout [UNNotificationRequest]) {
         let cal = Calendar.hgv
         let hm = cal.dateComponents([.hour, .minute], from: r.time)
         switch r.repeatRule {
         case .once:
             guard r.time > .now else { return }
             let comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: r.time)
-            center.add(UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)))
+            pending.append(UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)))
         case .daily:
-            center.add(UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: hm, repeats: true)))
+            pending.append(UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: hm, repeats: true)))
         case .weekdays:
             for weekday in 2...6 {
                 var c = hm
                 c.weekday = weekday
-                center.add(UNNotificationRequest(identifier: id + ".\(weekday)", content: content, trigger: UNCalendarNotificationTrigger(dateMatching: c, repeats: true)))
+                pending.append(UNNotificationRequest(identifier: id + ".\(weekday)", content: content, trigger: UNCalendarNotificationTrigger(dateMatching: c, repeats: true)))
             }
         case .weekly:
             var c = hm
             c.weekday = cal.component(.weekday, from: r.time)
-            center.add(UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: c, repeats: true)))
+            pending.append(UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: c, repeats: true)))
         }
     }
 

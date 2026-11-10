@@ -61,6 +61,7 @@ struct TodayView: View {
                 ScrollView {
                     VStack(spacing: 14) {
                         CardButton(inserted: cardIn, since: cardSince) { toggleCard() }
+                        ExpiryBanner()
                         currentCard(status, dash)
                         if let help {
                             HelpBanner(message: help) {

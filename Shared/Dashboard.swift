@@ -33,6 +33,16 @@ struct Dashboard: Codable, Equatable {
     /// Driver card in the tachograph.
     var cardInserted = false
 
+    // Next break (covers driving and working-time rules) and next shift start.
+    var breakBy: Date?
+    var breakLength: TimeInterval = 0
+    var breakReason: String = ""
+    var nextStart: Date?
+    var dailyRestRegularBy: Date?
+    var weeklyRestBy: Date?
+    var tenHourDaysLeft = 2
+    var reducedRestsLeft = 3
+
     // Pay (for widgets)
     var earnedShift: Double = 0
     var earnedWeek: Double = 0
@@ -73,6 +83,7 @@ enum WatchCommand: String, Codable {
     case drive, otherWork, availability, breakTime
     case startShift, endShiftDaily, endShiftWeekly
     case autoOn, autoOff
+    case cardIn, cardOut
     case refresh
 }
 

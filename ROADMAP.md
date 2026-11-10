@@ -55,8 +55,9 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Lorry-specific routing (height/weight restrictions) — needs a paid truck-routing service
 
 ## V2.1 (2.1.0) — Accounts & Wearable Integration
-- ⬜ Driver account with login and registration
-- ⬜ Apple Watch (incl. Ultra) interface redesign
+- ✅ Driver profile (registration on first launch) with licence, tacho card, CPC and medical expiry dates and reminders; Face ID / passcode app lock; backup & restore to a file
+- ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
+- ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
 ## V3.0 (3.0.0) — AI & International Expansion
 - ⬜ AI assistant

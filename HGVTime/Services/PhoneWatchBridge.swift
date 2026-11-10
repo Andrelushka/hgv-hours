@@ -49,6 +49,16 @@ final class PhoneWatchBridge: NSObject {
         case .autoOn: store.settings.autoDetectEnabled = true
         case .autoOff: store.settings.autoDetectEnabled = false
         case .refresh: ActivityController.refreshSideEffects(context: context, settings: settings)
+        case .cardIn, .cardOut:
+            let inserting = command == .cardIn
+            store.settings.cardInserted = inserting
+            store.settings.cardChangedAt = Date.now.timeIntervalSince1970
+            store.save()
+            context.insert(CardEvent(time: .now, inserted: inserting))
+            try? context.save()
+            EventRecorder.log(inserting ? .cardIn : .cardOut, context: context, settings: store.settings)
+            if inserting { ReminderService.shared.fire(.cardInserted, context: context) }
+            ActivityController.refreshSideEffects(context: context, settings: store.settings)
         }
         if command == .autoOn || command == .autoOff {
             store.save()

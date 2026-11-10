@@ -1,4 +1,5 @@
 import XCTest
+import SwiftData
 @testable import HGVTime
 
 final class RulesEngineTests: XCTestCase {
@@ -364,5 +365,45 @@ final class RulesEngineTests: XCTestCase {
         XCTAssertEqual(normalisedReg("ab12 cde"), "AB12CDE")
         XCTAssertTrue(looksLikePlate("AB12 CDE"))
         XCTAssertFalse(looksLikePlate("STOP"))
+    }
+
+    // MARK: 2.1 backup and profile
+
+    @MainActor
+    func testBackupRoundTrip() throws {
+        let schema = StoreSetup.schema
+        let a = try ModelContainer(for: schema, configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: true))
+        let ctx = ModelContext(a)
+        ctx.insert(ActivityEntry(kind: .drive, regime: .assimilated, start: t(8), end: t(10)))
+        let v = Vehicle(kind: .tractor); v.registration = "AB12CDE"; v.height = 4.95
+        ctx.insert(v)
+        let plan = WorkPlan(start: t(6, day: 1), end: t(16, day: 1)); plan.company = "ACME"
+        plan.stops = [PlanStop(kind: .delivery, place: "Daventry")]
+        ctx.insert(plan)
+        ctx.insert(EventLog(kind: .cardIn))
+        try ctx.save()
+        var settings = AppSettings(); settings.driverName = "Test Driver"
+        let url = try BackupService.export(context: ctx, settings: settings)
+        let backup = try BackupService.read(url)
+        XCTAssertEqual(backup.entries.count, 1)
+
+        let b = try ModelContainer(for: schema, configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: true))
+        let ctx2 = ModelContext(b)
+        let store = SettingsStore(defaults: UserDefaults(suiteName: "hgv.test.\(UUID())")!)
+        try BackupService.restore(backup, context: ctx2, store: store)
+        XCTAssertEqual(try ctx2.fetch(FetchDescriptor<ActivityEntry>()).first?.start, t(8))
+        XCTAssertEqual(try ctx2.fetch(FetchDescriptor<Vehicle>()).first?.height ?? 0, 4.95, accuracy: 0.001)
+        XCTAssertEqual(try ctx2.fetch(FetchDescriptor<WorkPlan>()).first?.stops.first?.place, "Daventry")
+        XCTAssertEqual(try ctx2.fetch(FetchDescriptor<EventLog>()).count, 1)
+        XCTAssertEqual(store.settings.driverName, "Test Driver")
+    }
+
+    func testExpiriesDueSoon() {
+        var s = AppSettings()
+        s.expiryWarningDays = 30
+        s.cardExpiry = Date.now.addingTimeInterval(10 * 86_400).timeIntervalSince1970
+        s.cpcExpiry = Date.now.addingTimeInterval(200 * 86_400).timeIntervalSince1970
+        XCTAssertEqual(s.expiries.count, 2)
+        XCTAssertEqual(s.expiriesDueSoon.map(\.title), ["Tacho driver card"])
     }
 }

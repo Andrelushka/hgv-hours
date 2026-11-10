@@ -17,6 +17,8 @@ struct HGVTimeApp: App {
 
 struct RootView: View {
     @Environment(SettingsStore.self) private var store
+    @State private var locked = false
+    @State private var backgroundedAt: Date?
     @Environment(\.modelContext) private var context
     @Environment(\.scenePhase) private var scenePhase
 
@@ -37,6 +39,11 @@ struct RootView: View {
             DisclaimerView()
                 .interactiveDismissDisabled()
         }
+        .sheet(isPresented: Binding(
+            get: { store.settings.hasAcceptedDisclaimer && !store.settings.profileCreated },
+            set: { _ in })) {
+            NavigationStack { ProfileView(registering: true) }
+        }
         .task {
             ActivityController.removeDuplicateNightOuts(context: context)
             ReminderService.shared.becomeDelegate()
@@ -51,7 +58,21 @@ struct RootView: View {
             ActivityController.refreshSideEffects(context: context, settings: store.settings)
             await NotificationService.shared.requestAuthorization()
         }
+        .overlay {
+            if locked {
+                LockScreenView { withAnimation { locked = false } }
+                    .transition(.opacity)
+            }
+        }
+        .onAppear { if store.settings.lockEnabled { locked = true } }
         .onChange(of: scenePhase) { _, phase in
+            if phase == .background {
+                backgroundedAt = .now
+            }
+            if phase == .active, store.settings.lockEnabled, let since = backgroundedAt,
+               Date.now.timeIntervalSince(since) >= Double(store.settings.lockAfterMinutes * 60) {
+                locked = true
+            }
             if phase == .active {
                 ActivityController.refreshSideEffects(context: context, settings: store.settings)
             }

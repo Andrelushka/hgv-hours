@@ -21,6 +21,29 @@ enum WFmt {
     static func time(_ d: Date) -> String {
         d.formatted(date: .omitted, time: .shortened)
     }
+
+    static func dayTime(_ d: Date) -> String {
+        Calendar.current.isDateInToday(d) ? time(d) : d.formatted(.dateTime.weekday(.abbreviated).hour().minute())
+    }
+}
+
+extension Dashboard {
+    var accent: Color {
+        switch restTypeRaw {
+        case "weekly": .indigo
+        case "daily": .teal
+        default: hasData ? kind.color : .gray
+        }
+    }
+
+    var symbolName: String {
+        switch restTypeRaw {
+        case "weekly": "house.fill"
+        case "daily": "moon.zzz.fill"
+        case "break": "cup.and.saucer.fill"
+        default: hasData ? kind.symbol : "moon.zzz.fill"
+        }
+    }
 }
 
 struct WatchRootView: View {
@@ -28,10 +51,16 @@ struct WatchRootView: View {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
+        let accent = store.dashboard?.accent ?? .gray
         TabView {
-            StatusPage()
-            ControlsPage()
-            InCabPage()
+            NowPage()
+                .containerBackground(accent.gradient.opacity(0.45), for: .tabView)
+            ButtonsPage()
+                .containerBackground(Color.blue.gradient.opacity(0.25), for: .tabView)
+            NextPage()
+                .containerBackground(Color.green.gradient.opacity(0.25), for: .tabView)
+            CardPage()
+                .containerBackground(((store.dashboard?.cardInserted ?? false) ? Color.green : Color.red).gradient.opacity(0.3), for: .tabView)
         }
         .tabViewStyle(.verticalPage)
         .onChange(of: scenePhase) { _, phase in
@@ -40,159 +69,140 @@ struct WatchRootView: View {
     }
 }
 
-// MARK: Status
+// MARK: Now
 
-struct StatusPage: View {
+struct NowPage: View {
     @Environment(WatchStore.self) private var store
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 15)) { context in
             if let d = store.dashboard {
-                ScrollView {
-                    VStack(spacing: 8) {
-                        HStack {
-                            Image(systemName: symbol(d))
-                                .foregroundStyle(color(d))
-                            Text(d.statusTitle).font(.headline).lineLimit(1)
-                            Spacer()
-                            Text(d.since, style: .timer)
-                                .font(.caption.monospacedDigit())
-                                .foregroundStyle(.secondary)
+                GeometryReader { geo in
+                    let ring = min(geo.size.width / 2 - 6, geo.size.height * 0.48)
+                    VStack(spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: d.symbolName).font(.headline)
+                            Text(d.statusTitle).font(.headline).lineLimit(1).minimumScaleFactor(0.7)
+                            Spacer(minLength: 0)
+                            if d.hasData {
+                                Text(d.since, style: .timer).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                                    .fixedSize().padding(.trailing, 6)
+                            }
                         }
                         if d.onShift {
-                            HStack(spacing: 6) {
-                                WatchRing(title: "Drive", value: d.driveLeft(at: context.date), full: 4.5 * 3600, color: .blue)
-                                WatchRing(title: "Work", value: d.workLeft(at: context.date), full: 6 * 3600, color: .orange)
+                            HStack(spacing: 8) {
+                                BigRing(title: "Drive", value: d.driveLeft(at: context.date), full: 4.5 * 3600, color: .blue, size: ring)
+                                BigRing(title: "Work", value: d.workLeft(at: context.date), full: 6 * 3600, color: .orange, size: ring)
                             }
-                            if let restBy = d.restBy {
-                                row("Rest by", WFmt.time(restBy),
-                                    tint: restBy < context.date ? .red : (restBy.timeIntervalSince(context.date) < 3600 ? .orange : .primary))
+                            .frame(maxHeight: .infinity)
+                            if let restBy = d.dailyRestRegularBy ?? d.restBy {
+                                Label("Rest by \(WFmt.time(restBy))", systemImage: "moon.zzz.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(restBy.timeIntervalSince(context.date) < 3600 ? .orange : .primary)
                             }
-                            row("Break due in", WFmt.hm(d.breakDueIn(at: context.date)))
-                            row("Driven today", "\(WFmt.hm(d.dailyDriving))/\(WFmt.hm(d.dailyDrivingLimit))")
                         } else if d.hasData {
                             let target: TimeInterval = d.restTypeRaw == "weekly" ? 45 * 3600 : 11 * 3600
                             let rest = d.restLength + context.date.timeIntervalSince(d.generatedAt)
-                            Gauge(value: min(rest / target, 1)) {
-                                Text("Rest")
-                            } currentValueLabel: {
-                                Text(WFmt.hm(rest)).monospacedDigit()
+                            ZStack {
+                                Circle().stroke(d.accent.opacity(0.25), lineWidth: 10)
+                                Circle().trim(from: 0, to: min(rest / target, 1))
+                                    .stroke(d.accent, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                                    .rotationEffect(.degrees(-90))
+                                VStack(spacing: 0) {
+                                    Text(WFmt.hm(rest)).font(.system(.title2, design: .rounded).weight(.bold).monospacedDigit())
+                                    Text("of \(WFmt.hm(target))").font(.caption2).foregroundStyle(.secondary)
+                                }
                             }
-                            .gaugeStyle(.accessoryLinearCapacity)
-                            .tint(d.restTypeRaw == "weekly" ? .indigo : .teal)
-                            row("Full rest at", WFmt.time(d.since.addingTimeInterval(target)))
+                            .frame(width: ring * 1.3, height: ring * 1.3)
+                            .frame(maxHeight: .infinity)
+                            if let next = d.nextStart {
+                                Label("Can start \(WFmt.dayTime(next))", systemImage: "play.circle").font(.caption.weight(.semibold))
+                            }
                         } else {
-                            Text("Start your shift from the buttons page or your iPhone.")
-                                .font(.footnote).foregroundStyle(.secondary)
+                            Spacer()
+                            Text("Swipe down to start your shift.").font(.footnote).foregroundStyle(.secondary)
+                            Spacer()
                         }
-                        row("Driver card", d.cardInserted ? "Inserted" : "Not inserted", tint: d.cardInserted ? .green : .red)
-                        row("Week driving", WFmt.hm(d.weeklyDriving))
-                        row("Week working", WFmt.hm(d.weeklyWorking))
                         if !store.isReachable {
-                            Label("iPhone not connected", systemImage: "iphone.slash")
-                                .font(.caption2).foregroundStyle(.secondary)
+                            Label("iPhone not connected", systemImage: "iphone.slash").font(.caption2).foregroundStyle(.secondary)
                         }
                     }
                 }
             } else {
                 VStack(spacing: 8) {
                     Image(systemName: "iphone.radiowaves.left.and.right").font(.title2)
-                    Text("Open HGV Hours on your iPhone to connect.")
-                        .font(.footnote).multilineTextAlignment(.center)
+                    Text("Open HGV Hours on your iPhone to connect.").font(.footnote).multilineTextAlignment(.center)
                 }
             }
         }
         .navigationTitle("HGV Hours")
     }
-
-    private func row(_ title: String, _ value: String, tint: Color = .primary) -> some View {
-        HStack {
-            Text(title).font(.caption2).foregroundStyle(.secondary)
-            Spacer()
-            Text(value).font(.caption.weight(.semibold).monospacedDigit()).foregroundStyle(tint)
-        }
-    }
-
-    private func symbol(_ d: Dashboard) -> String {
-        switch d.restTypeRaw {
-        case "weekly": return "house.fill"
-        case "daily": return "moon.zzz.fill"
-        case "break": return "cup.and.saucer.fill"
-        default: return d.kind.symbol
-        }
-    }
-
-    private func color(_ d: Dashboard) -> Color {
-        switch d.restTypeRaw {
-        case "weekly": return .indigo
-        case "daily": return .teal
-        default: return d.kind.color
-        }
-    }
 }
 
-struct WatchRing: View {
+struct BigRing: View {
     var title: String
     var value: TimeInterval
     var full: TimeInterval
     var color: Color
+    var size: CGFloat
 
     var body: some View {
         let fraction = min(max(value / full, 0), 1)
         let tint: Color = value <= 0 ? .red : (fraction < 0.12 ? .orange : color)
-        VStack(spacing: 2) {
-            ZStack {
-                Circle().stroke(tint.opacity(0.2), lineWidth: 6)
-                Circle().trim(from: 0, to: fraction)
-                    .stroke(tint, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
+        ZStack {
+            Circle().stroke(tint.opacity(0.25), lineWidth: max(6, size * 0.1))
+            Circle().trim(from: 0, to: fraction)
+                .stroke(tint, style: StrokeStyle(lineWidth: max(6, size * 0.1), lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            VStack(spacing: 0) {
                 Text(WFmt.hm(value))
-                    .font(.system(.footnote, design: .rounded).weight(.bold).monospacedDigit())
-                    .minimumScaleFactor(0.6)
-                    .padding(4)
+                    .font(.system(size: size * 0.24, weight: .bold, design: .rounded).monospacedDigit())
+                    .minimumScaleFactor(0.5).lineLimit(1)
+                Text(title).font(.system(size: max(10, size * 0.13))).foregroundStyle(.secondary)
             }
-            .frame(height: 62)
-            Text(title + " left").font(.caption2).foregroundStyle(.secondary)
+            .padding(size * 0.12)
         }
-        .frame(maxWidth: .infinity)
+        .frame(width: size, height: size)
     }
 }
 
 // MARK: Buttons
 
-struct ControlsPage: View {
+struct ButtonsPage: View {
     @Environment(WatchStore.self) private var store
     @State private var confirmEnd = false
 
     var body: some View {
         let d = store.dashboard
         let onShift = d?.onShift ?? false
-        ScrollView {
+        GeometryReader { geo in
+            let tileHeight = max(52, (geo.size.height - 70) / 2)
             VStack(spacing: 6) {
                 if onShift {
                     Grid(horizontalSpacing: 6, verticalSpacing: 6) {
                         GridRow {
-                            button("Drive", "steeringwheel", .blue, .drive, selected: d?.kind == .drive)
-                            button("Work", "hammer.fill", .orange, .otherWork, selected: d?.kind == .otherWork)
+                            tile("Drive", "steeringwheel", .blue, .drive, selected: d?.kind == .drive, height: tileHeight)
+                            tile("Work", "hammer.fill", .orange, .otherWork, selected: d?.kind == .otherWork, height: tileHeight)
                         }
                         GridRow {
-                            button("POA", "hourglass", .purple, .availability, selected: d?.kind == .availability)
-                            button("Break", "cup.and.saucer.fill", .green, .breakTime, selected: d?.kind == .rest)
+                            tile("POA", "hourglass", .purple, .availability, selected: d?.kind == .availability, height: tileHeight)
+                            tile("Break", "cup.and.saucer.fill", .green, .breakTime, selected: d?.kind == .rest, height: tileHeight)
                         }
                     }
                     Button(role: .destructive) { confirmEnd = true } label: {
-                        Label("End shift", systemImage: "stop.circle.fill")
+                        Label("End shift", systemImage: "stop.circle.fill").font(.headline).frame(maxWidth: .infinity)
                     }
                     .tint(.red)
                 } else {
+                    Spacer()
                     Button { store.send(.startShift) } label: {
-                        Label("Start shift", systemImage: "play.circle.fill")
-                            .font(.headline)
+                        Label("Start shift", systemImage: "play.circle.fill").font(.title3.weight(.bold)).frame(maxWidth: .infinity, minHeight: 60)
                     }
                     .tint(.green)
                     Button { store.send(.drive) } label: {
-                        Label("Start driving", systemImage: "steeringwheel")
+                        Label("Start driving", systemImage: "steeringwheel").frame(maxWidth: .infinity)
                     }
+                    Spacer()
                 }
                 if let error = store.lastError {
                     Text(error).font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center)
@@ -205,37 +215,102 @@ struct ControlsPage: View {
         }
     }
 
-    private func button(_ title: String, _ symbol: String, _ color: Color, _ command: WatchCommand, selected: Bool) -> some View {
+    private func tile(_ title: String, _ symbol: String, _ color: Color, _ command: WatchCommand, selected: Bool, height: CGFloat) -> some View {
         Button { store.send(command) } label: {
-            VStack(spacing: 2) {
-                Image(systemName: symbol).font(.title3)
-                Text(title).font(.caption2.weight(.semibold))
+            VStack(spacing: 4) {
+                Image(systemName: symbol).font(.title2)
+                Text(title).font(.caption.weight(.bold))
             }
-            .frame(maxWidth: .infinity, minHeight: 48)
+            .frame(maxWidth: .infinity, minHeight: height)
             .foregroundStyle(selected ? .white : color)
-            .background(selected ? color : color.opacity(0.2), in: RoundedRectangle(cornerRadius: 10))
+            .background(selected ? color : color.opacity(0.22), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke(selected ? .white.opacity(0.6) : .clear, lineWidth: 2))
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
-// MARK: In cab
+// MARK: Next
 
-struct InCabPage: View {
+struct NextPage: View {
     @Environment(WatchStore.self) private var store
 
     var body: some View {
-        let on = store.dashboard?.autoDetect ?? false
-        VStack(spacing: 10) {
-            Image(systemName: on ? "box.truck.fill" : "figure.walk")
-                .font(.largeTitle)
-                .foregroundStyle(on ? .blue : .secondary)
-            Toggle(isOn: Binding(get: { on }, set: { store.send($0 ? .autoOn : .autoOff) })) {
-                Text(on ? "In cab" : "Walking").font(.headline)
+        TimelineView(.periodic(from: .now, by: 30)) { context in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let d = store.dashboard {
+                        if d.onShift, let by = d.breakBy {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Next break").font(.caption2).foregroundStyle(.secondary)
+                                HStack(alignment: .firstTextBaseline) {
+                                    Text(WFmt.hm(d.breakLength)).font(.title2.weight(.bold).monospacedDigit()).foregroundStyle(.green)
+                                    Text("by \(WFmt.time(by))").font(.headline.monospacedDigit())
+                                        .foregroundStyle(by.timeIntervalSince(context.date) < 1800 ? .orange : .primary)
+                                }
+                                Text(d.breakReason + " rule").font(.caption2).foregroundStyle(.secondary)
+                            }
+                            .padding(8)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.green.opacity(0.15), in: RoundedRectangle(cornerRadius: 12))
+                        }
+                        if let r = d.dailyRestRegularBy { row("moon.zzz.fill", "11h rest by", WFmt.time(r)) }
+                        if let r = d.restBy, r != d.dailyRestRegularBy { row("moon.haze.fill", "9h rest by", WFmt.time(r)) }
+                        if let w = d.weeklyRestBy { row("house.fill", "Weekly rest by", WFmt.dayTime(w)) }
+                        if let n = d.nextStart { row("play.circle", d.onShift ? "If you stop now" : "Can start", WFmt.dayTime(n)) }
+                        row("sun.max.fill", "10h days left", "\(d.tenHourDaysLeft) of 2")
+                        row("moon.haze", "15h days left", "\(d.reducedRestsLeft) of 3")
+                        row("calendar", "Week driving", "\(WFmt.hm(d.weeklyDriving)) / 56h")
+                        row("briefcase.fill", "Week working", "\(WFmt.hm(d.weeklyWorking)) / 60h")
+                        if d.earnedShift > 0 || d.earnedWeek > 0 {
+                            row("sterlingsign.circle", "Earned today", String(format: "%@%.2f", d.currency, d.earnedShift))
+                        }
+                    } else {
+                        Text("No data yet.").foregroundStyle(.secondary)
+                    }
+                }
             }
-            Text(on ? "Moving = Driving\nStopped = Other work" : "Manual — tap the buttons")
+        }
+        .navigationTitle("Coming up")
+    }
+
+    private func row(_ symbol: String, _ title: String, _ value: String) -> some View {
+        HStack {
+            Image(systemName: symbol).frame(width: 18).foregroundStyle(.secondary)
+            Text(title).font(.caption)
+            Spacer()
+            Text(value).font(.caption.weight(.semibold).monospacedDigit())
+        }
+    }
+}
+
+// MARK: Card & cab
+
+struct CardPage: View {
+    @Environment(WatchStore.self) private var store
+
+    var body: some View {
+        let cardIn = store.dashboard?.cardInserted ?? false
+        let cab = store.dashboard?.autoDetect ?? false
+        VStack(spacing: 10) {
+            Button { store.send(cardIn ? .cardOut : .cardIn) } label: {
+                VStack(spacing: 4) {
+                    Image(systemName: cardIn ? "checkmark.circle.fill" : "xmark.circle.fill").font(.title)
+                    Text(cardIn ? "Card in" : "No card").font(.headline)
+                    Text(cardIn ? "Tap to withdraw" : "Tap when inserted").font(.caption2).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 90)
+                .foregroundStyle(.white)
+                .background((cardIn ? Color.green : Color.red).gradient, in: RoundedRectangle(cornerRadius: 16))
+            }
+            .buttonStyle(.plain)
+            Toggle(isOn: Binding(get: { cab }, set: { store.send($0 ? .autoOn : .autoOff) })) {
+                Label(cab ? "In cab" : "Walking", systemImage: cab ? "box.truck.fill" : "figure.walk")
+            }
+            Text(cab ? "Moving = Driving · Stopped = Other work" : "Manual — use the buttons")
                 .font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center)
         }
-        .padding(.horizontal, 4)
+        .navigationTitle("Card & cab")
     }
 }

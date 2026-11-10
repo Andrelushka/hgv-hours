@@ -151,6 +151,25 @@ struct AppSettings: Codable, Equatable {
     var employer = ""
     var vehicleReg = ""
 
+    // Driver profile (kept only on this iPhone)
+    var profileCreated = false
+    var phone = ""
+    /// e.g. "C, C+E"
+    var licenceCategories = "C+E"
+    var driverCardNumber = ""
+    /// Expiry dates as seconds since 1970 (0 = not set).
+    var licenceExpiry: Double = 0
+    var cardExpiry: Double = 0
+    var cpcExpiry: Double = 0
+    var medicalDue: Double = 0
+    /// Days before an expiry to start reminding.
+    var expiryWarningDays = 60
+
+    // App lock
+    var lockEnabled = false
+    /// Lock again after this many minutes in the background (0 = every time).
+    var lockAfterMinutes = 0
+
     // Rules
     var primaryRegime: Regime = .assimilated
     var applyWorkingTime = true

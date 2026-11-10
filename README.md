@@ -23,7 +23,8 @@ A native SwiftUI app (iOS 17+) that tracks driving, other work, POA and rest the
 - **Vehicles & trailers:** saved with registration, make/model, height, width, length, weight, axles, fuel (diesel, AdBlue, HVO, LNG/CNG gas, electric…) and body type; select, edit or delete.
 - **Pay:** hourly or day rate; Saturday, Sunday, bank holiday and overtime as normal, ×1.25, ×1.5, ×2, a custom multiplier or a custom £ rate; holiday pay **included in the rate** (UK 12.07%) or **paid separately** (holiday days at the 52-week average day's pay, worked out automatically); regular and one-off bonuses; night premium and night-out allowance.
 - **Widgets:** Home Screen (small, medium) and Lock Screen (circular, rectangular, inline) with driving/working time left, rest-by time and earnings.
-- **Apple Watch:** status and countdowns, activity buttons, start/end shift, in-cab switch.
+- **Apple Watch (sized for Ultra):** big rings, large activity buttons, next break and rest deadlines, card insert/withdraw and the in-cab switch.
+- **Driver profile, app lock and backup:** expiry reminders for licence, card, CPC and medical; Face ID lock; back up and restore everything to a file.
 - **Earnings:** week / month / year totals with a chart, breakdown and an estimate for the full period; hourly, day rate or salary; guaranteed hours per shift, week and month.
 - **Mileage & resources:** odometer per vehicle, start/end mileage per day, GPS distance in in-cab mode; log diesel, AdBlue, tacho rolls and more.
 - **Job stops & debrief:** Arrived / Departed per stop with time and location; a shareable day debrief; a Summary table of every day with CSV export.

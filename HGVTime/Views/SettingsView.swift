@@ -81,8 +81,14 @@ struct SettingsView: View {
                     Toggle(isOn: Binding(get: { store.settings.useMiles }, set: { store.settings.useMiles = $0 })) {
                         SettingsRow(title: "Distances in miles", symbol: "road.lanes", color: .gray, value: "")
                     }
-                    NavigationLink { DriverSettingsView() } label: {
-                        SettingsRow(title: "Driver details", symbol: "person.crop.circle.fill", color: .gray,
+                    NavigationLink { LockSettingsView() } label: {
+                        SettingsRow(title: "App lock", symbol: "faceid", color: .green, value: s.lockEnabled ? "On" : "Off")
+                    }
+                    NavigationLink { BackupView() } label: {
+                        SettingsRow(title: "Backup & restore", symbol: "externaldrive.fill", color: .blue, value: "")
+                    }
+                    NavigationLink { ProfileView() } label: {
+                        SettingsRow(title: "Driver profile", symbol: "person.crop.circle.fill", color: .gray,
                                     value: s.driverName.isEmpty ? "Not set" : s.driverName)
                     }
                 }

@@ -46,6 +46,16 @@ extension Dashboard {
         d.weeklyWorking = s.weeklyWorkingTime
         d.shiftWorking = s.stats.workingTime
         d.restLength = s.currentRestLength
+        if let plan = Deadlines.breakPlan(s, applyWorkingTime: settings.applyWorkingTime) {
+            d.breakBy = plan.dueBy
+            d.breakLength = plan.recommended
+            d.breakReason = plan.reason
+        }
+        d.nextStart = Deadlines.nextStart(s)?.time
+        d.dailyRestRegularBy = d.onShift ? s.restStartByFull : nil
+        d.weeklyRestBy = s.weeklyRestDueBy
+        d.tenHourDaysLeft = max(0, Limits.maxExtensionsPerWeek - s.extensionsUsed)
+        d.reducedRestsLeft = max(0, Limits.maxReducedDailyRests - s.reducedRestsUsed)
         return d
     }
 }
