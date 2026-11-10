@@ -2,6 +2,11 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.0.0 — AI assistant & worldwide rules
+- Assistant (✨ on Today): ask about driving left, breaks, rest, next start, 15h/10h days, earnings, weekly rest, infringements or vehicle height — answered offline from your records. Turn on Claude AI with your own Anthropic API key (kept in the iPhone Keychain) for any question; it's sent with a summary of your hours and pay, never your name, locations or notes.
+- Country & rules: choose UK, EU/EEA/Switzerland, AETR, USA (FMCSA 11h/14h/30-min/60-70h), Canada south of 60° (13h/14h/16h/70h), Australia (NHVR standard hours) or New Zealand (5½h/13h/70h). Hours, alerts, widgets, the Watch and the event log follow your choice.
+- Rules matrix: key limits side by side, and a searchable list of countries and the rules they use.
+
 ## 2.1.0 — Driver profile, app lock, backup & Apple Watch redesign
 - Driver profile: registration on first launch (name, employer, phone, licence categories, card number) and expiry dates for driving licence, tacho card, Driver CPC and D4 medical, with a warning on Today and reminders before each expires.
 - App lock with Face ID (or your iPhone passcode), locking again after a time you choose.

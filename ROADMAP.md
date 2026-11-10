@@ -60,8 +60,9 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
 ## V3.0 (3.0.0) — AI & International Expansion
-- ⬜ AI assistant
-- ⬜ Rules for all countries, with their own limits matrix
+- ✅ Assistant: offline answers from your records (driving left, breaks, rest, next start, 15h/10h days, earnings, weekly rest, height); optional Claude AI for any question with your own Anthropic API key (stored in the Keychain)
+- ✅ Country & rules: UK, EU/EEA/Switzerland, AETR, USA (FMCSA), Canada (south of 60°), Australia (NHVR standard hours), New Zealand — live limits, alerts and infringements; rules matrix and country list
+- ⬜ More countries (e.g. Canada north of 60°, Australian BFM/AFM, India, South Africa, Brazil…) and US/Canada sleeper-berth splits
 
 ### Beta testing note
 Public beta testing through TestFlight needs a paid Apple Developer Program membership (£79/year). Until then the app is installed from Xcode with a free Apple ID (re-install every 7 days).

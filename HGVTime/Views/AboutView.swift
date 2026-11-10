@@ -55,7 +55,7 @@ struct AboutView: View {
             }
 
             Section {
-                Text("All your records stay on this iPhone (and your Apple Watch). There's no account, no tracking and no adverts. The only internet use is Apple's map service to name a place when you tap Arrived.")
+                Text("All your records stay on this iPhone (and your Apple Watch). There's no account, no tracking and no adverts. Internet is only used to name a place when you tap Arrived (Apple Maps) and, if you turn it on with your own API key, to ask Claude AI a question (a summary of your hours and pay is sent with it).")
                     .font(.footnote)
                 Link(destination: URL(string: "https://www.gov.uk/guidance/drivers-hours-goods-vehicles")!) {
                     Label("GOV.UK: drivers' hours (goods vehicles)", systemImage: "link")

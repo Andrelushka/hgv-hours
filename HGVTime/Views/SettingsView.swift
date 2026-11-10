@@ -33,6 +33,10 @@ struct SettingsView: View {
                 }
 
                 Section("Rules") {
+                    NavigationLink { CountryRulesView() } label: {
+                        SettingsRow(title: "Country & rules", symbol: "globe.europe.africa.fill", color: .teal,
+                                    value: "\(s.region.flag) \(s.region.isEuropean ? s.region.title : s.region.title.components(separatedBy: " (").first ?? "")")
+                    }
                     NavigationLink { DriversHoursSettingsView() } label: {
                         SettingsRow(title: "Drivers' hours", symbol: "steeringwheel", color: .indigo,
                                     value: s.primaryRegime.shortTitle)

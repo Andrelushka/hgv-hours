@@ -2,7 +2,7 @@ import Foundation
 
 extension Dashboard {
     /// Builds the headline numbers from the rules engine status.
-    static func make(status s: ComplianceStatus, settings: AppSettings, openEntry: ActivityEntry?) -> Dashboard {
+    @MainActor static func make(status s: ComplianceStatus, settings: AppSettings, openEntry: ActivityEntry?) -> Dashboard {
         var d = Dashboard()
         d.generatedAt = s.now
         d.hasData = s.hasData
@@ -55,7 +55,33 @@ extension Dashboard {
         d.dailyRestRegularBy = d.onShift ? s.restStartByFull : nil
         d.weeklyRestBy = s.weeklyRestDueBy
         d.tenHourDaysLeft = max(0, Limits.maxExtensionsPerWeek - s.extensionsUsed)
+        if !settings.region.isEuropean, let world = WorldRulesCache.status {
+            d.driveLeft = world.driveLeft
+            d.workLeft = world.workLeft
+            d.breakDueIn = world.breakBy.map { $0.timeIntervalSince(s.now) } ?? world.driveLeft
+            d.driveLeftReason = world.driveReason.isEmpty ? "" : "Then: \(world.driveReason)"
+            d.workLeftReason = world.workReason
+            d.breakBy = world.breakBy
+            d.breakLength = world.breakLength
+            d.breakReason = world.breakReason
+            d.nextStart = world.nextStart
+            d.restBy = nil
+            d.dailyRestRegularBy = nil
+        }
         d.reducedRestsLeft = max(0, Limits.maxReducedDailyRests - s.reducedRestsUsed)
         return d
+    }
+}
+
+/// The latest non-European status, computed alongside the EU one.
+@MainActor
+enum WorldRulesCache {
+    static var status: WorldStatus?
+
+    /// Recomputes for the current snapshots (call before Dashboard.make on screens that tick).
+    @discardableResult
+    static func refresh(_ snaps: [EntrySnapshot], now: Date, settings: AppSettings) -> WorldStatus? {
+        status = settings.region.isEuropean ? nil : WorldRules.status(snaps, now: now, region: settings.region, usCycle70: settings.usCycle70)
+        return status
     }
 }

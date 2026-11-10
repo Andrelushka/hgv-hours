@@ -81,4 +81,24 @@ final class NotificationService {
             center.add(UNNotificationRequest(identifier: "hgv.alert.\(index)", content: content, trigger: trigger))
         }
     }
+
+    /// Alerts for USA / Canada / Australia / New Zealand rules.
+    func rescheduleWorld(_ w: WorldStatus, settings: AppSettings, shiftEnded: Bool) {
+        center.removePendingNotificationRequests(withIdentifiers: (0..<40).map { "hgv.alert.\($0)" })
+        guard settings.notificationsEnabled, !shiftEnded else { return }
+        let lead = TimeInterval(settings.warningLeadMinutes * 60)
+        var plan: [(TimeInterval, String, String)] = []
+        for l in w.limits where l.remaining > 0 {
+            plan.append((l.remaining - lead, "\(l.title): \(settings.warningLeadMinutes) min left", l.note))
+            plan.append((l.remaining, "\(l.title) reached", l.note))
+        }
+        for (i, item) in plan.enumerated() where item.0 > 5 {
+            let c = UNMutableNotificationContent()
+            c.title = item.1
+            c.body = item.2
+            c.sound = .default
+            center.add(UNNotificationRequest(identifier: "hgv.alert.\(i)", content: c,
+                                             trigger: UNTimeIntervalNotificationTrigger(timeInterval: item.0, repeats: false)))
+        }
+    }
 }

@@ -56,7 +56,9 @@ struct TodayView: View {
     var body: some View {
         NavigationStack {
             TimelineView(.periodic(from: .now, by: 10)) { timeline in
-                let status = RulesEngine.status(snapshots(now: timeline.date), now: timeline.date, config: store.settings.ruleConfig)
+                let snaps = snapshots(now: timeline.date)
+                let status = RulesEngine.status(snaps, now: timeline.date, config: store.settings.ruleConfig)
+                let world = WorldRulesCache.refresh(snaps, now: timeline.date, settings: store.settings)
                 let dash = Dashboard.make(status: status, settings: store.settings, openEntry: openEntry)
                 ScrollView {
                     VStack(spacing: 14) {
@@ -562,6 +564,11 @@ struct TodayView: View {
         ToolbarItem(placement: .topBarLeading) {
             NavigationLink { SettingsView(embedded: true) } label: {
                 Label("Settings", systemImage: "gearshape")
+            }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            NavigationLink { AssistantView() } label: {
+                Label("Assistant", systemImage: "sparkles")
             }
         }
         ToolbarItem(placement: .topBarTrailing) {

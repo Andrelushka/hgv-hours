@@ -406,4 +406,57 @@ final class RulesEngineTests: XCTestCase {
         XCTAssertEqual(s.expiries.count, 2)
         XCTAssertEqual(s.expiriesDueSoon.map(\.title), ["Tacho driver card"])
     }
+
+    // MARK: 3.0 world rules and assistant
+
+    func testUSAThirtyMinuteBreakAndElevenHours() {
+        // 7h30 driving since 06:00 → 30 min left before the 8h break rule; 3h30 left of 11h.
+        let entries = [e(.drive, t(6), nil)]
+        let w = WorldRules.status(entries, now: t(13, 30), region: .usa)
+        XCTAssertEqual(w.limits[2].remaining, 30 * 60, accuracy: 61)
+        XCTAssertEqual(w.limits[0].remaining, 3.5 * 3600, accuracy: 61)
+        XCTAssertEqual(w.driveLeft, 30 * 60, accuracy: 61)
+    }
+
+    func testUSAFourteenHourWindowIgnoresBreaks() {
+        // Started 05:00, 2h break in the middle: window still ends 19:00.
+        let entries = [e(.drive, t(5), t(10)), e(.rest, t(10), t(12)), e(.drive, t(12), nil)]
+        let w = WorldRules.status(entries, now: t(16), region: .usa)
+        XCTAssertEqual(w.limits[1].remaining, 3 * 3600, accuracy: 61)
+    }
+
+    func testCanadaThirteenHoursDriving() {
+        let entries = [e(.drive, t(5), nil)]
+        let w = WorldRules.status(entries, now: t(16), region: .canada)
+        XCTAssertEqual(w.limits[0].remaining, 2 * 3600, accuracy: 61)
+    }
+
+    func testAustraliaShortRestCountsAsWork() {
+        // 5h work with a 10-min stop in the middle: the stop is under 15 min, so 5h10 counts as work → 5 min left of 5h15.
+        let entries = [e(.drive, t(6), t(8, 30)), e(.rest, t(8, 30), t(8, 40)), e(.drive, t(8, 40), nil)]
+        let w = WorldRules.status(entries, now: t(11, 10), region: .australia)
+        XCTAssertEqual(w.limits[0].remaining, 5 * 60, accuracy: 61)
+    }
+
+    func testNewZealandFiveAndAHalfHours() {
+        let entries = [e(.otherWork, t(6), t(7)), e(.drive, t(7), nil)]
+        let w = WorldRules.status(entries, now: t(10), region: .newZealand)
+        XCTAssertEqual(w.limits[0].remaining, 1.5 * 3600, accuracy: 61)
+        XCTAssertEqual(w.breakLength, 30 * 60)
+    }
+
+    @MainActor
+    func testOfflineAssistantAnswersDrivingQuestion() {
+        let entries = [e(.drive, t(6), nil)]
+        let s = RulesEngine.status(entries, now: t(9), config: config)
+        var d = Dashboard()
+        d.hasData = true; d.onShift = true; d.kind = .drive; d.driveLeft = 1.5 * 3600; d.driveLeftReason = "Then: 45 min break due"
+        let f = AssistantFacts(now: t(9), region: .uk, dash: d, status: s, world: nil, weekPay: 120, currency: "£",
+                               nextPlan: nil, vehicleHeight: 4.95, recentDays: [])
+        XCTAssertTrue(OfflineAssistant.answer("How long can I drive?", f)?.contains("1h30") ?? false)
+        XCTAssertTrue(OfflineAssistant.answer("how much have I earned this week", f)?.contains("£120.00") ?? false)
+        XCTAssertTrue(OfflineAssistant.answer("what's my height", f)?.contains("4.95") ?? false)
+        XCTAssertNil(OfflineAssistant.answer("what's the weather in Leeds", f))
+        XCTAssertTrue(f.summary.contains("Driving left: 1h30"))
+    }
 }

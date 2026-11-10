@@ -30,7 +30,9 @@ A native SwiftUI app (iOS 17+) that tracks driving, other work, POA and rest the
 - **Job stops & debrief:** Arrived / Departed per stop with time and location; a shareable day debrief; a Summary table of every day with CSV export.
 - **Driver card, overspeed and the tacho minute rule** (see ROADMAP.md).
 - **Lock Screen Live Activity, alerts before limits, and PDF/CSV export.**
-- All data is stored on the device. There is no account and no tracking. The only network use is Apple's own map lookup to name a place when you tap Arrived.
+- **Assistant:** offline answers from your records, plus optional Claude AI with your own Anthropic API key.
+- **Worldwide rules:** UK, EU/EEA, AETR, USA, Canada, Australia and New Zealand, with a rules matrix.
+- All data is stored on the device. There is no account and no tracking. Network use: Apple's map lookup when you tap Arrived, and Claude only if you turn it on with your own key.
 
 ## Build and run on your iPhone
 

@@ -234,12 +234,25 @@ enum ActivityController {
 
     static func refreshSideEffects(context: ModelContext, settings: AppSettings) {
         let now = Date()
-        let status = RulesEngine.status(recentSnapshots(context: context, settings: settings, now: now), now: now, config: settings.ruleConfig)
+        let snaps = recentSnapshots(context: context, settings: settings, now: now)
+        let status = RulesEngine.status(snaps, now: now, config: settings.ruleConfig)
+        WorldRulesCache.status = settings.region.isEuropean ? nil
+            : WorldRules.status(snaps, now: now, region: settings.region, usCycle70: settings.usCycle70)
         let last = openEntries(context: context).last
         let shiftEnded = last?.endsShift ?? true
-        NotificationService.shared.reschedule(status: status, settings: settings, shiftEnded: shiftEnded)
+        if let world = WorldRulesCache.status {
+            NotificationService.shared.rescheduleWorld(world, settings: settings, shiftEnded: shiftEnded)
+        } else {
+            NotificationService.shared.reschedule(status: status, settings: settings, shiftEnded: shiftEnded)
+        }
         ReminderService.shared.schedule(context: context, status: status, settings: settings, shiftEnded: shiftEnded)
-        EventRecorder.logInfringements(status, context: context, settings: settings)
+        if let world = WorldRulesCache.status {
+            var w = status
+            w.warnings = world.violations
+            EventRecorder.logInfringements(w, context: context, settings: settings)
+        } else {
+            EventRecorder.logInfringements(status, context: context, settings: settings)
+        }
         VoiceService.shared.update(settings: settings)
         let state = LiveActivityService.contentState(status: status, settings: settings, shiftEnded: shiftEnded)
         let name = settings.driverName

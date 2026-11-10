@@ -151,6 +151,15 @@ struct AppSettings: Codable, Equatable {
     var employer = ""
     var vehicleReg = ""
 
+    // Country rules
+    var ruleRegionRaw = RuleRegion.uk.rawValue
+    /// USA: 70 hours / 8 days (true) or 60 hours / 7 days (false).
+    var usCycle70 = true
+
+    // AI assistant
+    /// Use Claude for free-form questions (needs your own Anthropic API key in the Keychain).
+    var assistantUseClaude = false
+
     // Driver profile (kept only on this iPhone)
     var profileCreated = false
     var phone = ""
@@ -243,6 +252,8 @@ struct AppSettings: Codable, Equatable {
     var recordOverspeed = true
 
     var pay = PaySettings()
+
+    var region: RuleRegion { RuleRegion(rawValue: ruleRegionRaw) ?? .uk }
 
     var ruleConfig: RuleConfig {
         RuleConfig(

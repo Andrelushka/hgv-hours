@@ -20,10 +20,15 @@ struct HoursView: View {
     var body: some View {
         NavigationStack {
             TimelineView(.periodic(from: .now, by: 10)) { timeline in
-                let status = RulesEngine.status(snapshots(now: timeline.date), now: timeline.date, config: store.settings.ruleConfig)
+                let snaps = snapshots(now: timeline.date)
+                let status = RulesEngine.status(snaps, now: timeline.date, config: store.settings.ruleConfig)
+                let world = WorldRulesCache.refresh(snaps, now: timeline.date, settings: store.settings)
                 let dash = Dashboard.make(status: status, settings: store.settings, openEntry: openEntry)
                 ScrollView {
                     VStack(spacing: 14) {
+                        if let world {
+                            WorldHoursSection(world: world, dash: dash, onShift: onShift)
+                        } else {
                         if status.hasData { SectionHeader(title: "Right now") }
                         if onShift {
                             dashboardTiles(dash, status)
@@ -55,7 +60,8 @@ struct HoursView: View {
                             ContentUnavailableView("No hours yet", systemImage: "gauge.with.dots.needle.0percent",
                                                    description: Text("Start a shift on the Today tab and your driving, working time and rest limits appear here."))
                         }
-                        if !status.recentInfringements.isEmpty {
+                        }
+                        if world == nil && !status.recentInfringements.isEmpty {
                             Button {
                                 showingAllInfringements = true
                             } label: {
