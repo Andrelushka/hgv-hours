@@ -66,7 +66,8 @@ struct DriverDayView: View {
     var body: some View {
         let cal = Calendar.hgv
         let end = day.addingTimeInterval(86_400)
-        let dayEntries = entries.filter { ($0.end ?? .now) > day && $0.start < end }
+        // Newest first: what you just did is at the top.
+        let dayEntries = entries.filter { ($0.end ?? .now) > day && $0.start < end }.reversed().map { $0 }
         let dayEvents = events.filter { $0.time >= day && $0.time < end && $0.kind != .activity }
         let totals = DayTotals.compute(dayEntries, day: day)
         List {

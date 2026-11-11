@@ -212,6 +212,19 @@ struct InCabSettingsView: View {
                 Text("Like the tachograph: more than 60 seconds in a row above this speed is an overspeed infringement. Shorter ones are recorded but not counted as infringements. Each event is saved with its time, top speed and location. Automatic uses the vehicle you're driving and your country: lorries over 3.5 t 90 km/h (56 mph) in the UK/EU, 100 km/h in Australia, 105 km/h in North America; vans use the road limit. A speed set on a vehicle always wins.")
             }
             Section {
+                Toggle("Record harsh braking", isOn: $store.settings.recordHarshBraking)
+                if store.settings.recordHarshBraking {
+                    Stepper(value: $store.settings.harshBrakeMS2, in: 2.5...6, step: 0.1) {
+                        LabeledContent("Sensitivity", value: String(format: "%.1f m/s² (%.2f g)", store.settings.harshBrakeMS2, store.settings.harshBrakeMS2 / 9.81))
+                    }
+                }
+                Toggle("Road speed limits while navigating", isOn: $store.settings.onlineSpeedLimits)
+            } header: {
+                Text("Driving style")
+            } footer: {
+                Text("Harsh braking: a speed drop faster than this from 25 km/h or more, measured by GPS in in-cab mode. Lower = more sensitive; fleet systems typically use 0.3–0.4 g. Each event is saved with its time and place in the event log. Road speed limits come from OpenStreetMap: while navigating, your approximate position is sent to the OpenStreetMap Overpass service about once every 300 m.")
+            }
+            Section {
                 Toggle("Save my route", isOn: $store.settings.recordRoute)
                 Toggle("Save where events happen", isOn: $store.settings.recordEventLocations)
             } header: {

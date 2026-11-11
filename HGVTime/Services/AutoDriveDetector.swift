@@ -207,6 +207,7 @@ final class AutoDriveDetector: NSObject {
         let time = location.timestamp
 
         if speedValid && settings.recordOverspeed { trackOverspeed(kmh: kmh, at: time, coordinate: location.coordinate) }
+        if speedValid && settings.recordHarshBraking { trackBraking(location) }
 
         // Distance: add the gap between accurate fixes while the vehicle is moving.
         if speedValid && kmh >= stoppedSpeedKmh {
@@ -295,6 +296,36 @@ final class AutoDriveDetector: NSObject {
         guard let context, pendingKm > 0 else { return }
         ActivityController.addGPSDistance(pendingKm, at: .now, context: context, vehicleID: settings.currentVehicleID)
         pendingKm = 0
+    }
+
+    // MARK: Harsh braking
+
+    /// Harsh-braking events today (shown on the in-cab card).
+    private(set) var harshBrakesToday = 0
+    @ObservationIgnored private var lastSpeedFix: CLLocation?
+    @ObservationIgnored private var lastHarshBrake = Date.distantPast
+    @ObservationIgnored private var harshBrakeDay = Date.distantPast
+
+    /// Speed drop between two good GPS fixes ≤ 3 s apart. Above the threshold (default 3.4 m/s² ≈ 0.35 g)
+    /// from at least 25 km/h counts as harsh braking. One event per 15 s.
+    private func trackBraking(_ location: CLLocation) {
+        defer { lastSpeedFix = location }
+        guard let prev = lastSpeedFix else { return }
+        let dt = location.timestamp.timeIntervalSince(prev.timestamp)
+        guard dt > 0.4, dt <= 3, prev.speed >= 0, prev.speedAccuracy >= 0, prev.speedAccuracy < 2,
+              location.speedAccuracy < 2, prev.speed * 3.6 >= 25 else { return }
+        let decel = (prev.speed - location.speed) / dt
+        guard decel >= settings.harshBrakeMS2, location.timestamp.timeIntervalSince(lastHarshBrake) > 15, let context else { return }
+        lastHarshBrake = location.timestamp
+        if !Calendar.hgv.isDate(harshBrakeDay, inSameDayAs: location.timestamp) { harshBrakesToday = 0; harshBrakeDay = location.timestamp }
+        harshBrakesToday += 1
+        let from = Int((prev.speed * 3.6).rounded()), to = Int((max(0, location.speed) * 3.6).rounded())
+        let g = decel / 9.81
+        EventRecorder.log(.harshBraking, title: "Harsh braking",
+                          detail: "\(from) → \(to) km/h in \(String(format: "%.1f", dt)) s (\(String(format: "%.2f", g)) g)",
+                          speedKmh: prev.speed * 3.6, at: prev.timestamp, coordinate: location.coordinate,
+                          context: context, settings: settings)
+        lastEvent = "Harsh braking: \(from) → \(to) km/h (\(String(format: "%.2f", g)) g)"
     }
 
     // MARK: Overspeed

@@ -131,7 +131,7 @@ struct WeeksView: View {
 
                 Section("Shifts") {
                     if let shifts = week?.shifts, !shifts.isEmpty {
-                        ForEach(shifts) { shift in
+                        ForEach(shifts.reversed()) { shift in
                             NavigationLink { ShiftDetailView(shiftStart: shift.period.start) } label: { ShiftRow(shift: shift) }
                         }
                     } else {

@@ -250,7 +250,9 @@ struct DayMileageCard: View {
                     let v = vehicles.first { $0.id.uuidString == u.vehicleID }
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Label(v?.displayName ?? "Vehicle", systemImage: v?.kind.symbol ?? "box.truck").font(.caption.weight(.semibold)).lineLimit(1)
+                            let t = vehicles.first { $0.id.uuidString == u.trailerID }
+                            Label((v?.displayName ?? "Vehicle") + (t.map { " + \($0.registration.isEmpty ? $0.displayName : $0.registration)" } ?? ""),
+                                  systemImage: v?.kind.symbol ?? "box.truck").font(.caption.weight(.semibold)).lineLimit(1)
                             Spacer()
                             Text("\(Fmt.time(u.start))–\(u.end.map(Fmt.time) ?? "now") · \(Fmt.distance(u.distanceKm, miles: miles))")
                                 .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)

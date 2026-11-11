@@ -197,6 +197,58 @@ enum ClaudeAssistant {
     Answer the driver's question using the data provided with each question, which comes from their own records. Be short and practical: a few sentences, plain language, times as clock times. Use the driver's country rules shown in the data. If the data doesn't contain what's needed, say what's missing instead of guessing. You are a planning aid, not legal advice: when something is close to a legal limit, say so plainly and remind them the tachograph and their operator's instructions are what count.
     """
 
+    /// Agent mode: Claude can call the app's tools (jobs, notes, activities, vehicles…) until it has an answer.
+    /// `history` is updated with the whole exchange.
+    static func agent(_ text: String, history: inout [[String: Any]],
+                      run: (String, [String: String]) async -> String) async throws -> String {
+        guard let key = KeychainKey.load(), !key.isEmpty else { throw Failure.noKey }
+        var messages = history
+        messages.append(["role": "user", "content": text])
+        let tools = AgentTools.all.map(\.claudeSchema)
+        for _ in 0..<8 {
+            let body: [String: Any] = [
+                "model": model, "max_tokens": 4000, "system": AgentTools.instructions + "\nToday is \(Date.now.formatted(date: .complete, time: .shortened)).",
+                "messages": messages, "tools": tools, "fallbacks": "default"
+            ]
+            var req = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
+            req.httpMethod = "POST"
+            req.timeoutInterval = 120
+            req.setValue("application/json", forHTTPHeaderField: "content-type")
+            req.setValue(key, forHTTPHeaderField: "x-api-key")
+            req.setValue("2026-10-21", forHTTPHeaderField: "anthropic-version")
+            req.setValue("server-side-fallback-2026-07-01", forHTTPHeaderField: "anthropic-beta")
+            req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            let (data, response) = try await URLSession.shared.data(for: req)
+            let code = (response as? HTTPURLResponse)?.statusCode ?? 0
+            let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+            guard code == 200 else { throw Failure.http(code, (json["error"] as? [String: Any])?["message"] as? String ?? "") }
+            let stop = json["stop_reason"] as? String
+            if stop == "refusal" { throw Failure.refused }
+            let content = json["content"] as? [[String: Any]] ?? []
+            messages.append(["role": "assistant", "content": content])
+            let calls = content.filter { $0["type"] as? String == "tool_use" }
+            if stop == "tool_use", !calls.isEmpty {
+                var results: [[String: Any]] = []
+                for call in calls {
+                    let name = call["name"] as? String ?? ""
+                    let input = call["input"] as? [String: Any] ?? [:]
+                    var args: [String: String] = [:]
+                    for (k, v) in input { args[k] = (v as? String) ?? "\(v)" }
+                    let out = await run(name, args)
+                    results.append(["type": "tool_result", "tool_use_id": call["id"] as? String ?? "", "content": out])
+                }
+                messages.append(["role": "user", "content": results])
+                continue
+            }
+            history = messages
+            let answer = content.filter { $0["type"] as? String == "text" }.compactMap { $0["text"] as? String }.joined(separator: "\n")
+            guard !answer.isEmpty else { throw Failure.empty }
+            return answer
+        }
+        history = messages
+        return "Done."
+    }
+
     /// `history` is the earlier conversation as API messages (assistant turns keep their full content unchanged).
     static func ask(_ question: String, facts: AssistantFacts, history: [[String: Any]]) async throws -> Reply {
         guard let key = KeychainKey.load(), !key.isEmpty else { throw Failure.noKey }

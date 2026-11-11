@@ -22,6 +22,15 @@ enum VehicleLog {
         return all.filter { $0.start < end && ($0.end ?? .now) > start }
     }
 
+    /// Whether anything was recorded on a day (so the mileage card stays after the shift ends, until midnight).
+    static func hasMileage(on day: Date, context: ModelContext) -> Bool {
+        if !uses(on: day, context: context).isEmpty { return true }
+        let start = Calendar.hgv.startOfDay(for: day)
+        let end = start.addingTimeInterval(86_400)
+        let records = (try? context.fetch(FetchDescriptor<DayRecord>(predicate: #Predicate { $0.day >= start && $0.day < end }))) ?? []
+        return records.contains { $0.startOdometerKm > 0 || $0.endOdometerKm > 0 || $0.gpsKm > 0 }
+    }
+
     /// Chooses the vehicle you're driving. On a shift this closes the previous vehicle's use (end mileage
     /// worked out from GPS, adjustable later) and starts a new one. The vehicle's own rules (tacho, GB domestic
     /// or exempt) become the rules for new activities.
@@ -40,6 +49,26 @@ enum VehicleLog {
         if onShift && previous != vehicleID && !vehicleID.isEmpty {
             let name = vehicle(vehicleID, context: context)?.displayName ?? "vehicle"
             EventRecorder.log(.note, title: "Vehicle changed", detail: name, context: context, settings: store.settings)
+        }
+        try? context.save()
+    }
+
+    /// Changes the trailer. On a shift the current use is split so each part of the day
+    /// records which trailer was on (mileage carries over to the new part).
+    static func selectTrailer(_ trailerID: String, context: ModelContext, store: SettingsStore, at time: Date = .now) {
+        let previous = store.settings.currentTrailerID
+        guard previous != trailerID else { return }
+        store.settings.currentTrailerID = trailerID
+        if ActivityController.isOnShift(context: context) {
+            if let open = openUse(context: context) {
+                let vehicleID = open.vehicleID
+                close(open, at: time, context: context)
+                let next = self.open(vehicleID, trailerID: trailerID, at: time, context: context)
+                if open.endOdometerKm > 0 { next.startOdometerKm = open.endOdometerKm }
+            }
+            let name = vehicle(trailerID, context: context)?.displayName
+            EventRecorder.log(.note, title: trailerID.isEmpty ? "Trailer dropped" : "Trailer changed",
+                              detail: name ?? "", context: context, settings: store.settings)
         }
         try? context.save()
     }

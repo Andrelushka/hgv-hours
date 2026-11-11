@@ -30,9 +30,11 @@ struct PayCounterCard: View {
             : 0
         let week = PayCalculator.calculate(shifts: weekShifts, nightOuts: nights, settings: p, items: items, holidayDayValue: holidayValue)
 
-        let shift = currentShiftStart.flatMap { start in analysis.shifts.first { abs($0.period.start.timeIntervalSince(start)) < 60 } }
-            ?? analysis.shifts.last.flatMap { cal.isDate($0.period.start, inSameDayAs: now) ? $0 : nil }
-        let shiftPay = shift.map { PayCalculator.calculate(shifts: [$0], nightOuts: 0, settings: p) }
+        // On a shift: that shift. Off shift: everything worked today. Ending a shift doesn't clear it —
+        // it stays until midnight and the new day starts at zero.
+        let current = currentShiftStart.flatMap { start in analysis.shifts.first { abs($0.period.start.timeIntervalSince(start)) < 60 } }
+        let shown = current.map { [$0] } ?? analysis.shifts.workedOn(now)
+        let shiftPay: PayBreakdown? = shown.isEmpty ? nil : PayCalculator.calculate(shifts: shown, nightOuts: 0, settings: p)
 
         return NavigationLink {
             EarningsView()
@@ -79,5 +81,14 @@ struct PayCounterCard: View {
             .animation(.default, value: shiftPay?.total)
         }
         .buttonStyle(.plain)
+    }
+}
+
+extension Array where Element == ShiftSummary {
+    /// Shifts with work on this calendar day (a shift that started last night counts too).
+    func workedOn(_ day: Date, calendar cal: Calendar = .hgv) -> [ShiftSummary] {
+        let start = cal.startOfDay(for: day)
+        let end = start.addingTimeInterval(86_400)
+        return filter { $0.period.start < end && $0.period.end > start }
     }
 }

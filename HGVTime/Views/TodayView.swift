@@ -157,7 +157,7 @@ struct TodayView: View {
         case .warnings: return data.status.warnings.contains { $0.severity == .violation }
         case .job: return onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty
         case .vehicle: return true
-        case .mileage: return onShift || !VehicleLog.uses(on: now, context: context).isEmpty
+        case .mileage: return onShift || VehicleLog.hasMileage(on: now, context: context)
         case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut: return true
         default: return data.applies(tile)
         }
@@ -244,7 +244,27 @@ struct TodayView: View {
                             .background(Color.accentColor.opacity(0.15), in: Capsule())
                     }
                 }
-                if status.hasData {
+                if status.hasData, openEntry?.endsShift == true {
+                    // Resting between shifts: count down to the next planned job; no counter when nothing is planned.
+                    if let job = nextPlannedJob(after: status.now) {
+                        Text(timerInterval: status.now...max(status.now, job.plannedStart), countsDown: true)
+                            .font(.system(.largeTitle, design: .rounded).weight(.bold).monospacedDigit())
+                        Text("until your next job at \(Fmt.time(job.plannedStart))\(job.company.isEmpty ? "" : " · \(job.company)")")
+                            .font(.caption).foregroundStyle(.secondary)
+                        let restAtStart = job.plannedStart.timeIntervalSince(status.currentSince)
+                        if openEntry?.restType != .weekly && restAtStart < Limits.reducedDailyRest {
+                            Text("⚠︎ Only \(Fmt.hm(restAtStart)) rest by then — 9h minimum").font(.caption.weight(.semibold)).foregroundStyle(.red)
+                        }
+                    } else {
+                        Text("Resting since \(Fmt.dayTime(status.currentSince))").font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    if let next = TodayHelp.next(status: status, openEntry: openEntry) {
+                        Text(next)
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.tint)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                } else if status.hasData {
                     Text(status.currentSince, style: .timer)
                         .font(.system(.largeTitle, design: .rounded).weight(.bold).monospacedDigit())
                     HStack(spacing: 4) {
@@ -323,7 +343,7 @@ struct TodayView: View {
             VStack(spacing: 6) {
                 Button {
                     let s = currentStatus()
-                    if let plan = plans.first(where: { Calendar.hgv.isDateInToday($0.plannedStart) }) {
+                    if let plan = plans.first(where: { Calendar.hgv.isDateInToday($0.plannedStart) && !$0.cancelled }) {
                         if !plan.trailerID.isEmpty { store.settings.currentTrailerID = plan.trailerID }
                         if !plan.vehicleID.isEmpty { VehicleLog.select(plan.vehicleID, context: context, store: store) }
                     }
@@ -430,6 +450,10 @@ struct TodayView: View {
                 if detector.isOverspeeding {
                     Label("Over \(Int(detector.speedLimitKmh)) km/h — overspeed being recorded", systemImage: "gauge.with.dots.needle.100percent")
                         .font(.caption.weight(.bold)).foregroundStyle(.red)
+                }
+                if detector.harshBrakesToday > 0 {
+                    Label("Harsh braking today: \(detector.harshBrakesToday)", systemImage: "exclamationmark.brakesignal")
+                        .font(.caption.weight(.semibold)).foregroundStyle(.orange)
                 }
                 if let event = detector.lastEvent {
                     Text(event).font(.caption2).foregroundStyle(.secondary)
@@ -585,6 +609,7 @@ struct TodayView: View {
     private func todaysPlan(now: Date) -> some View {
         let cal = Calendar.hgv
         let todays = plans.filter { !$0.completed && (cal.isDate($0.plannedStart, inSameDayAs: now) || ($0.plannedStart <= now && $0.plannedEnd >= now)) }
+            .sorted { ($0.cancelled ? 1 : 0, $0.plannedStart) < ($1.cancelled ? 1 : 0, $1.plannedStart) }
         if todays.isEmpty {
             let next = plans.first { $0.plannedStart > now }
             HStack {
@@ -608,6 +633,11 @@ struct TodayView: View {
                 TodayJobCard(plan: plan) { editingPlan = plan }
             }
         }
+    }
+
+    /// The next job that isn't done or cancelled, starting within the next 24 hours.
+    private func nextPlannedJob(after now: Date) -> WorkPlan? {
+        plans.first { !$0.completed && !$0.cancelled && $0.plannedStart > now && $0.plannedStart < now.addingTimeInterval(24 * 3600) }
     }
 
     /// "Arrived" with no plan: makes today's job (from now) and records an arrival here.

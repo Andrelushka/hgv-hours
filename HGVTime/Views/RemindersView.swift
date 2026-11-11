@@ -6,7 +6,7 @@ import AVFoundation
 struct RemindersView: View {
     @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
-    @Query(sort: \Reminder.createdAt) private var reminders: [Reminder]
+    @Query(sort: \Reminder.createdAt, order: .reverse) private var reminders: [Reminder]
     @State private var editing: Reminder?
     @State private var adding = false
 

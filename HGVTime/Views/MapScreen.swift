@@ -22,6 +22,8 @@ struct MapScreen: View {
     @State private var showPlannedRoute = true
     @State private var geocoded: [UUID: CLLocationCoordinate2D] = [:]
     @State private var plannedRoutes: [MKRoute] = []
+    @State private var live = LiveLocation()
+    @State private var cameraHeading: CLLocationDirection = 0
 
     struct NavTarget: Identifiable, Hashable {
         static func == (a: NavTarget, b: NavTarget) -> Bool { a.id == b.id }
@@ -51,7 +53,13 @@ struct MapScreen: View {
         }
 
         Map(position: $position, selection: .constant(nil as Int?)) {
-            UserAnnotation()
+            if let loc = live.location {
+                Annotation("", coordinate: loc.coordinate, anchor: .center) {
+                    TruckMarker(rotation: live.heading - cameraHeading)
+                }
+            } else {
+                UserAnnotation()
+            }
             if showRoute && route.count > 1 {
                 MapPolyline(coordinates: route.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
                     .stroke(.blue.gradient, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
@@ -84,6 +92,9 @@ struct MapScreen: View {
                 }
             }
         }
+        .onMapCameraChange(frequency: .continuous) { ctx in cameraHeading = ctx.camera.heading }
+        .onAppear { live.start() }
+        .onDisappear { live.stop() }
         .mapControls {
             MapUserLocationButton()
             MapCompass()
@@ -272,7 +283,7 @@ struct EventPin: View {
 
     var color: Color {
         switch event.kind {
-        case .overspeed, .infringement, .cardOut: .red
+        case .overspeed, .infringement, .cardOut, .harshBraking: .red
         case .cardIn, .shiftStart: .green
         case .shiftEnd: .teal
         case .arrived, .departed: .indigo

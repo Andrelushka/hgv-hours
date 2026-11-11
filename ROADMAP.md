@@ -59,6 +59,14 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.4 (3.4.0) — Earnings kept, truck navigation, harsh braking, AI agent
+- ✅ Earnings and mileage stay until midnight after the shift ends; rest timer counts down to the next planned job
+- ✅ Cancel a job; change trailer mid-shift; newest records first
+- ✅ Lorry marker with heading, motorway-first routes, road-number signs, road speed limits (OpenStreetMap), speed limiter
+- ✅ Harsh braking detection
+- ✅ Assistant agent with app tools and photo reading
+- ⬜ On-device model (Qwen with Apple MLX) to replace the cloud model
+
 ## V3.3 (3.3.0) — Vehicles in the shift & 3D navigation
 - ✅ Vehicle selection and change on Today; per-vehicle mileage in reports; rules and overspeed per vehicle and country
 - ✅ Sub-activities with their own times; detailed addresses; vehicle service stops

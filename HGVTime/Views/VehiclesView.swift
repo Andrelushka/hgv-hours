@@ -119,6 +119,7 @@ struct VehicleEditor: View {
     @State private var odometer: Double
     @State private var rules: Regime?
     @State private var speedLimit: Double
+    @State private var limiter: Double
     @State private var inFeet = false
     @State private var lookingUp = false
     @State private var lookupMessage: String?
@@ -131,6 +132,7 @@ struct VehicleEditor: View {
         _odometer = State(initialValue: vehicle?.odometerKm ?? 0)
         _rules = State(initialValue: vehicle?.rules)
         _speedLimit = State(initialValue: vehicle?.speedLimitKmh ?? 0)
+        _limiter = State(initialValue: vehicle?.limiterKmh ?? 0)
         _fleetNumber = State(initialValue: vehicle?.fleetNumber ?? "")
         _make = State(initialValue: vehicle?.make ?? "")
         _model = State(initialValue: vehicle?.model ?? "")
@@ -234,6 +236,17 @@ struct VehicleEditor: View {
                                     .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 60)
                                 Text("km/h").foregroundStyle(.secondary)
                             }
+                        }
+                        LabeledContent("Speed limiter") {
+                            HStack(spacing: 4) {
+                                TextField(kind == .van ? "None" : "90", value: $limiter.emptyIfZero, format: .number.precision(.fractionLength(0)))
+                                    .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 60)
+                                Text("km/h").foregroundStyle(.secondary)
+                            }
+                        }
+                        if limiter > 0 {
+                            Text("Limiter \(Int(limiter)) km/h = \(Int((limiter / 1.609344).rounded())) mph. Used for arrival times when navigating.")
+                                .font(.caption).foregroundStyle(.secondary)
                         }
                         if speedLimit == 0 {
                             Text("Automatic: \(SpeedLimits.describe(SpeedLimits.defaultKmh(kind: kind, weightT: weight, region: store.settings.region))) for this vehicle in \(store.settings.region.title).")
@@ -345,6 +358,7 @@ struct VehicleEditor: View {
         v.odometerKm = odometer
         v.rules = kind == .trailer ? nil : rules
         v.speedLimitKmh = speedLimit
+        v.limiterKmh = limiter
         try? context.save()
         if v.id.uuidString == store.settings.currentVehicleID {
             VehicleLog.applyRules(v.id.uuidString, context: context, store: store)
@@ -413,13 +427,17 @@ struct CurrentVehicleCard: View {
                     Label(unit == nil ? "Choose" : "Change vehicle", systemImage: "arrow.triangle.2.circlepath")
                 }
                 Menu {
-                    ForEach(vehicles.filter { $0.kind == .trailer }) { v in
-                        Button(v.displayName) { store.settings.currentTrailerID = v.id.uuidString }
+                    Section(trailer == nil ? "Hook up a trailer" : "Change trailer to") {
+                        ForEach(vehicles.filter { $0.kind == .trailer && $0.id.uuidString != store.settings.currentTrailerID }) { v in
+                            Button(v.displayName) { VehicleLog.selectTrailer(v.id.uuidString, context: context, store: store) }
+                        }
                     }
                     Button("Add a new trailer", systemImage: "plus") { adding = .trailer }
-                    Button("No trailer") { store.settings.currentTrailerID = "" }
+                    if trailer != nil {
+                        Button("Drop trailer (none)", systemImage: "xmark") { VehicleLog.selectTrailer("", context: context, store: store) }
+                    }
                 } label: {
-                    Label("Trailer", systemImage: "shippingbox")
+                    Label(trailer == nil ? "Trailer" : "Change trailer", systemImage: "shippingbox")
                 }
                 if let unit {
                     Button { editing = unit } label: { Label("Edit", systemImage: "pencil") }
@@ -429,7 +447,9 @@ struct CurrentVehicleCard: View {
             .font(.caption.weight(.semibold))
             if shiftUses.count > 1 {
                 Text("This shift: " + shiftUses.map { u in
-                    (vehicles.first { $0.id.uuidString == u.vehicleID }?.registration ?? "Vehicle") + " " + Fmt.time(u.start)
+                    let unitReg = vehicles.first { $0.id.uuidString == u.vehicleID }?.registration ?? "Vehicle"
+                    let trailerReg = vehicles.first { $0.id.uuidString == u.trailerID }?.registration
+                    return unitReg + (trailerReg.map { " + \($0)" } ?? "") + " " + Fmt.time(u.start)
                 }.joined(separator: " → "))
                 .font(.caption2).foregroundStyle(.secondary)
             }

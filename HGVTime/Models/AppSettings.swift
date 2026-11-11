@@ -172,6 +172,10 @@ struct AppSettings: Codable, Equatable {
     // AI assistant
     /// Use Claude for free-form questions (needs your own Anthropic API key in the Keychain).
     var assistantUseClaude = false
+    /// Use the on-device model (free, private, offline after download).
+    var assistantUseLocal = false
+    /// Hugging Face id of the on-device model.
+    var assistantLocalModel = "mlx-community/Qwen3.5-2B-4bit"
 
     // Driver profile (kept only on this iPhone)
     var profileCreated = false
@@ -265,6 +269,12 @@ struct AppSettings: Codable, Equatable {
     /// Overspeed threshold from the vehicle type and country (otherwise the number above).
     var autoSpeedLimit = true
     var recordOverspeed = true
+    /// Record sudden stops (in-cab mode).
+    var recordHarshBraking = true
+    /// Deceleration that counts as harsh braking, m/s² (3.4 ≈ 0.35 g, a common fleet-telematics threshold).
+    var harshBrakeMS2: Double = 3.4
+    /// Look up the road's speed limit from OpenStreetMap while navigating.
+    var onlineSpeedLimits = true
 
     var pay = PaySettings()
 

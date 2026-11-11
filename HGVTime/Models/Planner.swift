@@ -70,6 +70,8 @@ final class Vehicle {
     var rulesRaw: String = ""
     /// Overspeed threshold for this vehicle in km/h (0 = automatic from vehicle type and country).
     var speedLimitKmh: Double = 0
+    /// Speed limiter setting (0 = usual for the type: 90 km/h / 56 mph for lorries over 3.5 t). Used for arrival times.
+    var limiterKmh: Double = 0
 
     var rules: Regime? {
         get { Regime(rawValue: rulesRaw) }
@@ -241,6 +243,10 @@ final class WorkPlan {
     var createdAt: Date = Date()
     /// Set when the shift ends: the job leaves the Today screen (still in the planner and debrief).
     var completed: Bool = false
+    /// The job was cancelled (kept for the record, not driven).
+    var cancelled: Bool = false
+    var cancelledAt: Date?
+    var cancelReason: String = ""
 
     init(start: Date, end: Date) {
         self.plannedStart = start
@@ -550,7 +556,7 @@ final class Reminder {
 // MARK: Event log and route
 
 enum EventKind: String, Codable, CaseIterable, Identifiable {
-    case shiftStart, shiftEnd, activity, cardIn, cardOut, arrived, departed, fuel, overspeed, infringement, note, correction
+    case shiftStart, shiftEnd, activity, cardIn, cardOut, arrived, departed, fuel, overspeed, infringement, note, correction, harshBraking
 
     var id: String { rawValue }
 
@@ -568,6 +574,7 @@ enum EventKind: String, Codable, CaseIterable, Identifiable {
         case .infringement: "Infringement"
         case .note: "Note"
         case .correction: "Record changed"
+        case .harshBraking: "Harsh braking"
         }
     }
 
@@ -584,10 +591,11 @@ enum EventKind: String, Codable, CaseIterable, Identifiable {
         case .infringement: "exclamationmark.octagon.fill"
         case .note: "note.text"
         case .correction: "pencil.circle.fill"
+        case .harshBraking: "exclamationmark.brakesignal"
         }
     }
 
-    var isProblem: Bool { self == .overspeed || self == .infringement }
+    var isProblem: Bool { self == .overspeed || self == .infringement || self == .harshBraking }
 }
 
 /// Something that happened, where and when.

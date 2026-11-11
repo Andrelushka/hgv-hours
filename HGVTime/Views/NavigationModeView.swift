@@ -13,6 +13,9 @@ struct NavigationModeView: View {
     @State private var view: ViewMode = .follow3D
     @State private var lastHeading: CLLocationDirection = 0
     @State private var showingSteps = false
+    @State private var cameraHeading: CLLocationDirection = 0
+    @State private var limits = RoadSpeedLimit()
+    @State private var roadLimit: RoadSpeedLimit.Result?
     var target: MapScreen.NavTarget
 
     /// How the map follows you, like Apple Maps navigation.
@@ -40,7 +43,14 @@ struct NavigationModeView: View {
     var body: some View {
         ZStack(alignment: .top) {
             Map(position: $position) {
-                UserAnnotation()
+                if let loc = engine.location {
+                    // Small lorry seen from above, pointing where you're heading.
+                    Annotation("", coordinate: loc.coordinate, anchor: .center) {
+                        TruckMarker(rotation: lastHeading - cameraHeading)
+                    }
+                } else {
+                    UserAnnotation()
+                }
                 if let route = engine.route {
                     MapPolyline(route.polyline).stroke(.blue, style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
                 }
@@ -55,13 +65,25 @@ struct NavigationModeView: View {
                                 pointsOfInterest: .including([.parking, .gasStation, .restroom]), showsTraffic: true))
             .mapControls { MapCompass(); MapScaleView() }
             .ignoresSafeArea()
-            .onChange(of: engine.location) { _, loc in follow(loc) }
+            .onMapCameraChange(frequency: .continuous) { ctx in cameraHeading = ctx.camera.heading }
+            .onChange(of: engine.location) { _, loc in
+                follow(loc)
+                if let loc, store.settings.onlineSpeedLimits {
+                    limits.update(loc, heavyVehicle: isHeavy) { roadLimit = $0 }
+                }
+            }
             .onChange(of: view) { _, _ in follow(engine.location, animated: true) }
 
             VStack(spacing: 8) {
                 instructionBanner
                 HStack(alignment: .top) {
-                    speedBubble
+                    VStack(spacing: 8) {
+                        speedLimitSign
+                        speedBubble
+                        if let road = currentRoad {
+                            RoadShield(text: road, large: true)
+                        }
+                    }
                     Spacer()
                     VStack(spacing: 8) {
                         Menu {
@@ -113,6 +135,7 @@ struct NavigationModeView: View {
         }
         .onAppear {
             engine.driveLeft = { driveLeftNow() }
+            engine.limiterKmh = limiterKmh
             if let c = target.coordinate {
                 engine.start(to: c, name: target.name)
             } else {
@@ -136,6 +159,9 @@ struct NavigationModeView: View {
                     Text(NavigationEngine.distanceText(d)).font(.title2.weight(.bold)).foregroundStyle(.white)
                 }
                 let next = engine.route.flatMap { r in engine.stepIndex + 1 < r.steps.count ? r.steps[engine.stepIndex + 1].instructions : nil }
+                if let n = next.flatMap(RoadSpeedLimit.roadNumber) {
+                    RoadShield(text: n, large: true)
+                }
                 Text(next ?? engine.currentStep?.instructions ?? engine.status)
                     .font(.headline).foregroundStyle(.white).lineLimit(2)
             }
@@ -196,7 +222,66 @@ struct NavigationModeView: View {
         }
         .frame(width: 64, height: 64)
         .background(.regularMaterial, in: Circle())
-        .overlay(Circle().stroke(kmh > AutoDriveDetector.shared.speedLimitKmh ? Color.red : .clear, lineWidth: 3))
+        .overlay(Circle().stroke(kmh > effectiveLimitKmh + 2 ? Color.red : .clear, lineWidth: 3))
+        .overlay(alignment: .bottom) {
+            if limiterKmh > 0 {
+                Text("Limiter \(miles ? Int((limiterKmh / 1.609344).rounded()) : Int(limiterKmh))")
+                    .font(.system(size: 9, weight: .bold)).padding(.horizontal, 4).padding(.vertical, 1)
+                    .background(.thinMaterial, in: Capsule()).offset(y: 8)
+            }
+        }
+    }
+
+    /// The road's limit as a round sign (with the lower of the road and your vehicle's limit).
+    @ViewBuilder
+    private var speedLimitSign: some View {
+        if let r = roadLimit {
+            let miles = store.settings.useMiles
+            let vehicleMax = SpeedLimits.defaultKmh(kind: currentVehicle?.kind ?? .tractor, weightT: currentVehicle?.weight ?? 0,
+                                                    region: store.settings.region)
+            let lower = isHeavy && vehicleMax + 1 < r.roadKmh
+            let text = lower ? "\(Int((miles ? vehicleMax / 1.609344 : vehicleMax).rounded()))" : r.signText
+            VStack(spacing: 2) {
+                Text(text)
+                    .font(.system(size: text.count > 2 ? 22 : 26, weight: .heavy, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.black)
+                    .frame(width: 64, height: 64)
+                    .background(Circle().fill(.white))
+                    .overlay(Circle().stroke(.red, lineWidth: 7))
+                    .shadow(radius: 2)
+                if lower {
+                    Text("Road \(r.signText)").font(.system(size: 10, weight: .bold)).padding(.horizontal, 5)
+                        .background(.thinMaterial, in: Capsule())
+                }
+            }
+            .accessibilityLabel("Speed limit \(text)")
+        }
+    }
+
+    /// Lowest of the road limit (for your vehicle) and the limiter, km/h.
+    private var effectiveLimitKmh: Double {
+        var l = AutoDriveDetector.shared.speedLimitKmh
+        if let r = roadLimit { l = min(l, r.roadKmh) }
+        return l
+    }
+
+    /// Road you're on: OpenStreetMap ref, else the current direction step.
+    private var currentRoad: String? {
+        if let ref = roadLimit?.roadRef, !ref.isEmpty { return ref.components(separatedBy: ";").first }
+        return engine.currentStep.flatMap { RoadSpeedLimit.roadNumber(in: $0.instructions) }
+    }
+
+    private var currentVehicle: Vehicle? { vehicles.first { $0.id.uuidString == store.settings.currentVehicleID } }
+
+    private var isHeavy: Bool {
+        guard let v = currentVehicle else { return true }
+        return !(v.kind == .van && (v.weight == 0 || v.weight <= 3.5))
+    }
+
+    /// Speed limiter of the vehicle in use: as set, or 90 km/h (56 mph) for lorries over 3.5 t.
+    private var limiterKmh: Double {
+        if let l = currentVehicle?.limiterKmh, l > 0 { return l }
+        return isHeavy ? 90 : 0
     }
 
     /// Moves the camera with you: behind the lorry in 3D (zooming out as speed rises), heading up, north up, or the whole route.
@@ -265,5 +350,48 @@ struct NavigationModeView: View {
         let s = RulesEngine.status(snaps, now: .now, config: settings.ruleConfig)
         if let world = WorldRulesCache.refresh(snaps, now: .now, settings: settings) { return world.driveLeft }
         return s.currentShift == nil ? .infinity : s.driveAvailableNow
+    }
+}
+
+/// Top-down lorry: cab at the front, trailer behind, an arrow on the cab. Rotated to your heading.
+struct TruckMarker: View {
+    var rotation: Double
+
+    var body: some View {
+        VStack(spacing: 1.5) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 4).fill(Color.blue)
+                Image(systemName: "arrowtriangle.up.fill").font(.system(size: 9, weight: .black)).foregroundStyle(.white)
+            }
+            .frame(width: 20, height: 15)
+            RoundedRectangle(cornerRadius: 2.5).fill(Color(white: 0.92))
+                .overlay(RoundedRectangle(cornerRadius: 2.5).stroke(Color.blue, lineWidth: 2))
+                .frame(width: 20, height: 34)
+        }
+        .padding(3)
+        .shadow(color: .black.opacity(0.45), radius: 3, y: 1)
+        .rotationEffect(.degrees(rotation))
+        .animation(.linear(duration: 0.8), value: rotation)
+        .accessibilityLabel("Your lorry")
+    }
+}
+
+/// Road number in its sign colours: blue motorway (M), green primary (A / E), white for others.
+struct RoadShield: View {
+    var text: String
+    var large = false
+
+    var body: some View {
+        let t = text.uppercased()
+        let motorway = t.hasPrefix("M") || t.contains("(M)") || t.hasPrefix("I")
+        let green = !motorway && (t.hasPrefix("A") || t.hasPrefix("E") || t.hasPrefix("N") || t.hasPrefix("US"))
+        Text(t)
+            .font(.system(size: large ? 24 : 15, weight: .heavy, design: .rounded))
+            .foregroundStyle(green ? Color.yellow : (motorway ? .white : .black))
+            .padding(.horizontal, large ? 10 : 6).padding(.vertical, large ? 4 : 2)
+            .background(RoundedRectangle(cornerRadius: 6).fill(motorway ? Color.blue : (green ? Color(red: 0, green: 0.42, blue: 0.24) : .white)))
+            .overlay(RoundedRectangle(cornerRadius: 6).stroke(.white, lineWidth: 2))
+            .shadow(radius: 1)
+            .accessibilityLabel("Road \(t)")
     }
 }

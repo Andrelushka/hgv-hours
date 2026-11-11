@@ -1,5 +1,9 @@
-import SwiftUI
+import PhotosUI
 import SwiftData
+import SwiftUI
+#if canImport(HGVAI)
+import HGVAI
+#endif
 
 struct ChatLine: Identifiable, Equatable {
     enum Role { case user, assistant, notice }
@@ -27,8 +31,24 @@ struct AssistantView: View {
     @State private var voice = VoiceInput()
     /// Hands-free: answers are spoken and it listens again.
     @State private var talkMode = false
+    @State private var photoItem: PhotosPickerItem?
+    @State private var readingPhoto = false
+    /// A change the assistant wants to make that needs your OK.
+    @State private var confirmText: String?
+    @State private var confirmReply: CheckedContinuation<Bool, Never>?
+    #if canImport(HGVAI)
+    @State private var localChat: LocalChat?
+    #endif
 
     private var claudeOn: Bool { store.settings.assistantUseClaude && KeychainKey.hasKey }
+    private var localOn: Bool {
+        #if canImport(HGVAI)
+        store.settings.assistantUseLocal
+        #else
+        false
+        #endif
+    }
+    private var agentOn: Bool { localOn || claudeOn }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -70,23 +90,37 @@ struct AssistantView: View {
             }
         }
         .onDisappear { voice.cancel(); talkMode = false }
+        .alert("Assistant wants to make a change", isPresented: Binding(get: { confirmText != nil }, set: { if !$0 { answerConfirm(false) } })) {
+            Button("Yes, do it") { answerConfirm(true) }
+            Button("No", role: .cancel) { answerConfirm(false) }
+        } message: {
+            Text(confirmText ?? "")
+        }
+        .onChange(of: photoItem) { _, item in
+            guard let item else { return }
+            photoItem = nil
+            readPhoto(item)
+        }
         .sheet(isPresented: $showingSettings) { NavigationStack { AssistantSettingsView() } }
     }
 
     private var intro: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Label(claudeOn ? "Claude AI is on" : "Offline answers", systemImage: claudeOn ? "sparkles" : "bolt.horizontal.circle")
+            Label(localOn ? "On-device AI agent" : (claudeOn ? "Claude AI agent" : "Offline answers"),
+                  systemImage: localOn ? "cpu" : (claudeOn ? "sparkles" : "bolt.horizontal.circle"))
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(claudeOn ? .purple : .accentColor)
-            Text(claudeOn
-                 ? "Ask anything about your hours, rest, pay or jobs. Your question and a summary of your records are sent to Anthropic to answer it."
+                .foregroundStyle(agentOn ? .purple : .accentColor)
+            Text(localOn
+                 ? "Ask anything, or tell it what to do: plan or cancel a job, add stops, write notes, set reminders, log fuel, change vehicle or trailer. 📷 reads delivery notes and booking sheets. Runs on this iPhone — nothing leaves the phone."
+                 : claudeOn
+                 ? "Ask anything, or tell it what to do: plan or cancel a job, add stops, write notes, set reminders, log fuel, change vehicle or trailer. 📷 reads delivery notes and booking sheets. Your question and the data it needs are sent to Anthropic."
                  : "Ask about driving left, breaks, rest, next start, 15h days, earnings, weekly rest or vehicle height. Answers come from your records on this iPhone. Turn on Claude AI (⚙︎ top right) for any other question.")
             Text("🎙 Tap the mic to speak, or turn on talk mode (👤 top right) for hands-free: answers are read out and it listens again. Say commands like \"start driving\", \"take a break\", \"loading\", \"insert card\" or \"end shift\".")
                 .font(.caption).foregroundStyle(.secondary)
                 .font(.caption).foregroundStyle(.secondary)
         }
         .padding(10)
-        .background((claudeOn ? Color.purple : Color.accentColor).opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .background((agentOn ? Color.purple : Color.accentColor).opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
     }
 
     private func bubble(_ line: ChatLine) -> some View {
@@ -95,7 +129,7 @@ struct AssistantView: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(LocalizedStringKey(line.text)).font(.subheadline)
                 if line.role == .assistant {
-                    Text(line.byClaude ? "Claude" : "From your records").font(.caption2).foregroundStyle(.secondary)
+                    Text(line.byClaude ? (localOn ? "On-device AI" : "Claude") : "From your records").font(.caption2).foregroundStyle(.secondary)
                 }
             }
             .padding(10)
@@ -130,6 +164,11 @@ struct AssistantView: View {
                     .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
             }
             .accessibilityLabel(voice.isListening ? "Stop listening" : "Speak")
+            PhotosPicker(selection: $photoItem, matching: .images) {
+                Image(systemName: readingPhoto ? "hourglass.circle.fill" : "camera.circle.fill").font(.title2)
+            }
+            .disabled(readingPhoto || thinking)
+            .accessibilityLabel("Read a photo")
             TextField(voice.isListening ? "Listening…" : "Ask or say a command…", text: voice.isListening ? .constant(voice.transcript) : $input, axis: .vertical)
                 .lineLimit(1...4)
                 .textFieldStyle(.roundedBorder)
@@ -158,9 +197,8 @@ struct AssistantView: View {
         let weekShifts = analysis.shifts.filter { $0.period.start >= weekStart }
         let week = PayCalculator.calculate(shifts: weekShifts, nightOuts: nightOuts.filter { $0.date >= weekStart }.count,
                                            settings: settings.pay, items: payItems.filter { $0.date >= weekStart }.map(\.snapshot))
-        if let last = analysis.shifts.last, Calendar.hgv.isDateInToday(last.period.start) {
-            dash.earnedShift = PayCalculator.calculate(shifts: [last], nightOuts: 0, settings: settings.pay).total
-        }
+        let today = analysis.shifts.workedOn(now)
+        if !today.isEmpty { dash.earnedShift = PayCalculator.calculate(shifts: today, nightOuts: 0, settings: settings.pay).total }
         dash.cardInserted = settings.cardInserted
         let ids = [settings.currentVehicleID, settings.currentTrailerID]
         let height = vehicles.filter { ids.contains($0.id.uuidString) }.map(\.height).max() ?? 0
@@ -206,20 +244,14 @@ struct AssistantView: View {
             return
         }
         let f = facts()
-        if claudeOn {
+        if agentOn {
             thinking = true
-            let history = apiHistory
             Task {
                 do {
-                    let reply = try await ClaudeAssistant.ask(q, facts: f, history: history)
-                    apiHistory.append(["role": "user", "content": "My data right now:\n\(f.summary)\n\nQuestion: \(q)"])
-                    apiHistory.append(["role": "assistant", "content": reply.rawContent])
-                    self.reply(ChatLine(role: .assistant, text: reply.text, byClaude: true))
+                    let answer = try await runAgent(q, facts: f)
+                    self.reply(ChatLine(role: .assistant, text: answer, byClaude: true))
                 } catch {
-                    // Fall back to the offline answer if there is one.
-                    if let offline = OfflineAssistant.answer(q, f) {
-                        self.reply(ChatLine(role: .assistant, text: offline))
-                    }
+                    if let offline = OfflineAssistant.answer(q, f) { self.reply(ChatLine(role: .assistant, text: offline)) }
                     lines.append(ChatLine(role: .notice, text: error.localizedDescription))
                 }
                 thinking = false
@@ -228,6 +260,79 @@ struct AssistantView: View {
             reply(ChatLine(role: .assistant, text: offline))
         } else {
             reply(ChatLine(role: .notice, text: "I can answer questions about driving left, breaks, rest, next start, 15h and 10h days, earnings, weekly rest, infringements and vehicle height. For anything else, turn on Claude AI with ⚙︎ (top right). You can also say commands like start driving, take a break, loading, or end shift."))
+        }
+    }
+}
+
+extension AssistantView {
+    /// Runs the question through the on-device model or Claude, letting it use the app's tools.
+    fileprivate func runAgent(_ q: String, facts f: AssistantFacts) async throws -> String {
+        let summary = f.summary
+        #if canImport(HGVAI)
+        if localOn {
+            let model = LocalModel.shared
+            if model.loadedID != store.settings.assistantLocalModel || localChat == nil {
+                lines.append(ChatLine(role: .notice, text: "Loading the on-device model…"))
+                try await model.load(store.settings.assistantLocalModel) { _ in }
+                let tools = AgentTools.all.map { d in
+                    AgentTool(name: d.name, description: d.description,
+                              parameters: d.params.map { (name: $0.name, type: $0.type, description: $0.description, required: $0.required) })
+                }
+                let ctx = context, st = store
+                localChat = try model.makeChat(
+                    instructions: AgentTools.instructions + "\nToday is \(Date.now.formatted(date: .complete, time: .shortened)).",
+                    tools: tools) { name, args in
+                        await AgentTools.run(name, args, context: ctx, store: st, status: { summary }, confirm: { await self.askConfirm($0) })
+                    }
+            }
+            guard let chat = localChat else { throw LocalModel.Failure.notLoaded }
+            return try await chat.send(q)
+        }
+        #endif
+        var history = apiHistory
+        let answer = try await ClaudeAssistant.agent(q, history: &history) { name, args in
+            await AgentTools.run(name, args, context: context, store: store, status: { summary }, confirm: { await askConfirm($0) })
+        }
+        apiHistory = history
+        return answer
+    }
+
+    fileprivate func askConfirm(_ text: String) async -> Bool {
+        await withCheckedContinuation { c in
+            confirmReply = c
+            confirmText = text
+        }
+    }
+
+    fileprivate func answerConfirm(_ yes: Bool) {
+        let c = confirmReply
+        confirmReply = nil
+        confirmText = nil
+        c?.resume(returning: yes)
+    }
+
+    /// Reads the text in a photo on the phone and hands it to the assistant.
+    fileprivate func readPhoto(_ item: PhotosPickerItem) {
+        readingPhoto = true
+        Task {
+            defer { readingPhoto = false }
+            guard let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) else {
+                lines.append(ChatLine(role: .notice, text: "Couldn't open that photo."))
+                return
+            }
+            let text = await AgentTools.readText(from: image)
+            guard !text.isEmpty else {
+                lines.append(ChatLine(role: .notice, text: "No text found in the photo."))
+                return
+            }
+            let ask = input.trimmingCharacters(in: .whitespacesAndNewlines)
+            input = ""
+            if agentOn {
+                send("Text read from my photo:\n\"\"\"\n\(text.prefix(4000))\n\"\"\"\n\n\(ask.isEmpty ? "What is this? If it's a job, booking or delivery note, offer to add it to my jobs." : ask)")
+            } else {
+                lines.append(ChatLine(role: .assistant, text: "Text in the photo:\n\n\(text)"))
+                lines.append(ChatLine(role: .notice, text: "Turn on the AI agent (⚙︎) to turn photos into jobs, notes or reminders."))
+            }
         }
     }
 }
@@ -241,6 +346,7 @@ struct AssistantSettingsView: View {
 
     var body: some View {
         Form {
+            OnDeviceAISection()
             Section {
                 Toggle("Use Claude AI for questions", isOn: Binding(get: { store.settings.assistantUseClaude }, set: { store.settings.assistantUseClaude = $0 }))
                     .disabled(!hasKey)
@@ -277,5 +383,56 @@ struct AssistantSettingsView: View {
         .navigationTitle("Assistant settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { Button("Done") { dismiss() } }
+    }
+}
+
+/// Download and switch on the on-device model.
+struct OnDeviceAISection: View {
+    @Environment(SettingsStore.self) private var store
+    @State private var progress: Double?
+    @State private var error: String?
+
+    var body: some View {
+        Section {
+            #if canImport(HGVAI)
+            Toggle("Use on-device AI agent", isOn: Binding(get: { store.settings.assistantUseLocal }, set: { on in
+                store.settings.assistantUseLocal = on
+                if on { store.settings.assistantUseClaude = false }
+            }))
+            Picker("Model", selection: Binding(get: { store.settings.assistantLocalModel }, set: { store.settings.assistantLocalModel = $0 })) {
+                ForEach(LocalModelOption.all) { m in Text("\(m.title) · \(m.sizeMB) MB").tag(m.id) }
+            }
+            if let m = LocalModelOption.all.first(where: { $0.id == store.settings.assistantLocalModel }) {
+                Text(m.detail).font(.caption).foregroundStyle(.secondary)
+            }
+            if let progress {
+                ProgressView(value: progress) { Text(progress < 0.9 ? "Downloading…" : "Loading…") }
+            } else {
+                Button(LocalModel.shared.loadedID == store.settings.assistantLocalModel ? "Model ready ✓" : "Download / load model") {
+                    error = nil
+                    progress = 0
+                    Task {
+                        do {
+                            try await LocalModel.shared.load(store.settings.assistantLocalModel) { p in
+                                Task { @MainActor in progress = p }
+                            }
+                        } catch { self.error = error.localizedDescription }
+                        progress = nil
+                    }
+                }
+                let mb = LocalModel.downloadedMB()
+                if mb > 0 {
+                    Button("Delete downloaded models (\(mb) MB)", role: .destructive) { LocalModel.shared.deleteDownloads() }
+                }
+            }
+            if let error { Text(error).font(.caption).foregroundStyle(.red) }
+            #else
+            Label("On-device AI isn't included in this build yet.", systemImage: "cpu")
+            #endif
+        } header: {
+            Text("On-device AI (free, private)")
+        } footer: {
+            Text("An open AI model (Qwen, by Alibaba, Apache-2.0 licence) runs on this iPhone with Apple's MLX. It can use the app's tools: plan, change or cancel jobs, add stops, notes, reminders and fuel, switch activity, vehicle or trailer, and read photos of delivery notes. The model downloads once over Wi-Fi from Hugging Face; after that nothing leaves the phone. Slower and less clever than Claude, and it uses battery while answering.")
+        }
     }
 }

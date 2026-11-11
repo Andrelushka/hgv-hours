@@ -2,6 +2,18 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.4.0 — Earnings kept, truck navigation, harsh braking, AI agent tools
+- Fixed: ending a shift no longer clears "Earned today" or the mileage card. They stay until midnight and start again at zero the next day (a night shift counts on the day it finishes).
+- Resting between shifts: the big timer counts down to your next planned job (within 24 h), warns if you won't have 9 h rest by then, and is hidden when nothing is planned.
+- Today's job: "Job cancelled" button (optional reason), with Restore. Cancelled jobs stay in your records with a CANCELLED badge.
+- Change the trailer mid-shift as well as the vehicle: each part of the shift records which trailer was on, shown in the vehicle card and mileage.
+- Driver log, shift details, weeks and reminders list the newest first.
+- Navigation: a small lorry marker that points the way you're heading (also on the main map); routes prefer motorways and A-roads; big road-number signs (blue motorway, green primary); the road's speed limit as a round sign (OpenStreetMap, lower lorry limit shown when it applies); arrival times allow for your speed limiter.
+- Vehicles: speed limiter setting (default 90 km/h / 56 mph for lorries over 3.5 t).
+- Harsh braking detection in in-cab mode (adjustable sensitivity), saved in the event log with time and place, and counted on Today.
+- Assistant is now an agent: it can plan, change, cancel or delete jobs, add stops, read and write notes, set reminders, log fuel, switch activity, vehicle or trailer, and mark the card — asking you first before deleting anything or ending a shift. 📷 reads the text in a photo (delivery notes, booking sheets) on the phone and turns it into jobs or notes.
+- 7 new tests (73 in total).
+
 ## 3.3.0 — Vehicles in the shift, 3D navigation, deeper rule checks
 - Today: choose, change, edit or add your vehicle and trailer at any time. Changing vehicle mid-shift keeps each vehicle's mileage separately.
 - Mileage per vehicle: start reading from the vehicle, end reading worked out from GPS (in-cab mode) and editable; goes into the day debrief and the summary table (with the number of vehicles used).

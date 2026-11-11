@@ -9,11 +9,48 @@ struct TodayJobCard: View {
     @Bindable var plan: WorkPlan
     var onEdit: () -> Void
     @State private var busy: UUID?
+    @State private var confirmCancel = false
+    @State private var reason = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Button(action: onEdit) { PlanCard(plan: plan, title: "Today's job", showChecks: false, showStops: false) }
                 .buttonStyle(.plain)
+                .opacity(plan.cancelled ? 0.5 : 1)
+            if plan.cancelled {
+                HStack {
+                    Label("Cancelled\(plan.cancelledAt.map { " at \(Fmt.time($0))" } ?? "")\(plan.cancelReason.isEmpty ? "" : " — \(plan.cancelReason)")",
+                          systemImage: "xmark.octagon.fill")
+                        .font(.caption.weight(.semibold)).foregroundStyle(.red)
+                    Spacer()
+                    Button("Restore") { setCancelled(false) }.buttonStyle(.bordered).font(.caption.weight(.semibold))
+                }
+            } else {
+                jobStops
+            }
+        }
+        .alert("Cancel this job?", isPresented: $confirmCancel) {
+            TextField("Reason (optional)", text: $reason)
+            Button("Cancel job", role: .destructive) { setCancelled(true) }
+            Button("Keep job", role: .cancel) {}
+        } message: {
+            Text("It stays in your records marked as cancelled. You can restore it.")
+        }
+    }
+
+    private func setCancelled(_ on: Bool) {
+        plan.cancelled = on
+        plan.cancelledAt = on ? .now : nil
+        plan.cancelReason = on ? reason.trimmingCharacters(in: .whitespaces) : ""
+        reason = ""
+        try? context.save()
+        EventRecorder.log(.note, title: on ? "Job cancelled" : "Job restored",
+                          detail: [plan.company, plan.reference].filter { !$0.isEmpty }.joined(separator: " · "),
+                          context: context, settings: store.settings)
+    }
+
+    @ViewBuilder
+    private var jobStops: some View {
             ForEach(plan.stops) { stop in
                 HStack(spacing: 8) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
@@ -46,7 +83,11 @@ struct TodayJobCard: View {
             }
             .buttonStyle(.bordered)
             .font(.caption.weight(.semibold))
-        }
+            Button(role: .destructive) { confirmCancel = true } label: {
+                Label("Job cancelled", systemImage: "xmark.octagon").frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.bordered)
+            .font(.caption.weight(.semibold))
     }
 
     private func statusText(_ stop: PlanStop) -> String {

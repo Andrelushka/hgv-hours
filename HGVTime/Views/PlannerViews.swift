@@ -393,6 +393,10 @@ struct PlanCard: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Label(title, systemImage: "calendar.badge.clock").font(.caption.weight(.bold)).foregroundStyle(.indigo)
+                if plan.cancelled {
+                    Text("CANCELLED").font(.caption2.weight(.heavy)).foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 2).background(.red, in: Capsule())
+                }
                 Spacer()
                 Text("\(Fmt.time(plan.plannedStart))–\(Fmt.time(plan.plannedEnd)) · \(Fmt.hm(plan.length))")
                     .font(.caption.monospacedDigit()).foregroundStyle(.secondary)

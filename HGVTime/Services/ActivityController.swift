@@ -363,8 +363,11 @@ enum ActivityController {
         let nights = ((try? context.fetch(FetchDescriptor<NightOut>())) ?? []).filter { $0.date >= weekStart }.count
         let items = ((try? context.fetch(FetchDescriptor<PayItem>())) ?? []).filter { $0.date >= weekStart }.map(\.snapshot)
         d.earnedWeek = PayCalculator.calculate(shifts: weekShifts, nightOuts: nights, settings: settings.pay, items: items).total
-        if let last = analysis.shifts.last, d.onShift || cal.isDate(last.period.start, inSameDayAs: now) {
+        if d.onShift, let last = analysis.shifts.last {
             d.earnedShift = PayCalculator.calculate(shifts: [last], nightOuts: 0, settings: settings.pay).total
+        } else {
+            let today = analysis.shifts.workedOn(now)
+            d.earnedShift = today.isEmpty ? 0 : PayCalculator.calculate(shifts: today, nightOuts: 0, settings: settings.pay).total
         }
         d.currency = settings.pay.currencySymbol
         let vehicles = (try? context.fetch(FetchDescriptor<Vehicle>())) ?? []

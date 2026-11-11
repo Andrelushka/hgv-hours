@@ -20,6 +20,15 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     var notEnoughTime = false
     var parkingOptions: [MKMapItem] = []
     var isRunning = false
+    /// Travel time for the chosen route, with the vehicle's speed limiter applied.
+    var travelTime: TimeInterval = 0
+    /// Share of the route on motorways / A-roads (0…1).
+    var majorShare: Double = 0
+
+    /// Speed limiter of the vehicle (km/h, 0 = none). Slows arrival times on fast roads.
+    @ObservationIgnored var limiterKmh: Double = 0
+    /// Choose the route that stays on motorways and A-roads when it isn't much slower.
+    @ObservationIgnored var preferMajorRoads = true
 
     /// Driving time left, provided by the app (drivers' hours).
     @ObservationIgnored var driveLeft: () -> TimeInterval = { .infinity }
@@ -74,15 +83,20 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination))
         request.transportType = .automobile
         request.departureDate = .now
-        guard let response = try? await MKDirections(request: request).calculate(), let best = response.routes.first else {
+        request.requestsAlternateRoutes = true
+        request.highwayPreference = .any
+        guard let response = try? await MKDirections(request: request).calculate(), !response.routes.isEmpty else {
             status = "Couldn't find a route. Check your connection."
             return
         }
+        let best = choose(response.routes)
         route = best
+        majorShare = Self.majorShare(best)
+        travelTime = adjustedTime(best)
         stepIndex = best.steps.first?.distance == 0 ? 1 : 0
         spokenForStep = []
         remainingDistance = best.distance
-        eta = Date.now.addingTimeInterval(best.expectedTravelTime)
+        eta = Date.now.addingTimeInterval(travelTime)
         status = "\(Self.distanceText(best.distance)) · arrive \(Fmt.time(eta!))"
         if announce {
             var lines = ["Route found. \(Self.distanceText(best.distance)), arriving about \(Fmt.time(eta!))."]
@@ -91,7 +105,7 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         }
         // Traffic: compare the new travel time with the first one.
         if let base = baselineTravelTime {
-            let delay = best.expectedTravelTime - base
+            let delay = travelTime - base
             if delay > 5 * 60 {
                 VoiceService.shared.say("Traffic ahead. About \(Int(delay / 60)) minutes of delay. New arrival time \(Fmt.time(eta!)).", force: true)
             }
@@ -99,24 +113,50 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
                 VoiceService.shared.say(best.advisoryNotices.joined(separator: " "), force: true)
             }
         }
-        baselineTravelTime = best.expectedTravelTime
+        baselineTravelTime = travelTime
         await checkDrivingTime()
+    }
+
+    /// Lorries belong on motorways and A-roads: take the route with most of its length on them unless it is
+    /// clearly slower (up to ~25% longer for a route entirely on major roads).
+    private func choose(_ routes: [MKRoute]) -> MKRoute {
+        guard preferMajorRoads, routes.count > 1 else { return routes[0] }
+        return routes.min { score($0) < score($1) } ?? routes[0]
+    }
+
+    private func score(_ r: MKRoute) -> Double {
+        adjustedTime(r) * (1 - 0.2 * Self.majorShare(r))
+    }
+
+    static func majorShare(_ r: MKRoute) -> Double {
+        guard r.distance > 0 else { return 0 }
+        let major = r.steps.filter { RoadSpeedLimit.isMajor($0.instructions) || RoadSpeedLimit.isMajor($0.notice ?? "") }
+            .reduce(0) { $0 + $1.distance }
+        return min(1, major / r.distance)
+    }
+
+    /// Apple's times are for cars. With a limiter, fast-road stretches take at least distance ÷ limiter.
+    func adjustedTime(_ r: MKRoute) -> TimeInterval {
+        guard limiterKmh > 0 else { return r.expectedTravelTime }
+        let major = Self.majorShare(r) * r.distance
+        let carSpeed = 108 / 3.6, truckSpeed = limiterKmh * 0.95 / 3.6
+        return r.expectedTravelTime + max(0, major / truckSpeed - major / carSpeed)
     }
 
     /// Warns when your drivers' hours run out before you arrive, and finds parking within reach.
     private func checkDrivingTime() async {
         guard let route else { return }
         let left = driveLeft()
-        guard left.isFinite, route.expectedTravelTime > left else { notEnoughTime = false; return }
+        guard left.isFinite, travelTime > left else { notEnoughTime = false; return }
         notEnoughTime = true
         // The point on the route you can reach in the time left.
-        let fraction = max(0, min(1, left / route.expectedTravelTime))
+        let fraction = max(0, min(1, left / travelTime))
         let coords = route.polyline.coordinates
         let reach = coords[min(coords.count - 1, Int(Double(coords.count - 1) * fraction))]
         parkingOptions = await Self.findParking(near: reach)
         guard !warnedAboutTime else { return }
         warnedAboutTime = true
-        var text = "You have \(Fmt.hm(left)) of driving left, but the journey takes \(Fmt.hm(route.expectedTravelTime))."
+        var text = "You have \(Fmt.hm(left)) of driving left, but the journey takes \(Fmt.hm(travelTime))."
         if let first = parkingOptions.first {
             text += " Nearest place to stop within reach: \(first.name ?? "services"). Check it's suitable for your vehicle."
         }

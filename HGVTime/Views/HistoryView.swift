@@ -183,7 +183,7 @@ struct ShiftDetailView: View {
                     }
                 }
                 Section("Activities") {
-                    let shiftEntries = entries.filter { ($0.end ?? .now) > shift.period.start && $0.start < shiftEnd }
+                    let shiftEntries = entries.filter { ($0.end ?? .now) > shift.period.start && $0.start < shiftEnd }.reversed().map { $0 }
                     ForEach(shiftEntries) { entry in
                         HStack(spacing: 6) {
                             Button { editing = entry } label: { EntryRow(entry: entry) }
