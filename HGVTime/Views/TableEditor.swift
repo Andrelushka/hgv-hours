@@ -71,8 +71,6 @@ struct TableDoc: Equatable {
         style.frozenRows = min(max(0, style.frozenRows), rows)
         style.headerCols = min(max(0, style.headerCols), c)
         style.frozenCols = min(max(0, style.frozenCols), c)
-        // Freeze one direction at a time: rows win if both were set.
-        if style.frozenRows > 0 && style.frozenCols > 0 { style.frozenCols = 0 }
     }
 
     func width(_ c: Int) -> CGFloat { CGFloat(style.colWidths.indices.contains(c) ? style.colWidths[c] : Self.defaultWidth) }
@@ -158,95 +156,81 @@ struct TableDoc: Equatable {
     }
 }
 
-/// Spreadsheet-style table. Freeze either rows (they stay at the top while you scroll down)
-/// or columns (they stay on the left while you scroll sideways) — one direction at a time.
+/// Spreadsheet-style table. Frozen rows stay at the top while you scroll down, and frozen columns
+/// stay on the left while you scroll sideways — both at once, as many as you like.
 struct TableGridEditor: View {
     @Binding var doc: TableDoc
     @Binding var selection: TableSelection?
 
     private let gutterW: CGFloat = 34
     private let gutterH: CGFloat = 26
+    /// How far the table has scrolled sideways (frozen columns are shifted back by this much).
+    @State private var scrolledX: CGFloat = 0
     @FocusState private var focused: CellID?
 
     struct CellID: Hashable { var r: Int; var c: Int }
 
     var body: some View {
         let fr = doc.style.frozenRows
-        let fc = doc.style.frozenCols
-        Group {
-            if fr > 0 {
-                // Frozen rows: everything scrolls sideways together; only the rows below scroll up and down.
-                ScrollView(.horizontal) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        letterRow(from: 0, gutter: true)
-                        rowsBlock(0..<fr, cols: 0..<doc.cols, gutter: true)
-                            .shadow(color: .black.opacity(0.12), radius: 2, y: 2)
-                            .zIndex(1)
-                        ScrollView(.vertical) {
-                            rowsBlock(fr..<doc.rows, cols: 0..<doc.cols, gutter: true)
-                                .padding(.bottom, 60)
-                        }
-                    }
-                    .padding(.trailing, 30)
-                }
-            } else if fc > 0 {
-                // Frozen columns: everything scrolls up and down together; only the columns on the right scroll sideways.
-                ScrollView(.vertical) {
-                    HStack(alignment: .top, spacing: 0) {
+        ScrollView(.horizontal) {
+            ScrollView(.vertical) {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    Section {
+                        rows(fr..<doc.rows)
+                            .padding(.bottom, 60)
+                    } header: {
+                        // Column letters and frozen rows stay pinned at the top.
                         VStack(alignment: .leading, spacing: 0) {
-                            letterRow(range: 0..<fc, gutter: true)
-                            rowsBlock(0..<doc.rows, cols: 0..<fc, gutter: true)
+                            letterRow
+                            rows(0..<fr)
                         }
-                        .shadow(color: .black.opacity(0.12), radius: 2, x: 2)
-                        .zIndex(1)
-                        ScrollView(.horizontal) {
-                            VStack(alignment: .leading, spacing: 0) {
-                                letterRow(range: fc..<doc.cols, gutter: false)
-                                rowsBlock(0..<doc.rows, cols: fc..<doc.cols, gutter: false)
-                            }
-                            .padding(.trailing, 30)
-                        }
+                        .background(Color(.systemBackground))
+                        .shadow(color: .black.opacity(fr > 0 ? 0.12 : 0), radius: 2, y: 2)
                     }
-                    .padding(.bottom, 60)
                 }
-            } else {
-                ScrollView([.horizontal, .vertical]) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        letterRow(from: 0, gutter: true)
-                        rowsBlock(0..<doc.rows, cols: 0..<doc.cols, gutter: true)
-                    }
-                    .padding(.trailing, 30)
-                    .padding(.bottom, 60)
-                }
+                .padding(.trailing, 30)
             }
+            .background(GeometryReader { g in
+                Color.clear.preference(key: TableScrollXKey.self, value: -g.frame(in: .named("tableH")).minX)
+            })
         }
+        .coordinateSpace(name: "tableH")
+        .onPreferenceChange(TableScrollXKey.self) { scrolledX = max(0, $0) }
+        .modifier(ScrollXReader(x: $scrolledX))
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.separator)))
         .onChange(of: focused) { _, id in if let id { selection = .cell(id.r, id.c) } }
     }
 
-    private func letterRow(from start: Int, gutter: Bool) -> some View {
-        letterRow(range: start..<doc.cols, gutter: gutter)
+    /// Keeps a frozen column (or the row-number gutter) in place while the rest scrolls sideways.
+    private func pinned<V: View>(_ view: V, _ isPinned: Bool) -> some View {
+        view
+            .offset(x: isPinned ? scrolledX : 0)
+            .zIndex(isPinned ? 1 : 0)
     }
 
-    private func letterRow(range: Range<Int>, gutter: Bool) -> some View {
+    private var letterRow: some View {
         HStack(spacing: 0) {
-            if gutter {
-                Image(systemName: "tablecells").font(.caption2).foregroundStyle(.secondary)
-                    .frame(width: gutterW, height: gutterH)
-                    .background(Color(.secondarySystemBackground))
+            pinned(Image(systemName: "tablecells").font(.caption2).foregroundStyle(.secondary)
+                .frame(width: gutterW, height: gutterH)
+                .background(Color(.secondarySystemBackground)), true)
+            ForEach(0..<doc.cols, id: \.self) { c in
+                pinned(columnHeader(c), c < doc.style.frozenCols)
             }
-            ForEach(Array(range), id: \.self) { c in columnHeader(c) }
         }
     }
 
-    private func rowsBlock(_ rows: Range<Int>, cols: Range<Int>, gutter: Bool) -> some View {
+    private func rows(_ range: Range<Int>) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(rows), id: \.self) { r in
+            ForEach(Array(range), id: \.self) { r in
                 HStack(spacing: 0) {
-                    if gutter { rowHeader(r) }
-                    ForEach(Array(cols), id: \.self) { c in liveCell(r, c) }
+                    pinned(rowHeader(r), true)
+                    ForEach(0..<doc.cols, id: \.self) { c in
+                        let frozen = c < doc.style.frozenCols
+                        pinned(liveCell(r, c)
+                            .shadow(color: .black.opacity(frozen && c == doc.style.frozenCols - 1 && scrolledX > 0 ? 0.15 : 0), radius: 2, x: 2), frozen)
+                    }
                 }
             }
         }
@@ -374,7 +358,6 @@ struct TableActionBar: View {
         }
         chip(r < doc.style.frozenRows ? "Unfreeze rows" : "Freeze rows to here", r < doc.style.frozenRows ? "pin.slash" : "pin") {
             doc.style.frozenRows = r < doc.style.frozenRows ? r : r + 1
-            if doc.style.frozenRows > 0 { doc.style.frozenCols = 0 }
         }
         chip("Delete", "trash", role: .destructive) { doc.deleteRow(r); selection = nil }.disabled(doc.rows <= 1)
     }
@@ -400,7 +383,6 @@ struct TableActionBar: View {
         }
         chip(c < doc.style.frozenCols ? "Unfreeze columns" : "Freeze columns to here", c < doc.style.frozenCols ? "pin.slash" : "pin") {
             doc.style.frozenCols = c < doc.style.frozenCols ? c : c + 1
-            if doc.style.frozenCols > 0 { doc.style.frozenRows = 0 }
         }
         chip("Delete", "trash", role: .destructive) { doc.deleteColumn(c); selection = nil }.disabled(doc.cols <= 1)
     }
@@ -483,4 +465,23 @@ extension Array {
 
 extension String {
     func ifEmpty(_ other: String) -> String { isEmpty ? other : self }
+}
+
+private struct TableScrollXKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+}
+
+/// Reads the sideways scroll position directly where the system supports it (iOS 18+).
+private struct ScrollXReader: ViewModifier {
+    @Binding var x: CGFloat
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollGeometryChange(for: CGFloat.self, of: { $0.contentOffset.x + $0.contentInsets.leading }) { _, new in
+                x = max(0, new)
+            }
+        } else {
+            content
+        }
+    }
 }

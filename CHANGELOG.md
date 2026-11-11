@@ -2,6 +2,10 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.2.2 — Freeze both ways, keeps working when closed
+- Tables: freeze any number of rows and columns at the same time — frozen rows stay at the top, frozen columns (and row numbers) stay on the left.
+- In-cab mode keeps working after you close the app: with location set to "Always", iOS relaunches HGV Hours in the background when the lorry moves and recording carries on. Everything is saved when the app goes to the background, and alerts, widgets and the Live Activity stay up to date.
+
 ## 3.2.1 — Table fixes
 - Tables scroll sideways properly again (left and right), including with a frozen header row.
 - Freeze either rows (stay at the top while you scroll down) or columns (stay on the left while you scroll sideways) — one direction at a time.

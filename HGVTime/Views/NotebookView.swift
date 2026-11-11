@@ -227,7 +227,7 @@ struct NoteEditor: View {
             }
             .padding(10)
             .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
-            Text("Tap a row number or column letter to insert, move, colour, make a header or freeze. Freeze rows (they stay at the top) or columns (they stay on the left) — one at a time.")
+            Text("Tap a row number or column letter to insert, move, colour, make a header or freeze. Freeze any number of rows (they stay at the top) and columns (they stay on the left) at the same time.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .padding(.horizontal)

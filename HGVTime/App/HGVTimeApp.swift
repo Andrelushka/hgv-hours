@@ -1,10 +1,28 @@
 import SwiftUI
 import SwiftData
 
+/// Handles iOS relaunching the app in the background (e.g. after it was closed and the lorry started moving),
+/// so in-cab recording, alerts and widgets carry on without opening the app.
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        if launchOptions?[.location] != nil {
+            MainActor.assumeIsolated {
+                let settings = SettingsStore().settings
+                let context = StoreSetup.shared.mainContext
+                AutoDriveDetector.shared.configure(context: context, settings: settings)
+                ActivityController.refreshSideEffects(context: context, settings: settings)
+            }
+        }
+        return true
+    }
+}
+
 @main
 struct HGVTimeApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var settingsStore = SettingsStore()
-    private let container = StoreSetup.makeContainer()
+    private let container = StoreSetup.shared
 
     var body: some Scene {
         WindowGroup {
@@ -68,6 +86,10 @@ struct RootView: View {
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {
                 backgroundedAt = .now
+                // Make sure everything is saved and alerts/widgets are up to date before iOS may close the app.
+                try? context.save()
+                store.save()
+                ActivityController.refreshSideEffects(context: context, settings: store.settings)
             }
             if phase == .active, store.settings.lockEnabled, let since = backgroundedAt,
                Date.now.timeIntervalSince(since) >= Double(store.settings.lockAfterMinutes * 60) {

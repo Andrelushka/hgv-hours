@@ -60,6 +60,8 @@ final class AutoDriveDetector: NSObject {
     @ObservationIgnored private var stoppedSince: Date?
     @ObservationIgnored private var stopTimer: Timer?
     @ObservationIgnored private var started = false
+    /// Keeps location running in the background and lets iOS relaunch the app after it was closed (iOS 17+).
+    @ObservationIgnored private var backgroundSession: AnyObject?
 
     /// Below this speed the vehicle counts as stopped.
     private let stoppedSpeedKmh = 4.0
@@ -133,6 +135,7 @@ final class AutoDriveDetector: NSObject {
         manager.allowsBackgroundLocationUpdates = true
         manager.showsBackgroundLocationIndicator = true
         manager.startUpdatingLocation()
+        keepRunningWhenClosed()
         if CMMotionActivityManager.isActivityAvailable() {
             motion.startActivityUpdates(to: .main) { [weak self] activity in
                 guard let activity else { return }
@@ -147,12 +150,26 @@ final class AutoDriveDetector: NSObject {
         }
     }
 
+    /// So in-cab mode carries on after the app is closed: a background activity session, plus
+    /// significant-location-change monitoring, which makes iOS relaunch the app when the lorry moves.
+    private func keepRunningWhenClosed() {
+        if #available(iOS 17.0, *), backgroundSession == nil {
+            backgroundSession = CLBackgroundActivitySession()
+        }
+        if manager.authorizationStatus == .authorizedAlways, CLLocationManager.significantLocationChangeMonitoringAvailable() {
+            manager.startMonitoringSignificantLocationChanges()
+        }
+    }
+
     private func stop() {
         // Only touch location/motion if they were started, so nothing asks for permission while in-cab mode is off.
         if started {
             manager.stopUpdatingLocation()
+            manager.stopMonitoringSignificantLocationChanges()
             manager.allowsBackgroundLocationUpdates = false
             motion.stopActivityUpdates()
+            if #available(iOS 17.0, *) { (backgroundSession as? CLBackgroundActivitySession)?.invalidate() }
+            backgroundSession = nil
         }
         if let start = overspeedStart { finishOverspeed(start: start, end: .now) }
         flushDistance()
@@ -332,6 +349,7 @@ extension AutoDriveDetector: CLLocationManagerDelegate {
             switch status {
             case .authorizedWhenInUse, .authorizedAlways:
                 self.start()
+                if status == .authorizedAlways { self.keepRunningWhenClosed() }
                 // Ask for "Always" next so it keeps working with the phone locked.
                 if status == .authorizedWhenInUse { manager.requestAlwaysAuthorization() }
             case .denied, .restricted:

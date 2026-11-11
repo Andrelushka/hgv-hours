@@ -11,6 +11,9 @@ enum StoreSetup {
     static let schema = Schema([ActivityEntry.self, NightOut.self, PayItem.self, Vehicle.self,
                                 WorkPlan.self, NoteItem.self, CardEvent.self, SpeedEvent.self, DayRecord.self, ResourceLog.self, Reminder.self, EventLog.self, TrackPoint.self])
 
+    /// One container for the whole app (also used when iOS relaunches the app in the background).
+    @MainActor static let shared: ModelContainer = makeContainer()
+
     static func makeContainer() -> ModelContainer {
         let container: ModelContainer
         do {
