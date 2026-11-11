@@ -332,6 +332,7 @@ enum ActivityController {
             NotificationService.shared.reschedule(status: status, settings: settings, shiftEnded: shiftEnded)
         }
         ReminderService.shared.schedule(context: context, status: status, settings: settings, shiftEnded: shiftEnded)
+        WakeLeaveService.shared.refresh(context: context, settings: settings)
         if let world = WorldRulesCache.status {
             var w = status
             w.warnings = world.violations

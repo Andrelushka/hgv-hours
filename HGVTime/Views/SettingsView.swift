@@ -60,6 +60,10 @@ struct SettingsView: View {
                         SettingsRow(title: "Notifications & Lock Screen", symbol: "bell.badge.fill", color: .red,
                                     value: s.notificationsEnabled ? "\(s.warningLeadMinutes) min before" : "Off")
                     }
+                    NavigationLink { WakeLeaveSettingsView() } label: {
+                        SettingsRow(title: "Wake-up & leave home", symbol: "alarm.waves.left.and.right.fill", color: .orange,
+                                    value: s.wakeAlarmEnabled || s.leaveReminderEnabled ? "On" : "Off")
+                    }
                     NavigationLink { RemindersView() } label: {
                         SettingsRow(title: "Reminders", symbol: "alarm.fill", color: .orange, value: "")
                     }

@@ -13,6 +13,8 @@
 	<string>Talk to the assistant: ask questions and give commands like "start driving" or "take a break" by voice.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>Turns what you say to the assistant into text.</string>
+	<key>NSAlarmKitUsageDescription</key>
+	<string>Wake you up in time for your next planned job, even when the phone is on silent.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Unlock HGV Hours with Face ID so only you can see your records.</string>
 	<key>NSCameraUsageDescription</key>

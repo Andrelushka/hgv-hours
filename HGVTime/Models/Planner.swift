@@ -247,6 +247,11 @@ final class WorkPlan {
     var cancelled: Bool = false
     var cancelledAt: Date?
     var cancelReason: String = ""
+    /// Wake-up and leave-home times set by hand for this job (nil = worked out automatically).
+    var wakeOverride: Date?
+    var leaveOverride: Date?
+    /// No wake-up alarm or leave reminder for this job.
+    var alarmsOff: Bool = false
 
     init(start: Date, end: Date) {
         self.plannedStart = start

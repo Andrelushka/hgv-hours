@@ -251,6 +251,7 @@ struct TodayView: View {
                             .font(.system(.largeTitle, design: .rounded).weight(.bold).monospacedDigit())
                         Text("until your next job at \(Fmt.time(job.plannedStart))\(job.company.isEmpty ? "" : " · \(job.company)")")
                             .font(.caption).foregroundStyle(.secondary)
+                        WakeLeaveStrip()
                         let restAtStart = job.plannedStart.timeIntervalSince(status.currentSince)
                         if openEntry?.restType != .weekly && restAtStart < Limits.reducedDailyRest {
                             Text("⚠︎ Only \(Fmt.hm(restAtStart)) rest by then — 9h minimum").font(.caption.weight(.semibold)).foregroundStyle(.red)
@@ -686,6 +687,11 @@ struct TodayView: View {
         ToolbarItem(placement: .topBarLeading) {
             NavigationLink { SettingsView(embedded: true) } label: {
                 Label("Settings", systemImage: "gearshape")
+            }
+        }
+        ToolbarItem(placement: .topBarLeading) {
+            NavigationLink { CalculatorView() } label: {
+                Label("Calculator", systemImage: "plus.forwardslash.minus")
             }
         }
         ToolbarItem(placement: .topBarTrailing) {

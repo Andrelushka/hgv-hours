@@ -59,6 +59,11 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.6 (3.6.0) — Wake-up alarm, leave home, calculator
+- ✅ Assistant talk-mode crash fixed
+- ✅ Wake-up alarm (AlarmKit) and leave-home reminder with traffic, all adjustable, per-job overrides
+- ✅ Calculator with km ↔ mi and ft ↔ m converters
+
 ## V3.4 (3.4.0) — Earnings kept, truck navigation, harsh braking, AI agent
 - ✅ Earnings and mileage stay until midnight after the shift ends; rest timer counts down to the next planned job
 - ✅ Cancel a job; change trailer mid-shift; newest records first

@@ -276,6 +276,30 @@ struct AppSettings: Codable, Equatable {
     /// Look up the road's speed limit from OpenStreetMap while navigating.
     var onlineSpeedLimits = true
 
+    // Wake-up alarm and "time to leave" (worked out from the next planned job)
+    var wakeAlarmEnabled = false
+    /// Name shown on the alarm.
+    var wakeAlarmTitle = "Wake up"
+    /// Time to get up and ready before leaving home.
+    var wakeGetReadyMinutes = 60
+    /// A second alarm this many minutes after the first (0 = off).
+    var wakeBackupMinutes = 0
+    var leaveReminderEnabled = false
+    /// Arrive at the job this many minutes before the start time.
+    var leaveBufferMinutes = 10
+    /// An extra heads-up this many minutes before leaving (0 = off).
+    var leaveHeadsUpMinutes = 15
+    /// Journey time from home to work, used when there's no traffic estimate.
+    var commuteMinutes = 30
+    /// Ask Apple Maps for the drive time from home to the job's start, with traffic.
+    var commuteUseTraffic = true
+    var homeAddress = ""
+    var homePostcode = ""
+    var homeLatitude: Double?
+    var homeLongitude: Double?
+    /// One-off alarm set by hand (seconds since 1970, 0 = none).
+    var manualAlarmAt: Double = 0
+
     var pay = PaySettings()
 
     var region: RuleRegion { RuleRegion(rawValue: ruleRegionRaw) ?? .uk }

@@ -2,6 +2,14 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.6.0 — Wake-up alarm, leave-home reminder, calculator
+- Fixed: the app crashed when you turned on talk mode or tapped the microphone in the assistant. It tried to listen while it was still speaking. It now waits for the answer to finish, checks the microphone is ready, and shows a message instead of crashing.
+- Wake-up alarm for your next planned job. On iOS 26 it's a real alarm that rings on silent and shows full screen; on older iOS it's a notification with sound. Wake-up time = leave time − time to get ready. You can add a second alarm a few minutes later, rename the alarm, test it, and set a one-off alarm for days with no job planned.
+- "Time to leave" notification, plus an optional heads-up before it. The drive from your home address to the job's start place (or first stop) is worked out by Apple Maps with traffic, or uses a journey time you set. You choose how early you want to arrive.
+- Everything is adjustable in Settings → Wake-up & leave home. For each job you can set the wake-up or leave time yourself, or turn both off. Tap the ⏰ / 🚗 strip on Today to change them.
+- Calculator (± / % button on Today): a normal calculator, km ↔ miles, and feet ↔ metres (type heights like 16'6; shows feet and inches).
+- 5 new tests (78 in total).
+
 ## 3.5.0 — On-device AI agent
 - The assistant can run entirely on your iPhone: Qwen 3.5 2B (Alibaba, Apache-2.0) with Apple's MLX on the phone's GPU. Free, private, works offline once downloaded (about 1.3 GB, once, from Hugging Face). Lighter Qwen 3 1.7B and 0.6B models are also offered.
 - It uses the same app tools as before: plan, change, cancel or delete jobs, add stops, notes, reminders, fuel, activities, vehicle and trailer — and asks before deleting anything or ending a shift. Photos are read on the phone.

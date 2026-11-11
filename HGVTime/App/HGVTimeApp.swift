@@ -82,6 +82,7 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
+        .background { WakeLeavePlanWatcher() }
         .onAppear { if store.settings.lockEnabled { locked = true } }
         .onChange(of: scenePhase) { _, phase in
             if phase == .background {

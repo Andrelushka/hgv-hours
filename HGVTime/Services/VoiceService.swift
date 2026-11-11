@@ -4,9 +4,40 @@ import Foundation
 /// Speaks alerts out loud: activity changes, limit warnings, overspeed and reminders.
 /// Works while the app is open, or in the background while in-cab mode is running.
 @MainActor
-final class VoiceService {
+final class VoiceService: NSObject, AVSpeechSynthesizerDelegate {
     static let shared = VoiceService()
     private let synth = AVSpeechSynthesizer()
+    private var silentWaiters: [CheckedContinuation<Void, Never>] = []
+
+    override init() {
+        super.init()
+        synth.delegate = self
+    }
+
+    var isSpeaking: Bool { synth.isSpeaking }
+
+    /// Returns once nothing is being spoken (straight away if already quiet).
+    func waitUntilSilent() async {
+        guard synth.isSpeaking else { return }
+        await withCheckedContinuation { silentWaiters.append($0) }
+        // Give the audio route a moment to settle before the microphone opens.
+        try? await Task.sleep(for: .milliseconds(250))
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in self.resumeIfSilent() }
+    }
+
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in self.resumeIfSilent() }
+    }
+
+    private func resumeIfSilent() {
+        guard !synth.isSpeaking else { return }
+        let waiters = silentWaiters
+        silentWaiters = []
+        waiters.forEach { $0.resume() }
+    }
     private var settings = AppSettings()
     /// Warnings already spoken (so each is said once).
     private var spoken: Set<String> = []
@@ -34,7 +65,10 @@ final class VoiceService {
     func say(_ text: String, force: Bool = false) {
         guard settings.voiceEnabled || force else { return }
         let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, mode: .voicePrompt, options: [.duckOthers, .interruptSpokenAudioAndMixWithOthers])
+        // While the microphone session is set up, keep it: switching to playback mid-listen breaks the input.
+        if session.category != .playAndRecord {
+            try? session.setCategory(.playback, mode: .voicePrompt, options: [.duckOthers, .interruptSpokenAudioAndMixWithOthers])
+        }
         try? session.setActive(true)
         let u = AVSpeechUtterance(string: text)
         u.rate = Float(settings.voiceRate)

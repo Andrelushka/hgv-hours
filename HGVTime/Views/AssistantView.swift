@@ -77,7 +77,7 @@ struct AssistantView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Toggle(isOn: Binding(get: { talkMode }, set: { on in
                     talkMode = on
-                    if on { VoiceService.shared.say("Talk mode on. Ask me anything, or say a command like start driving.", force: true); listen() }
+                    if on { voice.cancel(); VoiceService.shared.say("Talk mode on. Ask me anything, or say a command like start driving.", force: true); listen() }
                     else { voice.cancel() }
                 })) {
                     Image(systemName: talkMode ? "person.wave.2.fill" : "person.wave.2")
@@ -224,11 +224,11 @@ struct AssistantView: View {
         lines.append(line)
         guard talkMode, line.role != .user else { return }
         let plain = line.text.replacingOccurrences(of: "**", with: "")
+        voice.cancel()
         VoiceService.shared.say(plain, force: true)
-        // Listen again after the answer has been read out.
-        let words = Double(plain.split(separator: " ").count)
+        // Listen again once the answer has been read out (start() waits for the voice to finish).
         Task {
-            try? await Task.sleep(for: .seconds(min(30, 1.5 + words * 0.38)))
+            try? await Task.sleep(for: .milliseconds(300))
             if talkMode && !voice.isListening && !thinking { listen() }
         }
     }

@@ -12,13 +12,19 @@ final class VoiceInput {
     var error: String?
 
     @ObservationIgnored private let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-GB"))
-    @ObservationIgnored private let audio = AVAudioEngine()
+    /// A fresh engine per listen: an old one keeps the input format from before the audio session changed.
+    @ObservationIgnored private var audio = AVAudioEngine()
     @ObservationIgnored private var request: SFSpeechAudioBufferRecognitionRequest?
     @ObservationIgnored private var task: SFSpeechRecognitionTask?
     @ObservationIgnored private var silenceTimer: Timer?
     @ObservationIgnored private var onFinish: ((String) -> Void)?
 
+    @ObservationIgnored private var starting = false
+
     func start(onFinish: @escaping (String) -> Void) async {
+        guard !starting, !isListening else { return }
+        starting = true
+        defer { starting = false }
         error = nil
         self.onFinish = onFinish
         let speechOK = await withCheckedContinuation { c in SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0 == .authorized) } }
@@ -26,22 +32,41 @@ final class VoiceInput {
         guard speechOK, micOK else { error = "Allow microphone and speech recognition for HGV Hours in iPhone Settings."; return }
         guard let recognizer, recognizer.isAvailable else { error = "Speech recognition isn't available right now."; return }
 
+        // Never listen over our own voice: wait for any spoken answer to finish first.
+        await VoiceService.shared.waitUntilSilent()
+        guard self.onFinish != nil else { return }   // cancelled while waiting
         stopEngine()
         transcript = ""
         let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker, .allowBluetoothHFP])
-        try? session.setActive(true, options: .notifyOthersOnDeactivation)
+        do {
+            try session.setCategory(.playAndRecord, mode: .default, options: [.duckOthers, .defaultToSpeaker, .allowBluetoothHFP])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            self.error = "Couldn't use the microphone (another app may be using it)."; return
+        }
+        guard session.isInputAvailable else { error = "No microphone is available."; return }
 
         let req = SFSpeechAudioBufferRecognitionRequest()
         req.shouldReportPartialResults = true
         if recognizer.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true }
         request = req
+        audio = AVAudioEngine()
         let input = audio.inputNode
         let format = input.outputFormat(forBus: 0)
-        input.removeTap(onBus: 0)
+        // installTap raises an exception (and the app dies) on an invalid format, so check it first.
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            request = nil
+            error = "The microphone isn't ready. Try again in a moment."
+            return
+        }
         input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in req.append(buffer) }
         audio.prepare()
-        do { try audio.start() } catch { self.error = "Couldn't start the microphone."; return }
+        do { try audio.start() } catch {
+            input.removeTap(onBus: 0)
+            request = nil
+            self.error = "Couldn't start the microphone."
+            return
+        }
         isListening = true
         task = recognizer.recognitionTask(with: req) { [weak self] result, err in
             Task { @MainActor in
