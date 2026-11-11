@@ -2,6 +2,19 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.3.0 — Vehicles in the shift, 3D navigation, deeper rule checks
+- Today: choose, change, edit or add your vehicle and trailer at any time. Changing vehicle mid-shift keeps each vehicle's mileage separately.
+- Mileage per vehicle: start reading from the vehicle, end reading worked out from GPS (in-cab mode) and editable; goes into the day debrief and the summary table (with the number of vehicles used).
+- Vehicles: set the drivers' hours rules per vehicle — tacho, GB domestic, or exempt (no drivers' hours rules; time still counts as working time) — and an overspeed threshold. Choosing the vehicle applies its rules.
+- Overspeed threshold automatic from the vehicle type and country (UK/EU lorries 90 km/h, vans road limit, Australia 100, North America 105), or set your own.
+- Sub-activities (loading, unloading, waiting, yard check…) are now separate activities with their own start and end time, editable like any other activity.
+- Addresses: business name, house number, house/building name and flat for stops and the job start. New stop type: Vehicle service.
+- Number boxes start empty instead of 0.
+- Today's job no longer lists the stops twice.
+- Navigation: 3D view from behind the lorry that turns with you (like Apple Maps), heading-up, north-up and route-overview modes, re-centre, speedometer, turn arrows and a full list of directions.
+- Rules fixes found by new scenario tests: a rest after the last work no longer counts as a working-day break; with two drivers, 45 min as co-driver counts as the driving break; a missing weekly rest is flagged even when no earlier weekly rest is recorded.
+- 23 new whole-day and whole-week scenario tests across UK/EU, GB domestic, exempt vehicles, USA, Canada, Australia and New Zealand (66 tests in total).
+
 ## 3.2.2 — Freeze both ways, keeps working when closed
 - Tables: freeze any number of rows and columns at the same time — frozen rows stay at the top, frozen columns (and row numbers) stay on the left.
 - In-cab mode keeps working after you close the app: with location set to "Always", iOS relaunches HGV Hours in the background when the lorry moves and recording carries on. Everything is saved when the app goes to the background, and alerts, widgets and the Live Activity stay up to date.

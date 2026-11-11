@@ -34,6 +34,10 @@ struct AddressLookupFields: View {
     /// Filled from a search result's name when it is empty (e.g. company / site).
     var name: Binding<String>?
     var addressLabel = "Address"
+    /// Optional address details. When given, the search fills the house number separately from the street.
+    var houseNumber: Binding<String>?
+    var houseName: Binding<String>?
+    var flat: Binding<String>?
 
     @State private var search = AddressSearch()
     @State private var searching = false
@@ -56,6 +60,34 @@ struct AddressLookupFields: View {
                 .foregroundStyle(.primary)
             }
             if search.results.isEmpty { Text("No matches yet — keep typing, or fill in below.").font(.caption).foregroundStyle(.secondary) }
+        }
+        if let name {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Business name (if it's a business)").font(.caption).foregroundStyle(.secondary)
+                TextField("e.g. Tesco Daventry DC", text: name)
+            }
+        }
+        if houseNumber != nil || houseName != nil || flat != nil {
+            HStack(spacing: 10) {
+                if let houseNumber {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("No.").font(.caption).foregroundStyle(.secondary)
+                        TextField("14", text: houseNumber).frame(maxWidth: 70)
+                    }
+                }
+                if let houseName {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("House / building name").font(.caption).foregroundStyle(.secondary)
+                        TextField("e.g. Rose House, Unit 4", text: houseName)
+                    }
+                }
+            }
+            if let flat {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Flat / apartment / unit").font(.caption).foregroundStyle(.secondary)
+                    TextField("e.g. Flat 2", text: flat)
+                }
+            }
         }
         VStack(alignment: .leading, spacing: 2) {
             Text(addressLabel).font(.caption).foregroundStyle(.secondary)
@@ -98,6 +130,11 @@ struct AddressLookupFields: View {
         }
         let picked = PickedPlace.from(pm)
         address = picked.address.isEmpty ? (completion.subtitle.isEmpty ? completion.title : completion.subtitle) : picked.address
+        if let houseNumber, let number = pm.subThoroughfare, !number.isEmpty {
+            houseNumber.wrappedValue = number
+            // Street line without the number (it's in its own box).
+            address = [pm.thoroughfare ?? "", pm.locality ?? pm.subAdministrativeArea ?? ""].filter { !$0.isEmpty }.joined(separator: ", ")
+        }
         postcode = pm.postalCode ?? postcode
         latitude = pm.coordinate.latitude
         longitude = pm.coordinate.longitude

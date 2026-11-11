@@ -135,7 +135,7 @@ struct ResourceEditor: View {
                     DatePicker("When", selection: $date)
                     LabeledContent("Quantity") {
                         HStack(spacing: 4) {
-                            TextField("0", value: $quantity, format: .number.precision(.fractionLength(0...2)))
+                            TextField("0", value: $quantity.emptyIfZero, format: .number.precision(.fractionLength(0...2)))
                                 .keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(maxWidth: 90)
                             Text(kind.unit).foregroundStyle(.secondary)
                         }
@@ -143,7 +143,7 @@ struct ResourceEditor: View {
                     LabeledContent("Cost") {
                         HStack(spacing: 2) {
                             Text(store.settings.pay.currencySymbol).foregroundStyle(.secondary)
-                            TextField("0.00", value: $cost, format: .number.precision(.fractionLength(2)))
+                            TextField("0.00", value: $cost.emptyIfZero, format: .number.precision(.fractionLength(2)))
                                 .keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(maxWidth: 90)
                         }
                     }
@@ -157,7 +157,7 @@ struct ResourceEditor: View {
                         HStack(spacing: 4) {
                             TextField("0", value: Binding(
                                 get: { miles ? (odometer / 1.609344).rounded() : odometer.rounded() },
-                                set: { odometer = miles ? $0 * 1.609344 : $0 }), format: .number.precision(.fractionLength(0)))
+                                set: { odometer = miles ? $0 * 1.609344 : $0 }).emptyIfZero, format: .number.precision(.fractionLength(0)))
                                 .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 100)
                             Text(miles ? "mi" : "km").foregroundStyle(.secondary)
                         }
@@ -204,33 +204,69 @@ struct ResourceEditor: View {
 }
 
 /// Today's mileage (start/end odometer and GPS distance) and quick fuel logging.
+/// Today's mileage: one block per vehicle used (start, end and distance), with the end reading
+/// worked out from GPS until you type it. Readings go into the summary and day reports.
 struct DayMileageCard: View {
     @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
     @Query(sort: \DayRecord.day) private var records: [DayRecord]
     @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
+    @Query(sort: \VehicleUse.start) private var allUses: [VehicleUse]
     var now: Date
-    @State private var entering: OdometerField?
+    @State private var entering: Reading?
     @State private var value: Double = 0
     @State private var adding: ResourceKind?
 
-    enum OdometerField: String, Identifiable { case start, end; var id: String { rawValue } }
+    /// Which reading is being typed: a vehicle use's start/end, or the day record (no vehicle chosen).
+    struct Reading: Identifiable {
+        var use: VehicleUse?
+        var start: Bool
+        var id: String { (use?.id.uuidString ?? "day") + (start ? "s" : "e") }
+    }
 
     var body: some View {
         let miles = store.settings.useMiles
-        let record = records.first { Calendar.hgv.isDate($0.day, inSameDayAs: now) }
+        let cal = Calendar.hgv
+        let dayStart = cal.startOfDay(for: now)
+        let uses = allUses.filter { $0.start < dayStart.addingTimeInterval(86_400) && ($0.end ?? .now) > dayStart }
+        let record = records.first { cal.isDate($0.day, inSameDayAs: now) }
+        let total = uses.isEmpty ? (record?.distanceKm ?? 0) : uses.reduce(0) { $0 + $1.distanceKm }
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Label("Mileage today", systemImage: "road.lanes").font(.subheadline.weight(.semibold))
                 Spacer()
-                Text(Fmt.distance(record?.distanceKm ?? 0, miles: miles)).font(.headline.monospacedDigit())
+                Text(Fmt.distance(total, miles: miles)).font(.headline.monospacedDigit())
             }
-            HStack(spacing: 8) {
-                odometerButton("Start", km: record?.startOdometerKm ?? 0, field: .start, miles: miles)
-                odometerButton("End", km: record?.endOdometerKm ?? 0, field: .end, miles: miles)
-            }
-            if let gps = record?.gpsKm, gps > 0 {
-                Text("GPS (in-cab mode): \(Fmt.distance(gps, miles: miles))").font(.caption).foregroundStyle(.secondary)
+            if uses.isEmpty {
+                HStack(spacing: 8) {
+                    odometerButton("Start", km: record?.startOdometerKm ?? 0, auto: false, reading: Reading(use: nil, start: true), miles: miles)
+                    odometerButton("End", km: record?.endOdometerKm ?? 0, auto: false, reading: Reading(use: nil, start: false), miles: miles)
+                }
+                if let gps = record?.gpsKm, gps > 0 {
+                    Text("GPS (in-cab mode): \(Fmt.distance(gps, miles: miles))").font(.caption).foregroundStyle(.secondary)
+                }
+            } else {
+                ForEach(uses) { u in
+                    let v = vehicles.first { $0.id.uuidString == u.vehicleID }
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Label(v?.displayName ?? "Vehicle", systemImage: v?.kind.symbol ?? "box.truck").font(.caption.weight(.semibold)).lineLimit(1)
+                            Spacer()
+                            Text("\(Fmt.time(u.start))–\(u.end.map(Fmt.time) ?? "now") · \(Fmt.distance(u.distanceKm, miles: miles))")
+                                .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
+                        }
+                        HStack(spacing: 8) {
+                            odometerButton("Start", km: u.startOdometerKm, auto: false, reading: Reading(use: u, start: true), miles: miles)
+                            odometerButton(u.endEdited ? "End" : "End (auto)", km: u.effectiveEndKm, auto: !u.endEdited,
+                                           reading: Reading(use: u, start: false), miles: miles)
+                        }
+                        if u.gpsKm > 0 {
+                            Text("GPS: \(Fmt.distance(u.gpsKm, miles: miles))\(u.endEdited ? "" : " — end worked out from GPS, tap to correct")")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
+                    }
+                    if u.id != uses.last?.id { Divider() }
+                }
             }
             HStack(spacing: 8) {
                 Button { adding = .diesel } label: { Label("Fuel", systemImage: "fuelpump.fill") }
@@ -243,26 +279,29 @@ struct DayMileageCard: View {
         .padding(12)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
         .sheet(item: $adding) { ResourceEditor(log: nil, kind: $0) }
-        .alert(entering == .start ? "Start odometer" : "End odometer",
+        .alert(entering?.start == true ? "Start odometer" : "End odometer",
                isPresented: Binding(get: { entering != nil }, set: { if !$0 { entering = nil } })) {
-            TextField(miles ? "Miles" : "km", value: $value, format: .number.precision(.fractionLength(0)))
+            TextField(miles ? "Miles" : "km", value: $value.emptyIfZero, format: .number.precision(.fractionLength(0)))
                 .keyboardType(.numberPad)
             Button("Save") { save(miles: miles) }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Enter the reading in \(miles ? "miles" : "km").")
+            Text("Enter the reading in \(miles ? "miles" : "km"). It goes into the summary and day reports.")
         }
     }
 
-    private func odometerButton(_ title: String, km: Double, field: OdometerField, miles: Bool) -> some View {
+    private func odometerButton(_ title: String, km: Double, auto: Bool, reading: Reading, miles: Bool) -> some View {
         Button {
-            let current = km > 0 ? km : (vehicles.first { $0.id.uuidString == store.settings.currentVehicleID }?.odometerKm ?? 0)
+            let fallback = vehicles.first { $0.id.uuidString == (reading.use?.vehicleID ?? store.settings.currentVehicleID) }?.odometerKm ?? 0
+            let current = km > 0 ? km : fallback
             value = miles ? (current / 1.609344).rounded() : current.rounded()
-            entering = field
+            entering = reading
         } label: {
             VStack(alignment: .leading, spacing: 1) {
                 Text(title).font(.caption2).foregroundStyle(.secondary)
-                Text(km > 0 ? Fmt.odometer(km, miles: miles) : "Enter").font(.subheadline.weight(.semibold).monospacedDigit())
+                Text(km > 0 ? Fmt.odometer(km, miles: miles) : "Enter")
+                    .font(.subheadline.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(auto ? .secondary : .primary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -270,16 +309,17 @@ struct DayMileageCard: View {
     }
 
     private func save(miles: Bool) {
-        guard let field = entering else { return }
+        guard let reading = entering else { return }
         let km = miles ? value * 1.609344 : value
-        let record = ActivityController.dayRecord(for: now, context: context)
-        if record.vehicleID.isEmpty { record.vehicleID = store.settings.currentVehicleID }
-        switch field {
-        case .start: record.startOdometerKm = km
-        case .end: record.endOdometerKm = km
+        if let use = reading.use {
+            VehicleLog.setReading(use, start: reading.start, km: km, context: context)
+        } else {
+            let record = ActivityController.dayRecord(for: now, context: context)
+            if record.vehicleID.isEmpty { record.vehicleID = store.settings.currentVehicleID }
+            if reading.start { record.startOdometerKm = km } else { record.endOdometerKm = km }
+            if let v = vehicles.first(where: { $0.id.uuidString == record.vehicleID }), km > v.odometerKm { v.odometerKm = km }
+            try? context.save()
         }
-        if let v = vehicles.first(where: { $0.id.uuidString == record.vehicleID }), km > v.odometerKm { v.odometerKm = km }
-        try? context.save()
         entering = nil
     }
 }

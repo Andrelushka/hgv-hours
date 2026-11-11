@@ -8,6 +8,9 @@ enum Regime: String, Codable, CaseIterable, Identifiable {
     case assimilated
     /// GB domestic rules (Transport Act 1968) — e.g. vehicles exempt from assimilated rules.
     case gbDomestic
+    /// Out of scope: vehicle exempt from drivers' hours rules (e.g. under 3.5 t, or an exempt use).
+    /// Driving counts as working time only.
+    case exempt
 
     var id: String { rawValue }
 
@@ -15,6 +18,7 @@ enum Regime: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .assimilated: "Assimilated / AETR (tacho)"
         case .gbDomestic: "GB domestic"
+        case .exempt: "Exempt (no drivers' hours rules)"
         }
     }
 
@@ -22,6 +26,7 @@ enum Regime: String, Codable, CaseIterable, Identifiable {
         switch self {
         case .assimilated: "EU/AETR"
         case .gbDomestic: "GB"
+        case .exempt: "Exempt"
         }
     }
 }

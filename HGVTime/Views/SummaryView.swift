@@ -6,6 +6,7 @@ struct SummaryView: View {
     @Environment(SettingsStore.self) private var store
     @Query(sort: \ActivityEntry.start) private var entries: [ActivityEntry]
     @Query(sort: \DayRecord.day) private var records: [DayRecord]
+    @Query(sort: \VehicleUse.start) private var uses: [VehicleUse]
     @Query(sort: \ResourceLog.date) private var resources: [ResourceLog]
     @Query(sort: \SpeedEvent.start) private var speedEvents: [SpeedEvent]
     @Query(sort: \NightOut.date) private var nightOuts: [NightOut]
@@ -92,8 +93,11 @@ struct SummaryView: View {
             let res = resources.filter { $0.date >= day && $0.date < next }
             let speeds = speedEvents.filter { $0.start >= day && $0.start < next }
             let night = nightOuts.contains { cal.isDate($0.date, inSameDayAs: day) }
-            guard !dayEntries.isEmpty || record != nil || !res.isEmpty || !speeds.isEmpty || night else { continue }
+            guard !dayEntries.isEmpty || record != nil || uses.contains(where: { Calendar.hgv.isDate($0.start, inSameDayAs: day) }) || !res.isEmpty || !speeds.isEmpty || night else { continue }
             let t = DayTotals.compute(dayEntries, day: day)
+            let dayStartU = Calendar.hgv.startOfDay(for: day)
+            let dayUses = uses.filter { $0.start < dayStartU.addingTimeInterval(86_400) && ($0.end ?? .now) > dayStartU }
+            let km: Double? = dayUses.isEmpty ? record?.distanceKm : dayUses.reduce(0) { $0 + $1.distanceKm }
             let first = shifts.first, last = shifts.last
             let spread = shifts.reduce(0.0) { $0 + $1.period.end.timeIntervalSince($1.period.start) }
             let fuel = res.filter { $0.kind == .diesel || $0.kind == .petrol }.reduce(0) { $0 + $1.quantity }
@@ -107,7 +111,7 @@ struct SummaryView: View {
                 shifts.isEmpty ? "" : Fmt.hmCompact(spread),
                 Fmt.hmCompact(t.driving), Fmt.hmCompact(t.otherWork), Fmt.hmCompact(t.availability),
                 Fmt.hmCompact(t.breaks), Fmt.hmCompact(t.working),
-                record.map { Fmt.distance($0.distanceKm, miles: miles) } ?? "",
+                km.map { Fmt.distance($0, miles: miles) + (dayUses.count > 1 ? " (\(dayUses.count) vehicles)" : "") } ?? "",
                 fuel > 0 ? String(format: "%g L", fuel) : "",
                 adblue > 0 ? String(format: "%g L", adblue) : "",
                 night ? "Yes" : "",
@@ -116,7 +120,7 @@ struct SummaryView: View {
                 speeds.isEmpty ? "" : "\(speeds.count)"
             ])
             tot.spread += spread; tot.drive += t.driving; tot.work += t.otherWork; tot.poa += t.availability
-            tot.breaks += t.breaks; tot.working += t.working; tot.km += record?.distanceKm ?? 0
+            tot.breaks += t.breaks; tot.working += t.working; tot.km += km ?? 0
             tot.fuel += fuel; tot.adblue += adblue; tot.nights += night ? 1 : 0; tot.pay += pay; tot.infr += infr; tot.speed += speeds.count
         }
         rows.append(["Total", "", "", Fmt.hmCompact(tot.spread), Fmt.hmCompact(tot.drive), Fmt.hmCompact(tot.work),

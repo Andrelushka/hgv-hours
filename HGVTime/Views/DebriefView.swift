@@ -12,13 +12,18 @@ struct TodayJobCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Button(action: onEdit) { PlanCard(plan: plan, title: "Today's job", showChecks: false) }
+            Button(action: onEdit) { PlanCard(plan: plan, title: "Today's job", showChecks: false, showStops: false) }
                 .buttonStyle(.plain)
             ForEach(plan.stops) { stop in
                 HStack(spacing: 8) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text(stop.displayName).font(.caption.weight(.semibold)).lineLimit(1)
+                        Text([stop.kind == .other ? stop.kindTitle : "", stop.displayName].filter { !$0.isEmpty }.joined(separator: " · "))
+                            .font(.caption.weight(.semibold)).lineLimit(1)
+                        let details = [stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
+                                       (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
+                                       stop.pallets.isEmpty ? "" : "\(stop.pallets) plt"].filter { !$0.isEmpty }.joined(separator: " · ")
+                        if !details.isEmpty { Text(details).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
                         Text(statusText(stop)).font(.caption2).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -125,11 +130,13 @@ struct DebriefView: View {
     @Query(sort: \ResourceLog.date) private var resources: [ResourceLog]
     @Query(sort: \CardEvent.time) private var cardEvents: [CardEvent]
     @Query(sort: \SpeedEvent.start) private var speedEvents: [SpeedEvent]
+    @Query(sort: \VehicleUse.start) private var uses: [VehicleUse]
     var day: Date
 
     var body: some View {
         let d = DebriefData.make(day: day, entries: entries, plans: plans, vehicles: vehicles, records: records,
-                                 resources: resources, cardEvents: cardEvents, speedEvents: speedEvents, settings: store.settings)
+                                 resources: resources, cardEvents: cardEvents, speedEvents: speedEvents, settings: store.settings,
+                                 uses: uses)
         List {
             Section("Job") {
                 row("Company", d.company)
@@ -210,7 +217,8 @@ struct DebriefData {
     var text = ""
 
     static func make(day: Date, entries: [ActivityEntry], plans: [WorkPlan], vehicles: [Vehicle], records: [DayRecord],
-                     resources: [ResourceLog], cardEvents: [CardEvent], speedEvents: [SpeedEvent], settings: AppSettings) -> DebriefData {
+                     resources: [ResourceLog], cardEvents: [CardEvent], speedEvents: [SpeedEvent], settings: AppSettings,
+                     uses: [VehicleUse] = []) -> DebriefData {
         let cal = Calendar.hgv
         let start = cal.startOfDay(for: day), end = start.addingTimeInterval(86_400)
         var d = DebriefData()
@@ -244,7 +252,18 @@ struct DebriefData {
                     ("Infringements", "\(shifts.flatMap(\.issues).count)")]
 
         let miles = settings.useMiles
-        if let r = records.first(where: { cal.isDate($0.day, inSameDayAs: day) }) {
+        let dayUses = uses.filter { $0.start < end && ($0.end ?? .now) > start }
+        if !dayUses.isEmpty {
+            // One line per vehicle driven (a shift can use several).
+            for u in dayUses {
+                let v = name(u.vehicleID).isEmpty ? "Vehicle" : name(u.vehicleID)
+                d.mileage.append(("\(v) \(Fmt.time(u.start))–\(u.end.map(Fmt.time) ?? "now")",
+                                  "\(Fmt.odometer(u.startOdometerKm, miles: miles)) → \(Fmt.odometer(u.effectiveEndKm, miles: miles)) · \(Fmt.distance(u.distanceKm, miles: miles))"))
+            }
+            d.mileage.append(("Total distance", Fmt.distance(dayUses.reduce(0) { $0 + $1.distanceKm }, miles: miles)))
+            let names = dayUses.map { name($0.vehicleID) }.filter { !$0.isEmpty }
+            if !names.isEmpty { d.vehicle = Array(NSOrderedSet(array: names)).compactMap { $0 as? String }.joined(separator: " · ") }
+        } else if let r = records.first(where: { cal.isDate($0.day, inSameDayAs: day) }) {
             d.mileage = [("Start odometer", Fmt.odometer(r.startOdometerKm, miles: miles)),
                          ("End odometer", Fmt.odometer(r.endOdometerKm, miles: miles)),
                          ("Distance", Fmt.distance(r.distanceKm, miles: miles))]

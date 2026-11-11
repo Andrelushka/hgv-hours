@@ -197,14 +197,19 @@ struct InCabSettingsView: View {
             Section {
                 Toggle("Record overspeed", isOn: $store.settings.recordOverspeed)
                 if store.settings.recordOverspeed {
+                    Toggle("Automatic (vehicle & country)", isOn: $store.settings.autoSpeedLimit)
+                    if store.settings.autoSpeedLimit {
+                        LabeledContent("Now", value: SpeedLimits.describe(AutoDriveDetector.shared.speedLimitKmh))
+                    } else {
                     Stepper(value: $store.settings.overspeedLimitKmh, in: 30...130, step: 1) {
                         LabeledContent("Overspeed above", value: "\(Int(store.settings.overspeedLimitKmh)) km/h (\(Int((store.settings.overspeedLimitKmh / 1.609).rounded())) mph)")
+                    }
                     }
                 }
             } header: {
                 Text("Speed")
             } footer: {
-                Text("Like the tachograph: more than 60 seconds in a row above this speed is an overspeed infringement. Shorter ones are recorded but not counted as infringements. Each event is saved with its time, top speed and location. HGV limiters and tachographs are usually set at 90 km/h (56 mph).")
+                Text("Like the tachograph: more than 60 seconds in a row above this speed is an overspeed infringement. Shorter ones are recorded but not counted as infringements. Each event is saved with its time, top speed and location. Automatic uses the vehicle you're driving and your country: lorries over 3.5 t 90 km/h (56 mph) in the UK/EU, 100 km/h in Australia, 105 km/h in North America; vans use the road limit. A speed set on a vehicle always wins.")
             }
             Section {
                 Toggle("Save my route", isOn: $store.settings.recordRoute)
@@ -524,7 +529,7 @@ struct PaySettingsView: View {
                             .submitLabel(.done)
                         HStack {
                             Text(symbol).foregroundStyle(.secondary)
-                            TextField("0.00", value: $extra.amount, format: .number.precision(.fractionLength(2)))
+                            TextField("0.00", value: $extra.amount.emptyIfZero, format: .number.precision(.fractionLength(2)))
                                 .keyboardType(.decimalPad)
                                 .frame(maxWidth: 90)
                             Spacer()
@@ -589,7 +594,7 @@ struct PaySettingsView: View {
         LabeledContent(title) {
             HStack(spacing: 2) {
                 Text(symbol).foregroundStyle(.secondary)
-                TextField(placeholder, value: value, format: .number.precision(.fractionLength(2)))
+                TextField(placeholder, value: value.emptyIfZero, format: .number.precision(.fractionLength(2)))
                     .keyboardType(.decimalPad)
                     .multilineTextAlignment(.trailing)
                     .frame(maxWidth: 90)
@@ -670,7 +675,7 @@ struct RateEditor: View {
             LabeledContent("Multiplier") {
                 HStack(spacing: 2) {
                     Text("×").foregroundStyle(.secondary)
-                    TextField("1.5", value: $multiplier, format: .number.precision(.fractionLength(0...3)))
+                    TextField("1.5", value: $multiplier.emptyIfZero, format: .number.precision(.fractionLength(0...3)))
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: 80)
@@ -681,7 +686,7 @@ struct RateEditor: View {
             LabeledContent("Amount") {
                 HStack(spacing: 2) {
                     Text(symbol).foregroundStyle(.secondary)
-                    TextField("0.00", value: $fixed, format: .number.precision(.fractionLength(2)))
+                    TextField("0.00", value: $fixed.emptyIfZero, format: .number.precision(.fractionLength(2)))
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: 90)

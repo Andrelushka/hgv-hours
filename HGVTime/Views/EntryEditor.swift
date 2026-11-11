@@ -18,6 +18,7 @@ struct EntryEditor: View {
     @State private var multiManned: Bool
     @State private var restType: RestType
     @State private var note: String
+    @State private var subtype: ActivitySubtype?
     @State private var confirmDelete = false
 
     init(entry: ActivityEntry?, defaultStart: Date = .now, defaultRegime: Regime = .assimilated) {
@@ -31,6 +32,7 @@ struct EntryEditor: View {
         _multiManned = State(initialValue: entry?.multiManned ?? false)
         _restType = State(initialValue: entry?.restType ?? .breakTime)
         _note = State(initialValue: entry?.note ?? "")
+        _subtype = State(initialValue: entry?.subtype)
     }
 
     private var isValid: Bool { isOpen ? start <= .now : end > start }
@@ -47,6 +49,12 @@ struct EntryEditor: View {
                             ForEach(RestType.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
                         }
                         .pickerStyle(.segmented)
+                    }
+                    if kind == .otherWork || kind == .availability {
+                        Picker("What", selection: $subtype) {
+                            Text(kind == .otherWork ? "Other work" : "Period of availability").tag(ActivitySubtype?.none)
+                            ForEach(ActivitySubtype.options(for: kind)) { Label($0.title, systemImage: $0.symbol).tag(ActivitySubtype?.some($0)) }
+                        }
                     }
                     Picker("Rules", selection: $regime) {
                         ForEach(Regime.allCases) { Text($0.title).tag($0) }
@@ -128,6 +136,7 @@ struct EntryEditor: View {
         target.endsShift = kind == .rest && restType != .breakTime
         target.plannedRestRaw = target.endsShift ? restType.rawValue : ""
         target.note = note
+        target.subtypeRaw = (subtype?.kind == kind ? subtype?.rawValue : nil) ?? ""
 
         // Make the other activities fit around this one.
         let descriptor = FetchDescriptor<ActivityEntry>(sortBy: [SortDescriptor(\.start)])
@@ -143,6 +152,7 @@ struct EntryEditor: View {
                     let tail = ActivityEntry(kind: other.kind, regime: other.regime, start: end, end: other.end,
                                              multiManned: other.multiManned, note: other.note, endsShift: other.endsShift)
                     tail.plannedRestRaw = other.plannedRestRaw
+                    tail.subtypeRaw = other.subtypeRaw
                     context.insert(tail)
                 }
                 other.end = start

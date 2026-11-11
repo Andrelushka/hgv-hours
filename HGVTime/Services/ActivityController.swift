@@ -43,6 +43,7 @@ enum ActivityController {
     static func startShift(context: ModelContext, settings: AppSettings) {
         EventRecorder.log(.shiftStart, detail: "Started with \(settings.shiftStartKind.title.lowercased())", context: context, settings: settings)
         switchTo(settings.shiftStartKind, context: context, settings: settings)
+        VehicleLog.shiftStarted(settings: settings, context: context)
         ReminderService.shared.fire(.shiftStart, context: context)
     }
 
@@ -57,8 +58,10 @@ enum ActivityController {
     /// After a shift ends: clear the vehicle/trailer in use and mark the day's job done,
     /// so tomorrow starts clean. Earnings, the route and the debrief are kept.
     static func resetAfterShift(context: ModelContext, store: SettingsStore, shiftStart: Date?) {
+        VehicleLog.shiftEnded(context: context)
         store.settings.currentVehicleID = ""
         store.settings.currentTrailerID = ""
+        store.settings.currentRegime = store.settings.primaryRegime
         let from = (shiftStart ?? Calendar.hgv.startOfDay(for: .now)).addingTimeInterval(-6 * 3600)
         let plans = (try? context.fetch(FetchDescriptor<WorkPlan>())) ?? []
         for p in plans where p.plannedStart >= from && p.plannedStart <= .now && !p.completed {
@@ -95,8 +98,20 @@ enum ActivityController {
             switchTo(subtype.kind, context: context, settings: settings)
         }
         guard let current = openEntries(context: context).last else { return }
-        current.subtypeRaw = subtype?.rawValue ?? ""
+        let newRaw = subtype?.rawValue ?? ""
+        guard current.subtypeRaw != newRaw else { return }
+        let now = Date.now
+        if now.timeIntervalSince(current.start) >= 60 {
+            // Each sub-activity is its own entry, so it has its own start and end time you can edit.
+            current.end = now
+            let next = ActivityEntry(kind: current.kind, regime: current.regime, start: now, multiManned: current.multiManned)
+            next.subtypeRaw = newRaw
+            context.insert(next)
+        } else {
+            current.subtypeRaw = newRaw
+        }
         try? context.save()
+        refreshSideEffects(context: context, settings: settings)
         if let subtype {
             EventRecorder.log(.activity, title: subtype.title, activity: "\(subtype.kind.rawValue):\(subtype.rawValue)", context: context, settings: settings)
             VoiceService.shared.activityChanged(to: subtype.title)
@@ -153,6 +168,7 @@ enum ActivityController {
         guard km > 0 else { return }
         let r = dayRecord(for: date, context: context)
         r.gpsKm += km
+        VehicleLog.addGPS(km, context: context)
         if r.vehicleID.isEmpty { r.vehicleID = vehicleID }
         try? context.save()
     }

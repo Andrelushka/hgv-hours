@@ -78,7 +78,6 @@ struct StopEditor: View {
                         row("Custom stop name", text: Binding(get: { stop.customTitle ?? "" }, set: { stop.customTitle = $0 }),
                             prompt: "e.g. Weighbridge, Customs, Wash, Tip")
                     }
-                    row("Company / site", text: Binding(get: { stop.company ?? "" }, set: { stop.company = $0 }), prompt: "e.g. Tesco Daventry DC")
                 } header: {
                     Text("Stop type")
                 }
@@ -88,7 +87,10 @@ struct StopEditor: View {
                         address: Binding(get: { stop.address ?? stop.place }, set: { stop.address = $0; stop.place = $0 }),
                         postcode: Binding(get: { stop.postcode ?? "" }, set: { stop.postcode = $0 }),
                         latitude: $stop.latitude, longitude: $stop.longitude,
-                        name: Binding(get: { stop.company ?? "" }, set: { stop.company = $0 }))
+                        name: Binding(get: { stop.company ?? "" }, set: { stop.company = $0 }),
+                        houseNumber: Binding(get: { stop.houseNumber ?? "" }, set: { stop.houseNumber = $0 }),
+                        houseName: Binding(get: { stop.houseName ?? "" }, set: { stop.houseName = $0 }),
+                        flat: Binding(get: { stop.flat ?? "" }, set: { stop.flat = $0 }))
                 } header: {
                     Text("Address")
                 } footer: {

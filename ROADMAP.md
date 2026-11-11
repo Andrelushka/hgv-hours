@@ -59,6 +59,13 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.3 (3.3.0) — Vehicles in the shift & 3D navigation
+- ✅ Vehicle selection and change on Today; per-vehicle mileage in reports; rules and overspeed per vehicle and country
+- ✅ Sub-activities with their own times; detailed addresses; vehicle service stops
+- ✅ 3D follow-behind navigation with view modes
+- ✅ Scenario test suite across all supported countries
+- ⬜ Truck-specific road speed limits per road (needs a paid map data service)
+
 ## V3.2 (3.2.0) — Tile layout, planner & tables, bigger widgets
 - ✅ Today and Hours as switchable, draggable tile grids grouped by meaning; date tile; card toast
 - ✅ New activities: yard check, waiting for shift/job, spare

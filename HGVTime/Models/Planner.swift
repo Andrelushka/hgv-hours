@@ -65,6 +65,16 @@ final class Vehicle {
     var createdAt: Date = Date()
     /// Latest odometer reading in km (0 = not set).
     var odometerKm: Double = 0
+    /// Rules when driving this vehicle: "" = your usual rules, or a Regime raw value
+    /// ("assimilated" tacho, "gbDomestic", "exempt" = no drivers' hours rules).
+    var rulesRaw: String = ""
+    /// Overspeed threshold for this vehicle in km/h (0 = automatic from vehicle type and country).
+    var speedLimitKmh: Double = 0
+
+    var rules: Regime? {
+        get { Regime(rawValue: rulesRaw) }
+        set { rulesRaw = newValue?.rawValue ?? "" }
+    }
 
     init(kind: VehicleKind = .tractor) {
         self.kindRaw = kind.rawValue
@@ -118,7 +128,7 @@ struct PlanStop: Codable, Equatable, Identifiable {
 
     /// Address line(s) for navigation and geocoding.
     var fullAddress: String {
-        [address ?? place, postcode ?? ""].filter { !$0.isEmpty }.joined(separator: ", ")
+        AddressParts.join(flat: flat, houseName: houseName, houseNumber: houseNumber, street: address ?? place, postcode: postcode)
     }
 
     /// Booking time as text (new date field, or the old free-text time).
@@ -128,7 +138,7 @@ struct PlanStop: Codable, Equatable, Identifiable {
     }
 
     enum Kind: String, Codable, CaseIterable, Identifiable {
-        case collection, delivery, depot, fuel, parking, trailer, other
+        case collection, delivery, depot, fuel, parking, trailer, service, other
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -138,6 +148,7 @@ struct PlanStop: Codable, Equatable, Identifiable {
             case .fuel: "Fuel"
             case .parking: "Parking / rest"
             case .trailer: "Trailer swap"
+            case .service: "Vehicle service"
             case .other: "Custom stop"
             }
         }
@@ -149,6 +160,7 @@ struct PlanStop: Codable, Equatable, Identifiable {
             case .fuel: "fuelpump.fill"
             case .parking: "parkingsign.circle.fill"
             case .trailer: "arrow.triangle.swap"
+            case .service: "wrench.and.screwdriver.fill"
             case .other: "mappin.circle.fill"
             }
         }
@@ -160,6 +172,7 @@ struct PlanStop: Codable, Equatable, Identifiable {
             case .fuel: .green
             case .parking: .teal
             case .trailer: .brown
+            case .service: .red
             case .other: .purple
             }
         }
@@ -183,6 +196,10 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var contactPhone: String?
     /// Name of a custom stop type, e.g. "Weighbridge", "Customs", "Wash".
     var customTitle: String?
+    /// Address details: house/building number, house or building name, flat/unit.
+    var houseNumber: String?
+    var houseName: String?
+    var flat: String?
     // Recorded on the day with the Arrived / Departed buttons.
     var arrivedAt: Date?
     var departedAt: Date?
@@ -208,6 +225,11 @@ final class WorkPlan {
     var trailerID: String = ""
     var startLocation: String = ""
     var startPostcode: String = ""
+    /// Business / depot name and address details for the start location.
+    var startName: String = ""
+    var startHouseNumber: String = ""
+    var startHouseName: String = ""
+    var startFlat: String = ""
     var startLatitude: Double?
     var startLongitude: Double?
     var load: String = ""
@@ -677,4 +699,62 @@ enum ActivitySubtype: String, Codable, CaseIterable, Identifiable {
     }
 
     static func options(for kind: DutyKind) -> [ActivitySubtype] { allCases.filter { $0.kind == kind } }
+}
+
+
+enum AddressParts {
+    /// "Flat 2, Rose House, 14 High Street, Daventry, NN11 4XX" — leaves out the empty parts and
+    /// doesn't repeat a number already at the start of the street line.
+    static func join(flat: String?, houseName: String?, houseNumber: String?, street: String, postcode: String?) -> String {
+        let f = (flat ?? "").trimmingCharacters(in: .whitespaces)
+        let n = (houseNumber ?? "").trimmingCharacters(in: .whitespaces)
+        var streetLine = street
+        if !n.isEmpty && !street.hasPrefix(n) { streetLine = street.isEmpty ? n : "\(n) \(street)" }
+        return [f.isEmpty ? "" : (f.lowercased().hasPrefix("flat") || f.lowercased().hasPrefix("unit") ? f : "Flat \(f)"),
+                houseName ?? "", streetLine, postcode ?? ""]
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+    }
+}
+
+// MARK: Vehicle use
+
+/// One vehicle driven during a shift, with its own odometer readings and GPS distance.
+/// A shift can have several (change of vehicle mid-shift).
+@Model
+final class VehicleUse {
+    var id: UUID = UUID()
+    var vehicleID: String = ""
+    var trailerID: String = ""
+    var start: Date = Date()
+    var end: Date?
+    /// Odometer readings in km (0 = not entered).
+    var startOdometerKm: Double = 0
+    var endOdometerKm: Double = 0
+    /// Distance measured by GPS while this vehicle was in use (in-cab mode), km.
+    var gpsKm: Double = 0
+    /// True once the driver typed the end reading (otherwise it's worked out from start + GPS).
+    var endEdited: Bool = false
+
+    init(vehicleID: String, trailerID: String = "", start: Date, startOdometerKm: Double = 0) {
+        self.vehicleID = vehicleID
+        self.trailerID = trailerID
+        self.start = start
+        self.startOdometerKm = startOdometerKm
+    }
+
+    /// End reading typed by the driver, or start + GPS distance.
+    var effectiveEndKm: Double {
+        if endEdited && endOdometerKm > 0 { return endOdometerKm }
+        if startOdometerKm > 0 && gpsKm > 0 { return startOdometerKm + gpsKm }
+        return endOdometerKm
+    }
+
+    /// Distance from the odometer readings when both are there, otherwise GPS.
+    var distanceKm: Double {
+        let e = effectiveEndKm
+        if startOdometerKm > 0 && e > startOdometerKm { return e - startOdometerKm }
+        return gpsKm
+    }
 }

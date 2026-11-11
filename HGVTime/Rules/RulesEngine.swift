@@ -26,6 +26,8 @@ struct ComplianceIssue: Identifiable, Hashable {
 struct PeriodStats: Equatable {
     var euDriving: TimeInterval = 0
     var gbDriving: TimeInterval = 0
+    /// Driving a vehicle that's exempt from drivers' hours rules (counted as other work).
+    var exemptDriving: TimeInterval = 0
     var otherWork: TimeInterval = 0
     var availability: TimeInterval = 0
     var breaks: TimeInterval = 0
@@ -176,14 +178,23 @@ enum RulesEngine {
                     s.euDriving += d
                     s.continuousDriving += d
                     s.maxContinuousDriving = max(s.maxContinuousDriving, s.continuousDriving)
-                } else {
+                } else if segment.regime == .gbDomestic {
                     // GB domestic driving counts as "other work" under assimilated rules.
                     s.gbDriving += d
+                } else {
+                    // Exempt vehicle: no driving limits, but it's still working time.
+                    s.otherWork += d
+                    s.exemptDriving += d
                 }
             case .otherWork:
                 s.otherWork += d
             case .availability:
                 s.availability += d
+                // Double-manned: a 45-min break may be taken as co-driver while the other driver drives (Art. 7).
+                if segment.multiManned && d >= Limits.fullBreak - 1 {
+                    s.continuousDriving = 0
+                    s.splitBreakFirstTaken = false
+                }
             case .rest:
                 s.breaks += d
                 if d >= Limits.splitRestFirstPart { s.splitRestFirstPartTaken = true }
@@ -285,21 +296,28 @@ enum RulesEngine {
                               date: date))
         }
         if config.applyWorkingTime {
+            // Rest after the last piece of work is the end of the day, not a break during it.
+            var trailing: TimeInterval = 0
+            for seg in period.segments.reversed() {
+                if seg.isWork { break }
+                if seg.kind == .rest && seg.duration >= Limits.wtdBreakPiece - 1 { trailing += seg.duration }
+            }
+            let breaksTaken = max(0, st.wtdBreakTotal - trailing)
             if st.wtdMaxWorkWithoutBreak > Limits.wtdMaxWorkWithoutBreak + tol {
                 list.append(.init(severity: .violation, family: .workingTime,
                                   title: "Worked over 6h without a break",
                                   detail: "Longest run \(Fmt.hm(st.wtdMaxWorkWithoutBreak)). Take 30 min (in 15 min pieces) before 6h.",
                                   date: date))
             }
-            if st.workingTime > Limits.wtdLongDayThreshold + tol && st.wtdBreakTotal < Limits.wtdBreakLongDay - tol {
+            if st.workingTime > Limits.wtdLongDayThreshold + tol && breaksTaken < Limits.wtdBreakLongDay - tol {
                 list.append(.init(severity: .violation, family: .workingTime,
                                   title: "Under 45 min breaks on a 9h+ day",
-                                  detail: "Worked \(Fmt.hm(st.workingTime)) with \(Fmt.hm(st.wtdBreakTotal)) of breaks.",
+                                  detail: "Worked \(Fmt.hm(st.workingTime)) with \(Fmt.hm(breaksTaken)) of breaks.",
                                   date: date))
-            } else if st.workingTime > Limits.wtdMaxWorkWithoutBreak + tol && st.wtdBreakTotal < Limits.wtdBreakShortDay - tol {
+            } else if st.workingTime > Limits.wtdMaxWorkWithoutBreak + tol && breaksTaken < Limits.wtdBreakShortDay - tol {
                 list.append(.init(severity: .violation, family: .workingTime,
                                   title: "Under 30 min breaks on a 6h+ day",
-                                  detail: "Worked \(Fmt.hm(st.workingTime)) with \(Fmt.hm(st.wtdBreakTotal)) of breaks.",
+                                  detail: "Worked \(Fmt.hm(st.workingTime)) with \(Fmt.hm(breaksTaken)) of breaks.",
                                   date: date))
             }
             if st.nightWork && st.workingTime > config.nightWorkLimit + tol {
@@ -400,6 +418,18 @@ enum RulesEngine {
             }
         }
 
+        // No weekly rest known before the records start: count six 24h periods from the first work.
+        if let firstWork = segments.first(where: { $0.isWork }) {
+            let firstRest = weeklyRests.first { $0.start > firstWork.start }
+            let due = firstWork.start.addingTimeInterval(Limits.weeklyRestInterval)
+            let lateStart = firstRest?.start ?? (segments.last(where: { $0.isWork && $0.end > due }) != nil ? now : nil)
+            if let lateStart, lateStart.timeIntervalSince(due) > Limits.tolerance,
+               let weekIndex = weeks.lastIndex(where: { $0.weekStart <= min(lateStart, now) }) {
+                weeks[weekIndex].issues.append(.init(severity: .violation, family: .driversHours, title: "Weekly rest started late",
+                    detail: "Weekly rest was due to start by \(Fmt.dayTime(due)) — six 24h periods after your first recorded shift.", date: due))
+            }
+        }
+
         // Weekly rest spacing and consecutive reduced weekly rests.
         for (index, rest) in weeklyRests.enumerated() where index > 0 {
             let previous = weeklyRests[index - 1]
@@ -486,6 +516,9 @@ enum RulesEngine {
         let completedWeekly = weeklyRests.filter { $0.end < now }
         s.lastWeeklyRest = completedWeekly.last
         let onWeeklyRest = last.kind == .rest && last.duration >= Limits.reducedWeeklyRest
+        if completedWeekly.isEmpty, !onWeeklyRest, let firstWork = segments.first(where: { $0.isWork }) {
+            s.weeklyRestDueBy = firstWork.start.addingTimeInterval(Limits.weeklyRestInterval)
+        }
         if let lastWeekly = completedWeekly.last, !onWeeklyRest {
             s.weeklyRestDueBy = lastWeekly.end.addingTimeInterval(Limits.weeklyRestInterval)
             let lastReduced = lastWeekly.duration < Limits.regularWeeklyRest - Limits.tolerance

@@ -22,6 +22,12 @@ enum BackupService {
         var reminders: [Rem] = []
         var events: [Event] = []
         var track: [Track] = []
+        var uses: [Use]? = []
+    }
+
+    struct Use: Codable {
+        var vehicleID, trailerID: String; var start: Date; var end: Date?
+        var startKm, endKm, gpsKm: Double; var endEdited: Bool
     }
 
     struct Entry: Codable { var id: UUID; var kind, regime: String; var start: Date; var end: Date?; var multi: Bool; var note: String; var endsShift: Bool; var plannedRest: String; var subtype: String? }
@@ -30,11 +36,13 @@ enum BackupService {
     struct Veh: Codable {
         var id: UUID; var kind, registration, fleetNumber, make, model: String
         var height, width, length, weight: Double; var axles: Int; var fuel, body, notes: String; var createdAt: Date; var odometerKm: Double
+        var rules: String?; var speedLimit: Double?
     }
     struct Plan: Codable {
         var id: UUID; var start, end: Date; var company, vehicleID, trailerID, startLocation, load, pallets, reference, notes: String
         var stops, lines: Data; var createdAt: Date
         var startPostcode: String?; var startLatitude, startLongitude: Double?; var completed: Bool?
+        var startName, startHouseNumber, startHouseName, startFlat: String?
     }
     struct Note: Codable { var id: UUID; var title, body, kind: String; var table: Data; var isTemplate, pinned: Bool; var createdAt, updatedAt: Date; var style: Data? }
     struct Card: Codable { var time: Date; var inserted: Bool }
@@ -64,13 +72,15 @@ enum BackupService {
         b.vehicles = all(Vehicle.self, context).map {
             Veh(id: $0.id, kind: $0.kindRaw, registration: $0.registration, fleetNumber: $0.fleetNumber, make: $0.make, model: $0.model,
                 height: $0.height, width: $0.width, length: $0.length, weight: $0.weight, axles: $0.axles, fuel: $0.fuelRaw,
-                body: $0.body, notes: $0.notes, createdAt: $0.createdAt, odometerKm: $0.odometerKm)
+                body: $0.body, notes: $0.notes, createdAt: $0.createdAt, odometerKm: $0.odometerKm,
+                rules: $0.rulesRaw, speedLimit: $0.speedLimitKmh)
         }
         b.plans = all(WorkPlan.self, context).map {
             Plan(id: $0.id, start: $0.plannedStart, end: $0.plannedEnd, company: $0.company, vehicleID: $0.vehicleID, trailerID: $0.trailerID,
                  startLocation: $0.startLocation, load: $0.load, pallets: $0.pallets, reference: $0.reference, notes: $0.notes,
                  stops: $0.stopsData, lines: $0.linesData, createdAt: $0.createdAt,
-                 startPostcode: $0.startPostcode, startLatitude: $0.startLatitude, startLongitude: $0.startLongitude, completed: $0.completed)
+                 startPostcode: $0.startPostcode, startLatitude: $0.startLatitude, startLongitude: $0.startLongitude, completed: $0.completed,
+                 startName: $0.startName, startHouseNumber: $0.startHouseNumber, startHouseName: $0.startHouseName, startFlat: $0.startFlat)
         }
         b.notes = all(NoteItem.self, context).map {
             Note(id: $0.id, title: $0.title, body: $0.body, kind: $0.kindRaw, table: $0.tableData, isTemplate: $0.isTemplate,
@@ -94,6 +104,10 @@ enum BackupService {
         b.events = all(EventLog.self, context).map {
             Event(time: $0.time, kind: $0.kindRaw, title: $0.title, detail: $0.detail, lat: $0.latitude, lon: $0.longitude,
                   speed: $0.speedKmh, duration: $0.duration, key: $0.key, activity: $0.activityRaw)
+        }
+        b.uses = all(VehicleUse.self, context).map {
+            Use(vehicleID: $0.vehicleID, trailerID: $0.trailerID, start: $0.start, end: $0.end,
+                startKm: $0.startOdometerKm, endKm: $0.endOdometerKm, gpsKm: $0.gpsKm, endEdited: $0.endEdited)
         }
         b.track = all(TrackPoint.self, context).map { Track(time: $0.time, lat: $0.latitude, lon: $0.longitude, speed: $0.speedKmh) }
 
@@ -130,6 +144,7 @@ enum BackupService {
         try context.delete(model: Reminder.self)
         try context.delete(model: EventLog.self)
         try context.delete(model: TrackPoint.self)
+        try context.delete(model: VehicleUse.self)
 
         for e in b.entries {
             let x = ActivityEntry(kind: DutyKind(rawValue: e.kind) ?? .rest, regime: Regime(rawValue: e.regime) ?? .assimilated,
@@ -146,6 +161,7 @@ enum BackupService {
             x.id = v.id; x.registration = v.registration; x.fleetNumber = v.fleetNumber; x.make = v.make; x.model = v.model
             x.height = v.height; x.width = v.width; x.length = v.length; x.weight = v.weight; x.axles = v.axles
             x.fuelRaw = v.fuel; x.body = v.body; x.notes = v.notes; x.createdAt = v.createdAt; x.odometerKm = v.odometerKm
+            x.rulesRaw = v.rules ?? ""; x.speedLimitKmh = v.speedLimit ?? 0
             context.insert(x)
         }
         for p in b.plans {
@@ -155,6 +171,8 @@ enum BackupService {
             x.stopsData = p.stops; x.linesData = p.lines; x.createdAt = p.createdAt
             x.startPostcode = p.startPostcode ?? ""; x.startLatitude = p.startLatitude; x.startLongitude = p.startLongitude
             x.completed = p.completed ?? false
+            x.startName = p.startName ?? ""; x.startHouseNumber = p.startHouseNumber ?? ""
+            x.startHouseName = p.startHouseName ?? ""; x.startFlat = p.startFlat ?? ""
             context.insert(x)
         }
         for n in b.notes {
@@ -184,6 +202,11 @@ enum BackupService {
             let x = EventLog(time: e.time, kind: EventKind(rawValue: e.kind) ?? .note, title: e.title, detail: e.detail)
             x.latitude = e.lat; x.longitude = e.lon; x.speedKmh = e.speed; x.duration = e.duration; x.key = e.key
             x.activityRaw = e.activity ?? ""
+            context.insert(x)
+        }
+        for u in b.uses ?? [] {
+            let x = VehicleUse(vehicleID: u.vehicleID, trailerID: u.trailerID, start: u.start, startOdometerKm: u.startKm)
+            x.end = u.end; x.endOdometerKm = u.endKm; x.gpsKm = u.gpsKm; x.endEdited = u.endEdited
             context.insert(x)
         }
         b.track.forEach { context.insert(TrackPoint(time: $0.time, latitude: $0.lat, longitude: $0.lon, speedKmh: $0.speed)) }

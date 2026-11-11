@@ -35,6 +35,8 @@ final class AutoDriveDetector: NSObject {
     private(set) var lastEvent: String?
     /// Above the overspeed threshold right now.
     private(set) var isOverspeeding = false
+    /// Overspeed threshold for the vehicle in use and the country (km/h).
+    private(set) var speedLimitKmh: Double = 90
 
     @ObservationIgnored private var lastMovingLocation: CLLocation?
     @ObservationIgnored private var lastFixLocation: CLLocation?
@@ -87,6 +89,12 @@ final class AutoDriveDetector: NSObject {
 
     func update(settings: AppSettings) {
         self.settings = settings
+        if let context {
+            speedLimitKmh = SpeedLimits.limitKmh(vehicle: VehicleLog.vehicle(settings.currentVehicleID, context: context),
+                                                 region: settings.region, manual: settings.overspeedLimitKmh, automatic: settings.autoSpeedLimit)
+        } else {
+            speedLimitKmh = settings.overspeedLimitKmh
+        }
         settings.autoDetectEnabled ? start() : stop()
     }
 
@@ -292,9 +300,9 @@ final class AutoDriveDetector: NSObject {
     // MARK: Overspeed
 
     private func trackOverspeed(kmh: Double, at time: Date, coordinate: CLLocationCoordinate2D) {
-        if kmh > settings.overspeedLimitKmh {
+        if kmh > speedLimitKmh {
             if overspeedStart == nil {
-                VoiceService.shared.overspeed("Over \(Int(settings.overspeedLimitKmh)) kilometres an hour.")
+                VoiceService.shared.overspeed("Over \(Int(speedLimitKmh)) kilometres an hour.")
                 overspeedStart = time
                 overspeedMax = kmh
                 overspeedCoordinate = coordinate
@@ -310,7 +318,7 @@ final class AutoDriveDetector: NSObject {
         overspeedStart = nil
         isOverspeeding = false
         guard let context, end.timeIntervalSince(start) >= 1 else { return }
-        let event = SpeedEvent(start: start, end: end, maxKmh: overspeedMax, limitKmh: settings.overspeedLimitKmh,
+        let event = SpeedEvent(start: start, end: end, maxKmh: overspeedMax, limitKmh: speedLimitKmh,
                                latitude: overspeedCoordinate?.latitude ?? 0, longitude: overspeedCoordinate?.longitude ?? 0)
         context.insert(event)
         try? context.save()

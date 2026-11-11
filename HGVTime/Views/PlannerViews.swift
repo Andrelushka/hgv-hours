@@ -18,6 +18,10 @@ struct PlanEditor: View {
     @State private var trailerID: String
     @State private var startLocation: String
     @State private var startPostcode: String
+    @State private var startFlat: String
+    @State private var startHouseName: String
+    @State private var startHouseNumber: String
+    @State private var startName: String
     @State private var startLatitude: Double?
     @State private var startLongitude: Double?
     @State private var editingLine: PlanLine?
@@ -47,6 +51,10 @@ struct PlanEditor: View {
         _trailerID = State(initialValue: plan?.trailerID ?? defaultTrailerID)
         _startLocation = State(initialValue: plan?.startLocation ?? "")
         _startPostcode = State(initialValue: plan?.startPostcode ?? "")
+        _startFlat = State(initialValue: plan?.startFlat ?? "")
+        _startHouseName = State(initialValue: plan?.startHouseName ?? "")
+        _startHouseNumber = State(initialValue: plan?.startHouseNumber ?? "")
+        _startName = State(initialValue: plan?.startName ?? "")
         _startLatitude = State(initialValue: plan?.startLatitude)
         _startLongitude = State(initialValue: plan?.startLongitude)
         _stops = State(initialValue: plan?.stops ?? [])
@@ -102,7 +110,8 @@ struct PlanEditor: View {
                 Section {
                     AddressLookupFields(address: $startLocation, postcode: $startPostcode,
                                         latitude: $startLatitude, longitude: $startLongitude,
-                                        addressLabel: "Start location / depot")
+                                        name: $startName, addressLabel: "Start location / depot",
+                                        houseNumber: $startHouseNumber, houseName: $startHouseName, flat: $startFlat)
                 } header: {
                     Text("Start location")
                 } footer: {
@@ -253,6 +262,10 @@ struct PlanEditor: View {
         trailerID = p.trailerID
         startLocation = p.startLocation
         startPostcode = p.startPostcode
+        startFlat = p.startFlat
+        startHouseName = p.startHouseName
+        startHouseNumber = p.startHouseNumber
+        startName = p.startName
         startLatitude = p.startLatitude
         startLongitude = p.startLongitude
         stops = p.stops.map { var s = $0; s.id = UUID(); return s }
@@ -281,6 +294,10 @@ struct PlanEditor: View {
         p.trailerID = trailerID
         p.startLocation = startLocation
         p.startPostcode = startPostcode
+        p.startFlat = startFlat
+        p.startHouseName = startHouseName
+        p.startHouseNumber = startHouseNumber
+        p.startName = startName
         p.startLatitude = startLatitude
         p.startLongitude = startLongitude
         p.stops = stops
@@ -363,6 +380,8 @@ struct PlanCard: View {
     var plan: WorkPlan
     var title = "Planned"
     var showChecks = true
+    /// Off on Today, where the stops are listed with Arrived/Departed buttons instead.
+    var showStops = true
 
     var body: some View {
         let issues = showChecks
@@ -383,9 +402,10 @@ struct PlanCard: View {
                 Text([vehicle?.displayName, trailer.map { "Trailer \($0.displayName)" }].compactMap { $0 }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            let startText = [plan.startLocation, plan.startPostcode].filter { !$0.isEmpty }.joined(separator: ", ")
+            let startText = [plan.startName, AddressParts.join(flat: plan.startFlat, houseName: plan.startHouseName, houseNumber: plan.startHouseNumber,
+                                                                street: plan.startLocation, postcode: plan.startPostcode)].filter { !$0.isEmpty }.joined(separator: ", ")
             if !startText.isEmpty { Label("Start: \(startText)", systemImage: "flag.fill").font(.caption) }
-            ForEach(plan.stops) { stop in
+            ForEach(showStops ? plan.stops : []) { stop in
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
                     VStack(alignment: .leading, spacing: 1) {

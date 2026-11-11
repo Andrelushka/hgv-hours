@@ -37,7 +37,7 @@ struct PayItemEditor: View {
                         LabeledContent("Amount") {
                             HStack(spacing: 2) {
                                 Text(p.currencySymbol).foregroundStyle(.secondary)
-                                TextField("0.00", value: $amount, format: .number.precision(.fractionLength(2)))
+                                TextField("0.00", value: $amount.emptyIfZero, format: .number.precision(.fractionLength(2)))
                                     .keyboardType(.decimalPad)
                                     .multilineTextAlignment(.trailing)
                                     .frame(maxWidth: 110)

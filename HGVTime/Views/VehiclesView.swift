@@ -52,6 +52,9 @@ struct VehiclesView: View {
                     if !v.specsLine.isEmpty {
                         Text(v.specsLine).font(.caption).foregroundStyle(.secondary)
                     }
+                    if let r = v.rules {
+                        Text(r == .exempt ? "Exempt from drivers' hours" : r.title).font(.caption2.weight(.semibold)).foregroundStyle(.orange)
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .contentShape(Rectangle())
@@ -114,6 +117,8 @@ struct VehicleEditor: View {
     @State private var confirmDelete = false
 
     @State private var odometer: Double
+    @State private var rules: Regime?
+    @State private var speedLimit: Double
     @State private var inFeet = false
     @State private var lookingUp = false
     @State private var lookupMessage: String?
@@ -124,6 +129,8 @@ struct VehicleEditor: View {
         _kind = State(initialValue: k)
         _registration = State(initialValue: vehicle?.registration ?? registration)
         _odometer = State(initialValue: vehicle?.odometerKm ?? 0)
+        _rules = State(initialValue: vehicle?.rules)
+        _speedLimit = State(initialValue: vehicle?.speedLimitKmh ?? 0)
         _fleetNumber = State(initialValue: vehicle?.fleetNumber ?? "")
         _make = State(initialValue: vehicle?.make ?? "")
         _model = State(initialValue: vehicle?.model ?? "")
@@ -199,7 +206,7 @@ struct VehicleEditor: View {
                             HStack(spacing: 4) {
                                 TextField("0", value: Binding(
                                     get: { store.settings.useMiles ? (odometer / 1.609344).rounded() : odometer.rounded() },
-                                    set: { odometer = store.settings.useMiles ? $0 * 1.609344 : $0 }),
+                                    set: { odometer = store.settings.useMiles ? $0 * 1.609344 : $0 }).emptyIfZero,
                                           format: .number.precision(.fractionLength(0)))
                                     .keyboardType(.numberPad)
                                     .multilineTextAlignment(.trailing)
@@ -211,6 +218,31 @@ struct VehicleEditor: View {
                         Text("Fuel & mileage")
                     } footer: {
                         Text("The odometer updates when you enter end-of-day mileage on the Today screen.")
+                    }
+                }
+                if kind != .trailer {
+                    Section {
+                        Picker("Drivers' hours rules", selection: $rules) {
+                            Text("My usual rules (\(store.settings.primaryRegime.shortTitle))").tag(Regime?.none)
+                            Text("Tacho (assimilated / AETR)").tag(Regime?.some(.assimilated))
+                            Text("GB domestic (exempt from tacho)").tag(Regime?.some(.gbDomestic))
+                            Text("Exempt — no drivers' hours rules").tag(Regime?.some(.exempt))
+                        }
+                        LabeledContent("Overspeed above") {
+                            HStack(spacing: 4) {
+                                TextField("Auto", value: $speedLimit.emptyIfZero, format: .number.precision(.fractionLength(0)))
+                                    .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 60)
+                                Text("km/h").foregroundStyle(.secondary)
+                            }
+                        }
+                        if speedLimit == 0 {
+                            Text("Automatic: \(SpeedLimits.describe(SpeedLimits.defaultKmh(kind: kind, weightT: weight, region: store.settings.region))) for this vehicle in \(store.settings.region.title).")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                    } header: {
+                        Text("Rules & speed")
+                    } footer: {
+                        Text("When you choose this vehicle, new activities follow its rules. Exempt vehicles (e.g. vans up to 3.5 t, or exempt uses) don't count towards driving limits — the time is still working time.")
                     }
                 }
                 Section("Notes") {
@@ -247,7 +279,7 @@ struct VehicleEditor: View {
                         set: { ft in
                             let inches = Double(Int((value.wrappedValue / 0.0254).rounded()) % 12)
                             value.wrappedValue = (ft * 12 + inches) * 0.0254
-                        }), format: .number.precision(.fractionLength(0)))
+                        }).emptyIfZero, format: .number.precision(.fractionLength(0)))
                         .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 44)
                     Text("ft").foregroundStyle(.secondary)
                     TextField("in", value: Binding(
@@ -255,7 +287,7 @@ struct VehicleEditor: View {
                         set: { inches in
                             let ft = Double(Int((value.wrappedValue / 0.0254).rounded()) / 12)
                             value.wrappedValue = (ft * 12 + min(max(inches, 0), 11)) * 0.0254
-                        }), format: .number.precision(.fractionLength(0)))
+                        }).emptyIfZero, format: .number.precision(.fractionLength(0)))
                         .keyboardType(.numberPad).multilineTextAlignment(.trailing).frame(maxWidth: 40)
                     Text("in").foregroundStyle(.secondary)
                     Text(value.wrappedValue > 0 ? String(format: "%.2f m", value.wrappedValue) : "")
@@ -263,7 +295,7 @@ struct VehicleEditor: View {
                 }
             } else {
                 HStack(spacing: 4) {
-                    TextField("0.00", value: value, format: .number.precision(.fractionLength(0...2)))
+                    TextField("0.00", value: value.emptyIfZero, format: .number.precision(.fractionLength(0...2)))
                         .keyboardType(.decimalPad)
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: 80)
@@ -311,7 +343,13 @@ struct VehicleEditor: View {
         v.body = trailerBody
         v.notes = notes
         v.odometerKm = odometer
+        v.rules = kind == .trailer ? nil : rules
+        v.speedLimitKmh = speedLimit
         try? context.save()
+        if v.id.uuidString == store.settings.currentVehicleID {
+            VehicleLog.applyRules(v.id.uuidString, context: context, store: store)
+            AutoDriveDetector.shared.update(settings: store.settings)
+        }
         // First vehicle/trailer added becomes the current one.
         if kind == .trailer, store.settings.currentTrailerID.isEmpty { store.settings.currentTrailerID = v.id.uuidString }
         if kind != .trailer, store.settings.currentVehicleID.isEmpty { store.settings.currentVehicleID = v.id.uuidString }
@@ -319,57 +357,93 @@ struct VehicleEditor: View {
     }
 }
 
-/// Shows the current vehicle and trailer on Today, with quick switching.
+/// The vehicle and trailer in use, on Today: choose, change mid-shift (each vehicle's mileage is kept
+/// separately), edit, or add a new one. Shows height, rules and overspeed threshold.
 struct CurrentVehicleCard: View {
+    @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
     @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
+    @Query(sort: \VehicleUse.start) private var uses: [VehicleUse]
+    @State private var editing: Vehicle?
+    @State private var adding: VehicleKind?
 
     var body: some View {
         let unit = vehicles.first { $0.id.uuidString == store.settings.currentVehicleID }
         let trailer = vehicles.first { $0.id.uuidString == store.settings.currentTrailerID }
         let maxHeight = max(unit?.height ?? 0, trailer?.height ?? 0)
-        HStack(spacing: 10) {
-            if maxHeight > 0 {
-                VStack(spacing: 0) {
-                    Text(String(format: "%.2f m", maxHeight)).font(.caption.weight(.heavy).monospacedDigit())
-                    Text(Fmt.feetInches(maxHeight)).font(.caption2.weight(.bold).monospacedDigit())
-                }
-                .foregroundStyle(.black)
-                .frame(width: 62, height: 62)
-                .background(Circle().fill(.white))
-                .overlay(Circle().stroke(.red, lineWidth: 5))
-                .accessibilityLabel(String(format: "Height %.2f metres", maxHeight))
-            }
-            VStack(alignment: .leading, spacing: 2) {
-                Menu {
-                    ForEach(vehicles.filter { $0.kind != .trailer }) { v in
-                        Button(v.displayName) { store.settings.currentVehicleID = v.id.uuidString }
+        let shiftUses = uses.filter { ($0.end ?? .now) > Date.now.addingTimeInterval(-16 * 3600) }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                if maxHeight > 0 {
+                    VStack(spacing: 0) {
+                        Text(String(format: "%.2f m", maxHeight)).font(.caption.weight(.heavy).monospacedDigit())
+                        Text(Fmt.feetInches(maxHeight)).font(.caption2.weight(.bold).monospacedDigit())
                     }
-                    Button("None") { store.settings.currentVehicleID = "" }
+                    .foregroundStyle(.black)
+                    .frame(width: 62, height: 62)
+                    .background(Circle().fill(.white))
+                    .overlay(Circle().stroke(.red, lineWidth: 5))
+                    .accessibilityLabel(String(format: "Height %.2f metres", maxHeight))
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(unit == nil ? "No vehicle chosen" : "Driving").font(.caption).foregroundStyle(.secondary)
+                    Text(unit?.displayName ?? "Choose your vehicle").font(.headline).lineLimit(1)
+                    if let trailer { Label(trailer.displayName, systemImage: "shippingbox").font(.caption).lineLimit(1) }
+                    HStack(spacing: 6) {
+                        let rules = store.settings.currentRegime
+                        Text(rules == .exempt ? "Exempt" : rules.shortTitle)
+                            .font(.caption2.weight(.bold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background((rules == .assimilated ? Color.blue : Color.orange).opacity(0.15), in: Capsule())
+                        Text("Overspeed \(Int(AutoDriveDetector.shared.speedLimitKmh)) km/h").font(.caption2).foregroundStyle(.secondary)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            HStack(spacing: 8) {
+                Menu {
+                    Section(unit == nil ? "Choose vehicle" : "Change to") {
+                        ForEach(vehicles.filter { $0.kind != .trailer && $0.id.uuidString != store.settings.currentVehicleID }) { v in
+                            Button(v.displayName) { choose(v.id.uuidString) }
+                        }
+                    }
+                    Button("Add a new vehicle", systemImage: "plus") { adding = .tractor }
+                    if unit != nil { Button("No vehicle", systemImage: "xmark") { choose("") } }
                 } label: {
-                    Label(unit?.displayName ?? "Choose vehicle", systemImage: unit?.kind.symbol ?? "box.truck")
-                        .font(.subheadline.weight(.semibold))
+                    Label(unit == nil ? "Choose" : "Change vehicle", systemImage: "arrow.triangle.2.circlepath")
                 }
                 Menu {
                     ForEach(vehicles.filter { $0.kind == .trailer }) { v in
                         Button(v.displayName) { store.settings.currentTrailerID = v.id.uuidString }
                     }
+                    Button("Add a new trailer", systemImage: "plus") { adding = .trailer }
                     Button("No trailer") { store.settings.currentTrailerID = "" }
                 } label: {
-                    Label(trailer?.displayName ?? "No trailer", systemImage: "shippingbox")
-                        .font(.caption)
+                    Label("Trailer", systemImage: "shippingbox")
                 }
-                if let specs = unit?.specsLine, !specs.isEmpty {
-                    Text(specs).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                if let unit {
+                    Button { editing = unit } label: { Label("Edit", systemImage: "pencil") }
                 }
             }
-            Spacer(minLength: 0)
-            NavigationLink { VehiclesView() } label: {
-                Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+            .buttonStyle(.bordered)
+            .font(.caption.weight(.semibold))
+            if shiftUses.count > 1 {
+                Text("This shift: " + shiftUses.map { u in
+                    (vehicles.first { $0.id.uuidString == u.vehicleID }?.registration ?? "Vehicle") + " " + Fmt.time(u.start)
+                }.joined(separator: " → "))
+                .font(.caption2).foregroundStyle(.secondary)
             }
         }
         .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+        .sheet(item: $editing) { VehicleEditor(vehicle: $0) }
+        .sheet(item: $adding) { VehicleEditor(vehicle: nil, newKind: $0) }
+    }
+
+    private func choose(_ id: String) {
+        VehicleLog.select(id, context: context, store: store)
+        AutoDriveDetector.shared.update(settings: store.settings)
     }
 }
 

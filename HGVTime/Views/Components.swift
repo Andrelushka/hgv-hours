@@ -570,3 +570,10 @@ struct CardTile: View {
         .accessibilityLabel(inserted ? "Driver card inserted. Tap to record withdrawing it." : "Driver card not inserted. Tap to record inserting it.")
     }
 }
+
+extension Binding where Value == Double {
+    /// Shows an empty box instead of "0" so there's nothing to delete before typing.
+    var emptyIfZero: Binding<Double?> {
+        Binding<Double?>(get: { wrappedValue == 0 ? nil : wrappedValue }, set: { wrappedValue = $0 ?? 0 })
+    }
+}

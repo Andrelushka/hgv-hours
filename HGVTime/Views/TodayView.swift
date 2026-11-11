@@ -156,7 +156,8 @@ struct TodayView: View {
         switch tile {
         case .warnings: return data.status.warnings.contains { $0.severity == .violation }
         case .job: return onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty
-        case .vehicle, .mileage: return onShift
+        case .vehicle: return true
+        case .mileage: return onShift || !VehicleLog.uses(on: now, context: context).isEmpty
         case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut: return true
         default: return data.applies(tile)
         }
@@ -323,9 +324,10 @@ struct TodayView: View {
                 Button {
                     let s = currentStatus()
                     if let plan = plans.first(where: { Calendar.hgv.isDateInToday($0.plannedStart) }) {
-                        if !plan.vehicleID.isEmpty { store.settings.currentVehicleID = plan.vehicleID }
                         if !plan.trailerID.isEmpty { store.settings.currentTrailerID = plan.trailerID }
+                        if !plan.vehicleID.isEmpty { VehicleLog.select(plan.vehicleID, context: context, store: store) }
                     }
+                    VehicleLog.applyRules(store.settings.currentVehicleID, context: context, store: store)
                     ActivityController.startShift(context: context, settings: store.settings)
                     let settings = store.settings
                     let noCard = !cardIn
@@ -426,7 +428,7 @@ struct TodayView: View {
                         .font(.caption)
                 }
                 if detector.isOverspeeding {
-                    Label("Over \(Int(store.settings.overspeedLimitKmh)) km/h — overspeed being recorded", systemImage: "gauge.with.dots.needle.100percent")
+                    Label("Over \(Int(detector.speedLimitKmh)) km/h — overspeed being recorded", systemImage: "gauge.with.dots.needle.100percent")
                         .font(.caption.weight(.bold)).foregroundStyle(.red)
                 }
                 if let event = detector.lastEvent {
