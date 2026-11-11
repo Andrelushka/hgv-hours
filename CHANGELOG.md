@@ -2,6 +2,12 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.5.0 — On-device AI agent
+- The assistant can run entirely on your iPhone: Qwen 3.5 2B (Alibaba, Apache-2.0) with Apple's MLX on the phone's GPU. Free, private, works offline once downloaded (about 1.3 GB, once, from Hugging Face). Lighter Qwen 3 1.7B and 0.6B models are also offered.
+- It uses the same app tools as before: plan, change, cancel or delete jobs, add stops, notes, reminders, fuel, activities, vehicle and trailer — and asks before deleting anything or ending a shift. Photos are read on the phone.
+- Turn it on in Assistant → ⚙︎ → On-device AI → Download / load model. Claude stays available as an option.
+- Tested with the real model: it creates jobs with the right date, time and stops from a plain request, and checks your hours with get_status.
+
 ## 3.4.0 — Earnings kept, truck navigation, harsh braking, AI agent tools
 - Fixed: ending a shift no longer clears "Earned today" or the mileage card. They stay until midnight and start again at zero the next day (a night shift counts on the day it finishes).
 - Resting between shifts: the big timer counts down to your next planned job (within 24 h), warns if you won't have 9 h rest by then, and is hidden when nothing is planned.

@@ -65,7 +65,7 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ✅ Lorry marker with heading, motorway-first routes, road-number signs, road speed limits (OpenStreetMap), speed limiter
 - ✅ Harsh braking detection
 - ✅ Assistant agent with app tools and photo reading
-- ⬜ On-device model (Qwen with Apple MLX) to replace the cloud model
+- ✅ On-device model (Qwen 3.5 with Apple MLX) — released in 3.5.0
 
 ## V3.3 (3.3.0) — Vehicles in the shift & 3D navigation
 - ✅ Vehicle selection and change on Today; per-vehicle mileage in reports; rules and overspeed per vehicle and country
