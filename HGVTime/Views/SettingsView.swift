@@ -4,7 +4,6 @@ import SwiftData
 struct SettingsView: View {
     @Environment(SettingsStore.self) private var store
     @Environment(\.modelContext) private var context
-    @State private var confirmErase = false
     @State private var exporting = false
     /// True when pushed inside another navigation stack (from the Today gear button).
     var embedded = false
@@ -91,7 +90,9 @@ struct SettingsView: View {
                         SettingsRow(title: "Export timesheet", symbol: "square.and.arrow.up.fill", color: .blue, value: "PDF / CSV")
                     }
                     .foregroundStyle(.primary)
-                    Button("Erase all activity data", role: .destructive) { confirmErase = true }
+                    NavigationLink { ResetView() } label: {
+                        SettingsRow(title: "Reset & erase", symbol: "arrow.counterclockwise.circle.fill", color: .red, value: "")
+                    }
                 }
 
                 Section {
@@ -108,15 +109,6 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .sheet(isPresented: $exporting) { ExportView() }
-            .confirmationDialog("Erase all recorded activities and night-outs? This can't be undone.",
-                                isPresented: $confirmErase, titleVisibility: .visible) {
-                Button("Erase everything", role: .destructive) {
-                    try? context.delete(model: ActivityEntry.self)
-                    try? context.delete(model: NightOut.self)
-                    try? context.save()
-                    ActivityController.refreshSideEffects(context: context, settings: store.settings)
-                }
-            }
         }
     }
 }

@@ -59,6 +59,10 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.7 (3.7.0) — Reset & erase, new assistant look
+- ✅ Factory reset and selective erase of records and settings
+- ✅ Futuristic assistant design
+
 ## V3.6 (3.6.0) — Wake-up alarm, leave home, calculator
 - ✅ Assistant talk-mode crash fixed
 - ✅ Wake-up alarm (AlarmKit) and leave-home reminder with traffic, all adjustable, per-job overrides

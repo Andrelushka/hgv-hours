@@ -2,6 +2,13 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.7.0 — Reset & erase, new assistant look
+- Settings → Reset & erase replaces the old "Erase all activity data" button. Quick choices: factory reset (erase everything and go back to all defaults, as if newly installed), reset all settings but keep your records, or erase all records but keep your settings.
+- Or choose exactly what to do. Records to erase: driver log, jobs and debriefs, earnings extras and nights out, vehicles/mileage/fuel, notes, reminders, event log/speed/routes, assistant keys and AI models (each shows how many items it holds). Settings to reset: driver profile and home, pay, country and hours rules, alerts/voice/alarm, in-cab and navigation, layout and units, assistant, app lock, everything else.
+- You type ERASE to confirm, with a "Make a backup first" link. Alarms and notifications are cleared and set again from what's left.
+- New assistant look: a dark, moving aurora background; a glowing AI orb that pulses while listening and spins while thinking (tap it to speak); a personal greeting; suggestion cards; glass chat bubbles; a floating input bar where the mic turns into a send button when you type.
+- 5 new tests (83 in total).
+
 ## 3.6.0 — Wake-up alarm, leave-home reminder, calculator
 - Fixed: the app crashed when you turned on talk mode or tapped the microphone in the assistant. It tried to listen while it was still speaking. It now waits for the answer to finish, checks the microphone is ready, and shows a message instead of crashing.
 - Wake-up alarm for your next planned job. On iOS 26 it's a real alarm that rings on silent and shows full screen; on older iOS it's a notification with sound. Wake-up time = leave time − time to get ready. You can add a second alarm a few minutes later, rename the alarm, test it, and set a one-off alarm for days with no job planned.

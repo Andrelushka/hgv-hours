@@ -50,30 +50,71 @@ struct AssistantView: View {
     }
     private var agentOn: Bool { localOn || claudeOn }
 
+    private var mood: AIOrb.Mood { voice.isListening ? .listening : (thinking || readingPhoto ? .thinking : .idle) }
+
+    private var modeName: String {
+        localOn ? "On-device AI" : (claudeOn ? "Claude" : "Offline")
+    }
+
     var body: some View {
-        VStack(spacing: 0) {
+        ZStack {
+            AuroraBackground(energy: mood == .idle ? 0 : 1)
             ScrollViewReader { proxy in
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        intro
-                        ForEach(lines) { line in bubble(line).id(line.id) }
-                        if thinking {
-                            HStack(spacing: 8) { ProgressView(); Text("Thinking…").font(.caption).foregroundStyle(.secondary) }
-                                .id("thinking")
+                    VStack(alignment: .leading, spacing: 14) {
+                        if lines.isEmpty { hero } else { compactHeader }
+                        ForEach(lines) { line in
+                            bubble(line).id(line.id)
+                                .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
                         }
+                        if thinking || readingPhoto {
+                            HStack(spacing: 10) {
+                                AIOrb(mood: .thinking, size: 26)
+                                TypingDots()
+                                Text(readingPhoto ? "Reading photo…" : "Thinking…").font(.caption).foregroundStyle(.secondary)
+                            }
+                            .padding(.horizontal, 14).padding(.vertical, 10)
+                            .aiGlass(cornerRadius: 18)
+                            .id("thinking")
+                        }
+                        Color.clear.frame(height: 4).id("bottom")
                     }
                     .padding()
+                    .animation(.spring(duration: 0.4), value: lines)
                 }
+                .scrollDismissesKeyboard(.interactively)
                 .onChange(of: lines) { _, _ in
-                    withAnimation { proxy.scrollTo(lines.last?.id, anchor: .bottom) }
+                    withAnimation { proxy.scrollTo("bottom", anchor: .bottom) }
+                }
+                .onChange(of: thinking) { _, _ in
+                    withAnimation { proxy.scrollTo("bottom", anchor: .bottom) }
                 }
             }
-            suggestions
-            inputBar
         }
-        .navigationTitle("Assistant")
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 8) {
+                if !lines.isEmpty { suggestions }
+                inputBar
+            }
+            .padding(.bottom, 6)
+        }
+        .environment(\.colorScheme, .dark)
+        .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                HStack(spacing: 8) {
+                    AIOrb(mood: mood, size: 22)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Assistant").font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                        Text(voice.isListening ? "Listening…" : thinking ? "Thinking…" : talkMode ? "Talk mode · \(modeName)" : modeName)
+                            .font(.caption2).foregroundStyle(AIStyle.cyan)
+                            .contentTransition(.opacity)
+                    }
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Toggle(isOn: Binding(get: { talkMode }, set: { on in
                     talkMode = on
@@ -83,10 +124,12 @@ struct AssistantView: View {
                     Image(systemName: talkMode ? "person.wave.2.fill" : "person.wave.2")
                 }
                 .toggleStyle(.button)
+                .tint(AIStyle.cyan)
                 .accessibilityLabel("Talk mode")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showingSettings = true } label: { Image(systemName: "slider.horizontal.3") }
+                    .tint(.white)
             }
         }
         .onDisappear { voice.cancel(); talkMode = false }
@@ -101,84 +144,196 @@ struct AssistantView: View {
             photoItem = nil
             readPhoto(item)
         }
+        .sensoryFeedback(.impact(weight: .light), trigger: lines.count)
         .sheet(isPresented: $showingSettings) { NavigationStack { AssistantSettingsView() } }
     }
 
-    private var intro: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label(localOn ? "On-device AI agent" : (claudeOn ? "Claude AI agent" : "Offline answers"),
-                  systemImage: localOn ? "cpu" : (claudeOn ? "sparkles" : "bolt.horizontal.circle"))
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(agentOn ? .purple : .accentColor)
-            Text(localOn
-                 ? "Ask anything, or tell it what to do: plan or cancel a job, add stops, write notes, set reminders, log fuel, change vehicle or trailer. 📷 reads delivery notes and booking sheets. Runs on this iPhone — nothing leaves the phone."
-                 : claudeOn
-                 ? "Ask anything, or tell it what to do: plan or cancel a job, add stops, write notes, set reminders, log fuel, change vehicle or trailer. 📷 reads delivery notes and booking sheets. Your question and the data it needs are sent to Anthropic."
-                 : "Ask about driving left, breaks, rest, next start, 15h days, earnings, weekly rest or vehicle height. Answers come from your records on this iPhone. Turn on Claude AI (⚙︎ top right) for any other question.")
-            Text("🎙 Tap the mic to speak, or turn on talk mode (👤 top right) for hands-free: answers are read out and it listens again. Say commands like \"start driving\", \"take a break\", \"loading\", \"insert card\" or \"end shift\".")
-                .font(.caption).foregroundStyle(.secondary)
-                .font(.caption).foregroundStyle(.secondary)
-        }
-        .padding(10)
-        .background((agentOn ? Color.purple : Color.accentColor).opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func bubble(_ line: ChatLine) -> some View {
-        HStack {
-            if line.role == .user { Spacer(minLength: 40) }
-            VStack(alignment: .leading, spacing: 3) {
-                Text(LocalizedStringKey(line.text)).font(.subheadline)
-                if line.role == .assistant {
-                    Text(line.byClaude ? (localOn ? "On-device AI" : "Claude") : "From your records").font(.caption2).foregroundStyle(.secondary)
+    /// Empty chat: the orb, a greeting, what it can do, and suggestion cards.
+    private var hero: some View {
+        VStack(spacing: 18) {
+            AIOrb(mood: mood, size: 130)
+                .padding(.top, 24)
+                .onTapGesture { if voice.isListening { voice.finish() } else { listen() } }
+            VStack(spacing: 6) {
+                Text(greeting)
+                    .font(.system(.title, design: .rounded).weight(.bold))
+                    .foregroundStyle(LinearGradient(colors: [.white, AIStyle.cyan], startPoint: .leading, endPoint: .trailing))
+                    .multilineTextAlignment(.center)
+                Text(subtitle)
+                    .font(.subheadline).foregroundStyle(.white.opacity(0.7))
+                    .multilineTextAlignment(.center)
+            }
+            HStack(spacing: 8) {
+                chip(localOn ? "cpu" : claudeOn ? "sparkles" : "bolt.horizontal.circle", modeName)
+                chip(localOn ? "lock.fill" : claudeOn ? "cloud.fill" : "iphone", localOn ? "Private" : claudeOn ? "Online" : "Your records")
+                if agentOn { chip("wand.and.stars", "Can act") }
+            }
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: 10) {
+                ForEach(Array(OfflineAssistant.suggestions.prefix(6).enumerated()), id: \.offset) { i, s in
+                    Button { send(s) } label: {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Image(systemName: suggestionIcons[i % suggestionIcons.count])
+                                .font(.title3)
+                                .foregroundStyle(AIStyle.accent)
+                            Text(s).font(.footnote.weight(.medium)).foregroundStyle(.white)
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
+                        .aiGlass(cornerRadius: 16)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .padding(10)
-            .foregroundStyle(line.role == .user ? .white : .primary)
-            .background(line.role == .user ? AnyShapeStyle(Color.accentColor) :
-                            line.role == .notice ? AnyShapeStyle(Color.orange.opacity(0.15)) : AnyShapeStyle(Color(.secondarySystemBackground)),
-                        in: RoundedRectangle(cornerRadius: 14))
-            if line.role != .user { Spacer(minLength: 40) }
+            Text("Tap the orb or 🎙 to speak · 👤 talk mode reads answers out and listens again · say \"start driving\", \"take a break\", \"end shift\"")
+                .font(.caption2).foregroundStyle(.white.opacity(0.5))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var compactHeader: some View {
+        HStack {
+            Spacer()
+            Text(subtitleShort).font(.caption2).foregroundStyle(.white.opacity(0.45))
+            Spacer()
+        }
+    }
+
+    private var greeting: String {
+        let h = Calendar.current.component(.hour, from: .now)
+        let part = h < 5 ? "Late night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening"
+        let name = store.settings.driverName.split(separator: " ").first.map(String.init) ?? ""
+        return name.isEmpty ? "\(part)" : "\(part), \(name)"
+    }
+
+    private var subtitle: String {
+        agentOn
+            ? "Ask anything, or tell me what to do: plan or cancel jobs, add stops, notes, reminders, fuel, vehicle or trailer. 📷 reads delivery notes."
+            : "Ask about driving left, breaks, rest, next start, earnings or vehicle height. Turn on AI in ⚙︎ for anything else."
+    }
+
+    private var subtitleShort: String {
+        localOn ? "Runs on this iPhone · nothing leaves the phone" : claudeOn ? "Claude · your question is sent to Anthropic" : "Answers from your records on this iPhone"
+    }
+
+    private let suggestionIcons = ["steeringwheel", "cup.and.saucer.fill", "bed.double.fill", "sunrise.fill",
+                                   "clock.badge.exclamationmark", "sterlingsign.circle.fill", "calendar", "ruler.fill"]
+
+    private func chip(_ symbol: String, _ text: String) -> some View {
+        Label(text, systemImage: symbol)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.9))
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .aiGlass(cornerRadius: 12)
+    }
+
+    @ViewBuilder
+    private func bubble(_ line: ChatLine) -> some View {
+        switch line.role {
+        case .user:
+            HStack {
+                Spacer(minLength: 50)
+                Text(LocalizedStringKey(line.text))
+                    .font(.subheadline)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(
+                        UnevenRoundedRectangle(topLeadingRadius: 20, bottomLeadingRadius: 20, bottomTrailingRadius: 6, topTrailingRadius: 20, style: .continuous)
+                            .fill(LinearGradient(colors: [AIStyle.violet, AIStyle.violet.opacity(0.75), AIStyle.cyan.opacity(0.8)],
+                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .shadow(color: AIStyle.violet.opacity(0.5), radius: 12, y: 4)
+                    )
+                    .textSelection(.enabled)
+            }
+        case .assistant, .notice:
+            HStack(alignment: .top, spacing: 10) {
+                if line.role == .assistant {
+                    AIOrb(mood: .idle, size: 26).padding(.top, 2)
+                } else {
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange).frame(width: 26).padding(.top, 4)
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(LocalizedStringKey(line.text))
+                        .font(.subheadline)
+                        .foregroundStyle(.white)
+                        .textSelection(.enabled)
+                    if line.role == .assistant {
+                        HStack(spacing: 4) {
+                            Image(systemName: line.byClaude ? (localOn ? "cpu" : "sparkles") : "internaldrive")
+                            Text(line.byClaude ? modeName : "From your records")
+                        }
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(AIStyle.cyan.opacity(0.8))
+                    }
+                }
+                .padding(.horizontal, 14).padding(.vertical, 10)
+                .aiGlass(cornerRadius: 18, tint: line.role == .notice ? .orange : .clear)
+                Spacer(minLength: 24)
+            }
         }
     }
 
     private var suggestions: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack {
+            HStack(spacing: 8) {
                 ForEach(OfflineAssistant.suggestions, id: \.self) { s in
-                    Button(s) { send(s) }.buttonStyle(.bordered).font(.caption)
+                    Button { send(s) } label: {
+                        Text(s).font(.caption.weight(.medium)).foregroundStyle(.white)
+                            .padding(.horizontal, 12).padding(.vertical, 7)
+                            .aiGlass(cornerRadius: 14)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal)
         }
-        .padding(.vertical, 6)
     }
 
     private var inputBar: some View {
-        HStack(spacing: 8) {
-            Button {
-                if voice.isListening { voice.finish() } else { listen() }
-            } label: {
-                Image(systemName: voice.isListening ? "waveform.circle.fill" : "mic.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(voice.isListening ? .red : .accentColor)
-                    .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
-            }
-            .accessibilityLabel(voice.isListening ? "Stop listening" : "Speak")
+        HStack(spacing: 10) {
             PhotosPicker(selection: $photoItem, matching: .images) {
-                Image(systemName: readingPhoto ? "hourglass.circle.fill" : "camera.circle.fill").font(.title2)
+                Image(systemName: readingPhoto ? "hourglass" : "camera.fill")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.white.opacity(0.85))
+                    .frame(width: 36, height: 36)
+                    .background(.white.opacity(0.08), in: Circle())
             }
             .disabled(readingPhoto || thinking)
             .accessibilityLabel("Read a photo")
-            TextField(voice.isListening ? "Listening…" : "Ask or say a command…", text: voice.isListening ? .constant(voice.transcript) : $input, axis: .vertical)
-                .lineLimit(1...4)
-                .textFieldStyle(.roundedBorder)
+
+            TextField("", text: voice.isListening ? .constant(voice.transcript) : $input,
+                      prompt: Text(voice.isListening ? "Listening…" : "Ask or give a command…").foregroundStyle(.white.opacity(0.45)),
+                      axis: .vertical)
+                .lineLimit(1...5)
+                .foregroundStyle(.white)
+                .tint(AIStyle.cyan)
                 .submitLabel(.send)
                 .onSubmit { send(input) }
-            Button { send(input) } label: { Image(systemName: "arrow.up.circle.fill").font(.title2) }
-                .disabled(input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || thinking)
+
+            let canSend = !input.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !thinking
+            Button {
+                if canSend { send(input) } else if voice.isListening { voice.finish() } else { listen() }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(voice.isListening ? AnyShapeStyle(Color.red) : AnyShapeStyle(AIStyle.accent))
+                        .shadow(color: (voice.isListening ? Color.red : AIStyle.cyan).opacity(0.6), radius: voice.isListening ? 12 : 6)
+                    Image(systemName: canSend ? "arrow.up" : voice.isListening ? "waveform" : "mic.fill")
+                        .font(.body.weight(.bold))
+                        .foregroundStyle(.white)
+                        .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
+                        .contentTransition(.symbolEffect(.replace))
+                }
+                .frame(width: 40, height: 40)
+            }
+            .accessibilityLabel(canSend ? "Send" : voice.isListening ? "Stop listening" : "Speak")
         }
+        .padding(.leading, 8).padding(.trailing, 6).padding(.vertical, 6)
+        .aiGlass(cornerRadius: 26)
         .padding(.horizontal)
-        .padding(.bottom, 8)
     }
 
     // MARK: Answering
