@@ -2,6 +2,11 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.2.1 — Table fixes
+- Tables scroll sideways properly again (left and right), including with a frozen header row.
+- Freeze either rows (stay at the top while you scroll down) or columns (stay on the left while you scroll sideways) — one direction at a time.
+- Table notes are back, always shown under the table.
+
 ## 3.2.0 — Tile layout, planner and table upgrades, bigger widgets
 - Today and Hours are grids of square tiles (driving left, working left, rest by, break due, limits…), grouped by meaning. Tap Edit to drag tiles around, hide them with −, or add hidden ones back; each Hours group has its own on/off switches.
 - Today's date tile, in the format you choose (long, with week number, short, ISO…).

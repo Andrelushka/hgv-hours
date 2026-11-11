@@ -71,6 +71,8 @@ struct TableDoc: Equatable {
         style.frozenRows = min(max(0, style.frozenRows), rows)
         style.headerCols = min(max(0, style.headerCols), c)
         style.frozenCols = min(max(0, style.frozenCols), c)
+        // Freeze one direction at a time: rows win if both were set.
+        if style.frozenRows > 0 && style.frozenCols > 0 { style.frozenCols = 0 }
     }
 
     func width(_ c: Int) -> CGFloat { CGFloat(style.colWidths.indices.contains(c) ? style.colWidths[c] : Self.defaultWidth) }
@@ -156,127 +158,99 @@ struct TableDoc: Equatable {
     }
 }
 
-/// Spreadsheet-style table with frozen rows/columns (they stay put while the rest scrolls).
+/// Spreadsheet-style table. Freeze either rows (they stay at the top while you scroll down)
+/// or columns (they stay on the left while you scroll sideways) — one direction at a time.
 struct TableGridEditor: View {
     @Binding var doc: TableDoc
     @Binding var selection: TableSelection?
 
     private let gutterW: CGFloat = 34
     private let gutterH: CGFloat = 26
-    @State private var offset: CGPoint = .zero
     @FocusState private var focused: CellID?
 
     struct CellID: Hashable { var r: Int; var c: Int }
 
     var body: some View {
-        let frozenW = (0..<doc.style.frozenCols).reduce(CGFloat(0)) { $0 + doc.width($1) }
-        let frozenH = CGFloat(doc.style.frozenRows) * TableDoc.rowHeight
-        GeometryReader { geo in
-            ZStack(alignment: .topLeading) {
-                // Everything, scrolling both ways (frozen cells are drawn by the layers on top).
+        let fr = doc.style.frozenRows
+        let fc = doc.style.frozenCols
+        Group {
+            if fr > 0 {
+                // Frozen rows: everything scrolls sideways together; only the rows below scroll up and down.
+                ScrollView(.horizontal) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        letterRow(from: 0, gutter: true)
+                        rowsBlock(0..<fr, cols: 0..<doc.cols, gutter: true)
+                            .shadow(color: .black.opacity(0.12), radius: 2, y: 2)
+                            .zIndex(1)
+                        ScrollView(.vertical) {
+                            rowsBlock(fr..<doc.rows, cols: 0..<doc.cols, gutter: true)
+                                .padding(.bottom, 60)
+                        }
+                    }
+                    .padding(.trailing, 30)
+                }
+            } else if fc > 0 {
+                // Frozen columns: everything scrolls up and down together; only the columns on the right scroll sideways.
+                ScrollView(.vertical) {
+                    HStack(alignment: .top, spacing: 0) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            letterRow(range: 0..<fc, gutter: true)
+                            rowsBlock(0..<doc.rows, cols: 0..<fc, gutter: true)
+                        }
+                        .shadow(color: .black.opacity(0.12), radius: 2, x: 2)
+                        .zIndex(1)
+                        ScrollView(.horizontal) {
+                            VStack(alignment: .leading, spacing: 0) {
+                                letterRow(range: fc..<doc.cols, gutter: false)
+                                rowsBlock(0..<doc.rows, cols: fc..<doc.cols, gutter: false)
+                            }
+                            .padding(.trailing, 30)
+                        }
+                    }
+                    .padding(.bottom, 60)
+                }
+            } else {
                 ScrollView([.horizontal, .vertical]) {
                     VStack(alignment: .leading, spacing: 0) {
-                        Color.clear.frame(width: 1, height: gutterH)
-                        ForEach(0..<doc.rows, id: \.self) { r in
-                            HStack(spacing: 0) {
-                                Color.clear.frame(width: gutterW, height: TableDoc.rowHeight)
-                                ForEach(0..<doc.cols, id: \.self) { c in
-                                    cell(r, c, live: r >= doc.style.frozenRows && c >= doc.style.frozenCols)
-                                }
-                            }
-                        }
+                        letterRow(from: 0, gutter: true)
+                        rowsBlock(0..<doc.rows, cols: 0..<doc.cols, gutter: true)
                     }
-                    .padding(.trailing, 40)
-                    .padding(.bottom, 80)
-                    .background(GeometryReader { g in
-                        Color.clear.preference(key: TableOffsetKey.self, value: g.frame(in: .named("table")).origin)
-                    })
+                    .padding(.trailing, 30)
+                    .padding(.bottom, 60)
                 }
-                .coordinateSpace(name: "table")
-                .onPreferenceChange(TableOffsetKey.self) { offset = $0 }
-
-                // Frozen rows: move sideways only.
-                if doc.style.frozenRows > 0 {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(0..<doc.style.frozenRows, id: \.self) { r in
-                            HStack(spacing: 0) {
-                                ForEach(0..<doc.cols, id: \.self) { c in cell(r, c, live: c >= doc.style.frozenCols) }
-                            }
-                        }
-                    }
-                    .offset(x: offset.x)
-                    .frame(width: max(0, geo.size.width - gutterW), height: frozenH, alignment: .topLeading)
-                    .clipped()
-                    .shadow(color: .black.opacity(0.15), radius: 2, y: 2)
-                    .offset(x: gutterW, y: gutterH)
-                    .zIndex(2)
-                }
-                // Frozen columns: move up and down only.
-                if doc.style.frozenCols > 0 {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(0..<doc.rows, id: \.self) { r in
-                            HStack(spacing: 0) {
-                                ForEach(0..<doc.style.frozenCols, id: \.self) { c in cell(r, c, live: r >= doc.style.frozenRows) }
-                            }
-                        }
-                    }
-                    .offset(y: offset.y)
-                    .frame(width: frozenW, height: max(0, geo.size.height - gutterH), alignment: .topLeading)
-                    .clipped()
-                    .shadow(color: .black.opacity(0.15), radius: 2, x: 2)
-                    .offset(x: gutterW, y: gutterH)
-                    .zIndex(3)
-                }
-                // Corner where frozen rows and columns meet.
-                if doc.style.frozenRows > 0 && doc.style.frozenCols > 0 {
-                    VStack(alignment: .leading, spacing: 0) {
-                        ForEach(0..<doc.style.frozenRows, id: \.self) { r in
-                            HStack(spacing: 0) { ForEach(0..<doc.style.frozenCols, id: \.self) { c in cell(r, c, live: true) } }
-                        }
-                    }
-                    .offset(x: gutterW, y: gutterH)
-                    .zIndex(4)
-                }
-                // Column letters (always visible).
-                HStack(spacing: 0) {
-                    ForEach(0..<doc.cols, id: \.self) { c in
-                        let frozen = c < doc.style.frozenCols
-                        columnHeader(c)
-                            .offset(x: frozen ? -offset.x : 0)
-                            .zIndex(frozen ? 1 : 0)
-                    }
-                }
-                .offset(x: offset.x)
-                .frame(width: max(0, geo.size.width - gutterW), height: gutterH, alignment: .topLeading)
-                .clipped()
-                .background(Color(.secondarySystemBackground))
-                .offset(x: gutterW)
-                .zIndex(5)
-                // Row numbers (always visible).
-                VStack(spacing: 0) {
-                    ForEach(0..<doc.rows, id: \.self) { r in
-                        let frozen = r < doc.style.frozenRows
-                        rowHeader(r)
-                            .offset(y: frozen ? -offset.y : 0)
-                            .zIndex(frozen ? 1 : 0)
-                    }
-                }
-                .offset(y: offset.y)
-                .frame(width: gutterW, height: max(0, geo.size.height - gutterH), alignment: .topLeading)
-                .clipped()
-                .background(Color(.secondarySystemBackground))
-                .offset(y: gutterH)
-                .zIndex(5)
-                Image(systemName: "tablecells")
-                    .font(.caption2).foregroundStyle(.secondary)
-                    .frame(width: gutterW, height: gutterH)
-                    .background(Color(.secondarySystemBackground))
-                    .zIndex(6)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .clipShape(RoundedRectangle(cornerRadius: 10))
         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.separator)))
         .onChange(of: focused) { _, id in if let id { selection = .cell(id.r, id.c) } }
+    }
+
+    private func letterRow(from start: Int, gutter: Bool) -> some View {
+        letterRow(range: start..<doc.cols, gutter: gutter)
+    }
+
+    private func letterRow(range: Range<Int>, gutter: Bool) -> some View {
+        HStack(spacing: 0) {
+            if gutter {
+                Image(systemName: "tablecells").font(.caption2).foregroundStyle(.secondary)
+                    .frame(width: gutterW, height: gutterH)
+                    .background(Color(.secondarySystemBackground))
+            }
+            ForEach(Array(range), id: \.self) { c in columnHeader(c) }
+        }
+    }
+
+    private func rowsBlock(_ rows: Range<Int>, cols: Range<Int>, gutter: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(rows), id: \.self) { r in
+                HStack(spacing: 0) {
+                    if gutter { rowHeader(r) }
+                    ForEach(Array(cols), id: \.self) { c in liveCell(r, c) }
+                }
+            }
+        }
+        .background(Color(.systemBackground))
     }
 
     private func isSelected(_ r: Int, _ c: Int) -> Bool {
@@ -286,12 +260,6 @@ struct TableGridEditor: View {
         case .cell(let a, let b): a == r && b == c
         case nil: false
         }
-    }
-
-    /// One cell. `live` = editable here; otherwise a coloured placeholder (the editable copy is in a frozen layer).
-    @ViewBuilder
-    private func cell(_ r: Int, _ c: Int, live: Bool) -> some View {
-        if live { liveCell(r, c) } else { Color(.systemBackground).frame(width: doc.width(c), height: TableDoc.rowHeight) }
     }
 
     @ViewBuilder
@@ -350,11 +318,6 @@ enum TableSelection: Equatable {
     case row(Int), column(Int), cell(Int, Int)
 }
 
-private struct TableOffsetKey: PreferenceKey {
-    static var defaultValue: CGPoint = .zero
-    static func reduce(value: inout CGPoint, nextValue: () -> CGPoint) { value = nextValue() }
-}
-
 /// Actions for the selected row, column or cell.
 struct TableActionBar: View {
     @Binding var doc: TableDoc
@@ -409,8 +372,9 @@ struct TableActionBar: View {
         chip(r < doc.style.headerRows ? "Not header" : "Header to here", "textformat") {
             doc.style.headerRows = r < doc.style.headerRows ? r : r + 1
         }
-        chip(r < doc.style.frozenRows ? "Unfreeze" : "Freeze to here", r < doc.style.frozenRows ? "pin.slash" : "pin") {
+        chip(r < doc.style.frozenRows ? "Unfreeze rows" : "Freeze rows to here", r < doc.style.frozenRows ? "pin.slash" : "pin") {
             doc.style.frozenRows = r < doc.style.frozenRows ? r : r + 1
+            if doc.style.frozenRows > 0 { doc.style.frozenCols = 0 }
         }
         chip("Delete", "trash", role: .destructive) { doc.deleteRow(r); selection = nil }.disabled(doc.rows <= 1)
     }
@@ -434,8 +398,9 @@ struct TableActionBar: View {
         chip(c < doc.style.headerCols ? "Not header" : "Header to here", "textformat") {
             doc.style.headerCols = c < doc.style.headerCols ? c : c + 1
         }
-        chip(c < doc.style.frozenCols ? "Unfreeze" : "Freeze to here", c < doc.style.frozenCols ? "pin.slash" : "pin") {
+        chip(c < doc.style.frozenCols ? "Unfreeze columns" : "Freeze columns to here", c < doc.style.frozenCols ? "pin.slash" : "pin") {
             doc.style.frozenCols = c < doc.style.frozenCols ? c : c + 1
+            if doc.style.frozenCols > 0 { doc.style.frozenRows = 0 }
         }
         chip("Delete", "trash", role: .destructive) { doc.deleteColumn(c); selection = nil }.disabled(doc.cols <= 1)
     }

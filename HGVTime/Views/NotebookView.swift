@@ -140,7 +140,6 @@ struct NoteEditor: View {
     @State private var loaded = false
     @State private var selection: TableSelection?
     @State private var arranging = false
-    @State private var showingNotes = false
     @State private var confirmDelete = false
     @State private var savedTemplate = false
 
@@ -172,7 +171,6 @@ struct NoteEditor: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     if note.isTable {
-                        Button(showingNotes ? "Hide notes" : "Show notes", systemImage: "note.text") { showingNotes.toggle() }
                         Button("Rearrange rows & columns", systemImage: "arrow.up.arrow.down") { arranging = true }
                     }
                     if !note.isTemplate {
@@ -222,13 +220,14 @@ struct NoteEditor: View {
                 .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
             TableActionBar(doc: $doc, selection: $selection, arranging: $arranging)
             TableGridEditor(doc: $doc, selection: $selection)
-            if showingNotes {
-                TextField("Notes…", text: $note.body, axis: .vertical)
+            VStack(alignment: .leading, spacing: 4) {
+                Label("Notes", systemImage: "note.text").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                TextField("Write notes about this table…", text: $note.body, axis: .vertical)
                     .lineLimit(2...6)
-                    .padding(10)
-                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
             }
-            Text("Tap a row number or column letter to insert, move, colour, make a header or freeze up to it. Frozen rows and columns (📌) stay in view while you scroll.")
+            .padding(10)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+            Text("Tap a row number or column letter to insert, move, colour, make a header or freeze. Freeze rows (they stay at the top) or columns (they stay on the left) — one at a time.")
                 .font(.caption2).foregroundStyle(.secondary)
         }
         .padding(.horizontal)
