@@ -96,7 +96,7 @@ struct NotebookView: View {
 
     private func create(kind: String) -> NoteItem {
         let n = NoteItem(kind: kind)
-        if kind == "table" { n.table = [["Column 1", "Column 2", "Column 3"], ["", "", ""], ["", "", ""]] }
+        if kind == "table" { n.table = [["Column 1", "Column 2", "Column 3"]] + Array(repeating: ["", "", ""], count: 8) }
         context.insert(n)
         try? context.save()
         return n
@@ -136,83 +136,45 @@ struct NoteEditor: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Bindable var note: NoteItem
-    @State private var table: [[String]] = []
+    @State private var doc = TableDoc(cells: [], style: TableStyle())
+    @State private var loaded = false
+    @State private var selection: TableSelection?
+    @State private var arranging = false
+    @State private var showingNotes = false
     @State private var confirmDelete = false
     @State private var savedTemplate = false
 
     var body: some View {
-        Form {
-            Section {
-                TextField(note.isTemplate ? "Template name" : "Title", text: $note.title)
-                    .font(.headline)
-            }
-            if note.isTable {
-                Section {
-                    ScrollView(.horizontal) {
-                        Grid(alignment: .leading, horizontalSpacing: 6, verticalSpacing: 6) {
-                            ForEach(table.indices, id: \.self) { r in
-                                GridRow {
-                                    ForEach(table[r].indices, id: \.self) { c in
-                                        TextField(r == 0 ? "Header" : "", text: Binding(
-                                            get: { table.indices.contains(r) && table[r].indices.contains(c) ? table[r][c] : "" },
-                                            set: { if table.indices.contains(r) && table[r].indices.contains(c) { table[r][c] = $0 } }))
-                                            .font(r == 0 ? .caption.weight(.bold) : .caption)
-                                            .padding(6)
-                                            .frame(width: 110)
-                                            .background(r == 0 ? Color.accentColor.opacity(0.12) : Color(.tertiarySystemFill),
-                                                        in: RoundedRectangle(cornerRadius: 6))
-                                    }
-                                    if r > 0 {
-                                        Button { table.remove(at: r) } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.red) }
-                                            .buttonStyle(.borderless)
-                                    }
-                                }
-                            }
-                        }
-                        .padding(.vertical, 4)
-                    }
-                    HStack {
-                        Button { table.append(Array(repeating: "", count: table.first?.count ?? 2)) } label: {
-                            Label("Row", systemImage: "plus")
-                        }
-                        Spacer()
-                        Button { for i in table.indices { table[i].append(i == 0 ? "Column \(table[0].count + 1)" : "") } } label: {
-                            Label("Column", systemImage: "plus")
-                        }
-                        Spacer()
-                        Button(role: .destructive) {
-                            if (table.first?.count ?? 0) > 1 { for i in table.indices { table[i].removeLast() } }
-                        } label: {
-                            Label("Column", systemImage: "minus")
-                        }
-                    }
-                    .buttonStyle(.borderless)
-                    .font(.caption)
-                } header: {
-                    Text("Table")
-                } footer: {
-                    Text("The first row is the header. Scroll sideways for more columns.")
-                }
-            }
-            Section(note.isTable ? "Notes" : "Note") {
-                TextField("Write here…", text: $note.body, axis: .vertical)
-                    .lineLimit(note.isTable ? 3...20 : 12...200)
-            }
+        Group {
+            if note.isTable { tableBody } else { textBody }
         }
         .navigationTitle(note.isTemplate ? "Template" : (note.isTable ? "Table" : "Note"))
         .navigationBarTitleDisplayMode(.inline)
         .keyboardDoneButton()
-        .onAppear { table = note.table }
-        .onChange(of: table) { _, value in note.table = value; touch() }
+        .onAppear {
+            doc = TableDoc(cells: note.table, style: note.tableStyle)
+            loaded = true
+        }
+        .onChange(of: doc) { _, value in
+            guard loaded else { return }
+            note.table = value.cells
+            note.tableStyle = value.style
+            touch()
+        }
         .onChange(of: note.title) { _, _ in touch() }
         .onChange(of: note.body) { _, _ in touch() }
         .onDisappear { try? context.save() }
+        .sheet(isPresented: $arranging) { TableArrangeView(doc: $doc) }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 ShareLink(item: exportText) { Image(systemName: "square.and.arrow.up") }
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
+                    if note.isTable {
+                        Button(showingNotes ? "Hide notes" : "Show notes", systemImage: "note.text") { showingNotes.toggle() }
+                        Button("Rearrange rows & columns", systemImage: "arrow.up.arrow.down") { arranging = true }
+                    }
                     if !note.isTemplate {
                         Button("Save as template", systemImage: "doc.badge.plus") {
                             context.insert(note.copy(asTemplate: true))
@@ -241,13 +203,45 @@ struct NoteEditor: View {
         }
     }
 
+    private var textBody: some View {
+        Form {
+            Section {
+                TextField(note.isTemplate ? "Template name" : "Title", text: $note.title).font(.headline)
+            }
+            Section("Note") {
+                TextField("Write here…", text: $note.body, axis: .vertical).lineLimit(12...200)
+            }
+        }
+    }
+
+    private var tableBody: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            TextField(note.isTemplate ? "Template name" : "Title", text: $note.title)
+                .font(.headline)
+                .padding(10)
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+            TableActionBar(doc: $doc, selection: $selection, arranging: $arranging)
+            TableGridEditor(doc: $doc, selection: $selection)
+            if showingNotes {
+                TextField("Notes…", text: $note.body, axis: .vertical)
+                    .lineLimit(2...6)
+                    .padding(10)
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+            }
+            Text("Tap a row number or column letter to insert, move, colour, make a header or freeze up to it. Frozen rows and columns (📌) stay in view while you scroll.")
+                .font(.caption2).foregroundStyle(.secondary)
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 6)
+    }
+
     private func touch() { note.updatedAt = .now }
 
     /// Plain text (tables as CSV-like lines) for sharing.
     private var exportText: String {
         var out = note.title.isEmpty ? "" : note.title + "\n\n"
         if note.isTable {
-            out += table.map { $0.map { $0.contains(",") ? "\"\($0)\"" : $0 }.joined(separator: ", ") }.joined(separator: "\n") + "\n\n"
+            out += doc.cells.map { $0.map { $0.contains(",") ? "\"\($0)\"" : $0 }.joined(separator: ", ") }.joined(separator: "\n") + "\n\n"
         }
         return out + note.body
     }

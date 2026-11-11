@@ -24,6 +24,8 @@ struct TodayView: View {
     @State private var helpBuilder: ((Date) -> HelpMessage)?
     @State private var pickingTime = false
     @State private var pickedTime = Date()
+    @State private var editingLayout = false
+    @State private var toast: Toast?
     @Query(sort: \CardEvent.time) private var cardEvents: [CardEvent]
 
     private var cardIn: Bool { store.settings.cardInserted }
@@ -60,21 +62,45 @@ struct TodayView: View {
             TimelineView(.periodic(from: .now, by: 10)) { timeline in
                 let snaps = snapshots(now: timeline.date)
                 let status = RulesEngine.status(snaps, now: timeline.date, config: store.settings.ruleConfig)
-                let world = WorldRulesCache.refresh(snaps, now: timeline.date, settings: store.settings)
                 let dash = Dashboard.make(status: status, settings: store.settings, openEntry: openEntry)
+                let data = HoursTileData(status: status, dash: dash, settings: store.settings, openEntry: openEntry, onShift: onShift)
+                let hidden = store.settings.tileHidden(.today)
+                let tiles = store.settings.tileOrder(.today).filter { !hidden.contains($0) && (editingLayout || applies($0, data: data, now: timeline.date)) }
                 ScrollView {
-                    VStack(spacing: 14) {
-                        ForEach(store.settings.todayModules) { module in
-                            moduleView(module, status: status, dash: dash, now: timeline.date)
+                    VStack(spacing: 12) {
+                        TileGrid(page: .today, tiles: tiles, editing: editingLayout) { tile in
+                            if applies(tile, data: data, now: timeline.date) {
+                                moduleView(tile, status: status, dash: dash, data: data, now: timeline.date)
+                            } else {
+                                TilePlaceholder(tile: tile)
+                            }
                         }
-                        if !status.hasData { emptyState }
-                        NavigationLink { TodayCustomiseView() } label: {
-                            Label("Customise Today", systemImage: "slider.horizontal.below.square.and.square.filled")
-                                .font(.caption)
+                        if editingLayout { HiddenTilesTray(page: .today) }
+                        if !status.hasData && !editingLayout { emptyState }
+                        HStack(spacing: 16) {
+                            Button { withAnimation(.snappy) { editingLayout.toggle() } } label: {
+                                Label(editingLayout ? "Done" : "Edit layout", systemImage: editingLayout ? "checkmark.circle.fill" : "square.grid.2x2")
+                            }
+                            NavigationLink { TileCustomiseView(page: .today) } label: {
+                                Label("Customise", systemImage: "switch.2")
+                            }
                         }
+                        .font(.caption)
                         .padding(.top, 4)
                     }
                     .padding()
+                }
+            }
+            .overlay(alignment: .top) {
+                if let toast {
+                    ToastView(toast: toast)
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .task(id: toast.id) {
+                            try? await Task.sleep(for: .seconds(2.5))
+                            withAnimation(.snappy) { if self.toast?.id == toast.id { self.toast = nil } }
+                        }
+                        .onTapGesture { withAnimation { self.toast = nil } }
                 }
             }
             .navigationTitle("Today")
@@ -125,31 +151,44 @@ struct TodayView: View {
 
     // MARK: Current activity
 
+    /// Whether a Today tile has something to show now.
+    private func applies(_ tile: Tile, data: HoursTileData, now: Date) -> Bool {
+        switch tile {
+        case .warnings: return data.status.warnings.contains { $0.severity == .violation }
+        case .job: return onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty
+        case .vehicle, .mileage: return onShift
+        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut: return true
+        default: return data.applies(tile)
+        }
+    }
+
     @ViewBuilder
-    private func moduleView(_ module: TodayModule, status: ComplianceStatus, dash: Dashboard, now: Date) -> some View {
-        switch module {
-        case .card: CardButton(inserted: cardIn, since: cardSince) { toggleCard() }
+    private func moduleView(_ tile: Tile, status: ComplianceStatus, dash: Dashboard, data: HoursTileData, now: Date) -> some View {
+        switch tile {
+        case .date: DateTile(now: now)
+        case .card: CardTile(inserted: cardIn, since: cardSince) { toggleCard() }
         case .expiry: ExpiryBanner()
         case .status: currentCard(status, dash)
         case .buttons:
-            controls(status)
-            subtypeChips(status)
+            VStack(spacing: 10) {
+                controls(status)
+                subtypeChips(status)
+            }
         case .inCab: inCabCard
         case .warnings:
             let urgent = status.warnings.filter { $0.severity == .violation }
-            if !urgent.isEmpty {
-                VStack(spacing: 10) {
-                    ForEach(urgent) { IssueRow(issue: $0) }
-                    Text("See the Hours tab for all your limits.").font(.caption2).foregroundStyle(.secondary)
-                }
-                .padding()
-                .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+            VStack(spacing: 10) {
+                ForEach(urgent) { IssueRow(issue: $0) }
+                Text("See the Hours tab for all your limits.").font(.caption2).foregroundStyle(.secondary)
             }
+            .padding()
+            .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
         case .earnings: PayCounterCard(now: now, currentShiftStart: onShift ? status.currentShift?.period.start : nil)
-        case .nightOut: nightOutButton(now: now)
-        case .job: if onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty { todaysPlan(now: now) }
-        case .vehicle: if onShift { CurrentVehicleCard() }
-        case .mileage: if onShift { DayMileageCard(now: now) }
+        case .nightOut: NightOutTile(now: now)
+        case .job: todaysPlan(now: now)
+        case .vehicle: CurrentVehicleCard()
+        case .mileage: DayMileageCard(now: now)
+        default: HoursTileView(tile: tile, data: data)
         }
     }
 
@@ -448,16 +487,10 @@ struct TodayView: View {
         if inserting { ReminderService.shared.fire(.cardInserted, context: context) }
         EventRecorder.log(inserting ? .cardIn : .cardOut, context: context, settings: store.settings)
         ActivityController.refreshSideEffects(context: context, settings: store.settings)
-        let lines = inserting
-            ? ["Recorded at \(Fmt.time(.now)).", onShift ? "Remember to make a manual entry on the tacho for any work before you inserted it." : "Tap Start shift when you begin work."]
-            : ["Recorded at \(Fmt.time(.now)).", "Make sure your activities are complete before you leave the vehicle. Keep your card safe."]
         withAnimation(.snappy) {
-            helpBuilder = nil
-            helpSeen = false
-            help = HelpMessage(symbol: "creditcard.fill", color: inserting ? .green : .red,
-                               title: inserting ? "Driver card inserted" : "Driver card withdrawn", lines: lines)
-            adjustEntryID = nil
-            adjustCard = event
+            toast = Toast(symbol: "creditcard.fill", color: inserting ? .green : .red,
+                          title: inserting ? "Card inserted" : "Card withdrawn",
+                          detail: "Recorded at \(Fmt.time(now))" + (inserting && !onShift ? " · tap Start shift when you begin work" : ""))
         }
     }
 

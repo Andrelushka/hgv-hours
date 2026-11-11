@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import SwiftData
 
 // MARK: Vehicles and trailers
@@ -106,6 +107,12 @@ struct PlanStop: Codable, Equatable, Identifiable {
         let c = company ?? ""
         if !c.isEmpty { return c }
         if !place.isEmpty { return place }
+        return kindTitle
+    }
+
+    /// Type of stop, using the custom name for a custom stop.
+    var kindTitle: String {
+        if kind == .other, let c = customTitle, !c.isEmpty { return c }
         return kind.title
     }
 
@@ -121,14 +128,17 @@ struct PlanStop: Codable, Equatable, Identifiable {
     }
 
     enum Kind: String, Codable, CaseIterable, Identifiable {
-        case collection, delivery, depot, other
+        case collection, delivery, depot, fuel, parking, trailer, other
         var id: String { rawValue }
         var title: String {
             switch self {
             case .collection: "Collection"
             case .delivery: "Delivery"
             case .depot: "Depot"
-            case .other: "Stop"
+            case .fuel: "Fuel"
+            case .parking: "Parking / rest"
+            case .trailer: "Trailer swap"
+            case .other: "Custom stop"
             }
         }
         var symbol: String {
@@ -136,7 +146,21 @@ struct PlanStop: Codable, Equatable, Identifiable {
             case .collection: "arrow.up.bin.fill"
             case .delivery: "arrow.down.to.line.compact"
             case .depot: "building.2.fill"
+            case .fuel: "fuelpump.fill"
+            case .parking: "parkingsign.circle.fill"
+            case .trailer: "arrow.triangle.swap"
             case .other: "mappin.circle.fill"
+            }
+        }
+        var color: Color {
+            switch self {
+            case .collection: .orange
+            case .delivery: .indigo
+            case .depot: .gray
+            case .fuel: .green
+            case .parking: .teal
+            case .trailer: .brown
+            case .other: .purple
             }
         }
     }
@@ -157,6 +181,8 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var weight: String?
     var contactName: String?
     var contactPhone: String?
+    /// Name of a custom stop type, e.g. "Weighbridge", "Customs", "Wash".
+    var customTitle: String?
     // Recorded on the day with the Arrived / Departed buttons.
     var arrivedAt: Date?
     var departedAt: Date?
@@ -181,6 +207,9 @@ final class WorkPlan {
     var vehicleID: String = ""
     var trailerID: String = ""
     var startLocation: String = ""
+    var startPostcode: String = ""
+    var startLatitude: Double?
+    var startLongitude: Double?
     var load: String = ""
     var pallets: String = ""
     var reference: String = ""
@@ -220,6 +249,8 @@ final class NoteItem {
     /// "text" or "table".
     var kindRaw: String = "text"
     var tableData: Data = Data()
+    /// Header/frozen rows and columns, colours and widths (TableStyle).
+    var styleData: Data = Data()
     var isTemplate: Bool = false
     var pinned: Bool = false
     var createdAt: Date = Date()
@@ -239,10 +270,16 @@ final class NoteItem {
         set { tableData = (try? JSONEncoder().encode(newValue)) ?? Data() }
     }
 
+    var tableStyle: TableStyle {
+        get { (try? JSONDecoder().decode(TableStyle.self, from: styleData)) ?? TableStyle() }
+        set { styleData = (try? JSONEncoder().encode(newValue)) ?? Data() }
+    }
+
     func copy(asTemplate: Bool) -> NoteItem {
         let n = NoteItem(title: title, kind: kindRaw, isTemplate: asTemplate)
         n.body = body
         n.tableData = tableData
+        n.styleData = styleData
         return n
     }
 }
@@ -590,14 +627,14 @@ final class TrackPoint {
 
 /// What kind of other work or POA it was, for the driver log and map.
 enum ActivitySubtype: String, Codable, CaseIterable, Identifiable {
-    case loading, unloading, vehicleCheck, fuelling, paperwork, cleaning
-    case waitingLoad, waitingUnload, ferryTrain, doubleManned
+    case loading, unloading, vehicleCheck, yardCheck, fuelling, paperwork, cleaning
+    case waitingLoad, waitingUnload, waitingShift, waitingJob, spare, ferryTrain, doubleManned
 
     var id: String { rawValue }
 
     var kind: DutyKind {
         switch self {
-        case .waitingLoad, .waitingUnload, .ferryTrain, .doubleManned: .availability
+        case .waitingLoad, .waitingUnload, .waitingShift, .waitingJob, .spare, .ferryTrain, .doubleManned: .availability
         default: .otherWork
         }
     }
@@ -607,11 +644,15 @@ enum ActivitySubtype: String, Codable, CaseIterable, Identifiable {
         case .loading: "Loading"
         case .unloading: "Unloading"
         case .vehicleCheck: "Vehicle check"
+        case .yardCheck: "Yard check"
         case .fuelling: "Fuelling"
         case .paperwork: "Paperwork"
         case .cleaning: "Cleaning"
         case .waitingLoad: "Waiting to load"
         case .waitingUnload: "Waiting to unload"
+        case .waitingShift: "Waiting for shift"
+        case .waitingJob: "Waiting for job"
+        case .spare: "Spare / standby"
         case .ferryTrain: "Ferry / train"
         case .doubleManned: "Double-manned"
         }
@@ -622,10 +663,14 @@ enum ActivitySubtype: String, Codable, CaseIterable, Identifiable {
         case .loading: "arrow.up.bin.fill"
         case .unloading: "arrow.down.to.line.compact"
         case .vehicleCheck: "checklist"
+        case .yardCheck: "checklist.checked"
         case .fuelling: "fuelpump.fill"
         case .paperwork: "doc.text.fill"
         case .cleaning: "sparkles"
         case .waitingLoad, .waitingUnload: "hourglass"
+        case .waitingShift: "clock.badge.questionmark"
+        case .waitingJob: "tray.and.arrow.down"
+        case .spare: "person.badge.clock"
         case .ferryTrain: "ferry.fill"
         case .doubleManned: "person.2.fill"
         }

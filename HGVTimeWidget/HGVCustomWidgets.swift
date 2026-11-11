@@ -171,11 +171,31 @@ struct CountdownWidgetView: View {
             case .accessoryInline:
                 Label("\(v.title) \(v.value)", systemImage: v.symbol)
             case .accessoryRectangular:
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 1) {
                     Label(v.title, systemImage: v.symbol).font(.caption).widgetAccentable()
-                    Text(v.value).font(.title2.weight(.bold).monospacedDigit())
+                    Text(v.value).font(.title2.weight(.bold).monospacedDigit()).lineLimit(1).minimumScaleFactor(0.6)
+                    if let f = v.fraction { ProgressView(value: min(max(f, 0), 1)) }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
+            case .systemMedium, .systemLarge, .systemExtraLarge:
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label(v.title, systemImage: v.symbol).font(.headline).foregroundStyle(v.color)
+                        Text(v.value)
+                            .font(.system(size: family == .systemMedium ? 44 : 64, weight: .bold, design: .rounded).monospacedDigit())
+                            .lineLimit(1).minimumScaleFactor(0.5)
+                        Spacer(minLength: 0)
+                        Label(d.statusTitle, systemImage: d.kind.symbol).font(.caption).foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    if let f = v.fraction {
+                        Gauge(value: min(max(f, 0), 1)) { EmptyView() }
+                            .gaugeStyle(.accessoryCircularCapacity)
+                            .tint(v.color)
+                            .scaleEffect(family == .systemMedium ? 1.4 : 2)
+                            .frame(width: family == .systemMedium ? 90 : 140)
+                    }
+                }
             default:
                 VStack(alignment: .leading) {
                     BlockView(v: v, big: true)
@@ -196,21 +216,52 @@ struct DashboardWidgetView: View {
     var body: some View {
         if let d = entry.dashboard {
             let c = entry.config
-            let metrics = family == .systemLarge ? [c.m1, c.m2, c.m3, c.m4, c.m5, c.m6] : [c.m1, c.m2, c.m3, c.m4]
+            let big = family == .systemLarge || family == .systemExtraLarge
+            let metrics: [WidgetMetric] = switch family {
+            case .systemSmall, .accessoryRectangular: [c.m1, c.m2]
+            case .systemLarge, .systemExtraLarge: [c.m1, c.m2, c.m3, c.m4, c.m5, c.m6]
+            default: [c.m1, c.m2, c.m3, c.m4]
+            }
+            switch family {
+            case .accessoryInline:
+                let v = c.m1.value(d, at: entry.date)
+                Label("\(v.title) \(v.value)", systemImage: v.symbol)
+            case .accessoryCircular:
+                let v = c.m1.value(d, at: entry.date)
+                Gauge(value: min(max(v.fraction ?? 1, 0), 1)) { Image(systemName: v.symbol) } currentValueLabel: {
+                    Text(v.value).font(.system(size: 11, weight: .bold).monospacedDigit())
+                }
+                .gaugeStyle(.accessoryCircularCapacity)
+                .widgetAccentable()
+            case .accessoryRectangular:
+                HStack(spacing: 8) {
+                    ForEach(Array(metrics.enumerated()), id: \.offset) { _, m in
+                        let v = m.value(d, at: entry.date)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Label(v.title, systemImage: v.symbol).font(.caption2).lineLimit(1).widgetAccentable()
+                            Text(v.value).font(.headline.monospacedDigit()).lineLimit(1).minimumScaleFactor(0.6)
+                            if let f = v.fraction { ProgressView(value: min(max(f, 0), 1)) }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            default:
             VStack(alignment: .leading, spacing: 8) {
-                if family == .systemLarge {
+                if big {
                     HStack {
                         Label(d.statusTitle, systemImage: d.kind.symbol).font(.headline).foregroundStyle(d.kind.color)
                         Spacer()
                         if d.hasData { Text(d.since, style: .timer).font(.caption.monospacedDigit()).foregroundStyle(.secondary) }
                     }
                 }
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)], spacing: family == .systemLarge ? 14 : 8) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: family == .systemExtraLarge ? 3 : (family == .systemSmall ? 1 : 2)),
+                          spacing: big ? 14 : 8) {
                     ForEach(Array(metrics.enumerated()), id: \.offset) { _, m in
-                        BlockView(v: m.value(d, at: entry.date), big: family == .systemLarge)
+                        BlockView(v: m.value(d, at: entry.date), big: big)
                     }
                 }
                 Spacer(minLength: 0)
+            }
             }
         } else {
             Text("Open HGV Hours").font(.caption)
@@ -225,7 +276,7 @@ struct HGVCountdownWidget: Widget {
         }
         .configurationDisplayName("HGV Countdown")
         .description("One number of your choice: driving left, rest by, earnings…")
-        .supportedFamilies([.systemSmall, .accessoryCircular, .accessoryRectangular, .accessoryInline])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }
 
@@ -236,6 +287,6 @@ struct HGVDashboardWidget: Widget {
         }
         .configurationDisplayName("HGV Dashboard")
         .description("Pick what each block shows. Long-press the widget → Edit Widget.")
-        .supportedFamilies([.systemMedium, .systemLarge])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }

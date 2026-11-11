@@ -59,6 +59,14 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.2 (3.2.0) — Tile layout, planner & tables, bigger widgets
+- ✅ Today and Hours as switchable, draggable tile grids grouped by meaning; date tile; card toast
+- ✅ New activities: yard check, waiting for shift/job, spare
+- ✅ Postcode lookup for the job start, map pinpointing for every address, custom stops, edit/delete for stops and lines
+- ✅ Planner calendar mini charts and shifts under the calendar; week numbers in Earnings; fleet list
+- ✅ Spreadsheet-style tables (freeze, headers, colours, rearrange)
+- ✅ All widget sizes and a more detailed Lock Screen widget
+
 ## V3.1 (3.1.0) — Reorganisation, driver log, navigation & voice
 - ✅ Tabs: Today · Hours · Driver log · Jobs · Earnings, with per-tab settings
 - ✅ Driver log with change records; sub-activities (loading, unloading, waiting…) with map pins

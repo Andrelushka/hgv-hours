@@ -2,6 +2,19 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.2.0 — Tile layout, planner and table upgrades, bigger widgets
+- Today and Hours are grids of square tiles (driving left, working left, rest by, break due, limits…), grouped by meaning. Tap Edit to drag tiles around, hide them with −, or add hidden ones back; each Hours group has its own on/off switches.
+- Today's date tile, in the format you choose (long, with week number, short, ISO…).
+- Driver card tile: one tap records insert/withdraw and shows a short "Card inserted / Card withdrawn" message that disappears.
+- New activities: Yard check (other work); Waiting for shift, Waiting for job and Spare / standby (POA). Voice commands too.
+- Planner: start location / depot searched by postcode with an address list; every address can be pinpointed on the map (drag the map under the pin, satellite view). The route on the map starts from the depot.
+- Stops: new types (Fuel, Parking / rest, Trailer swap) and custom stops with your own name; ⋯ menu on every stop and custom line to edit, duplicate, move or delete.
+- Planner calendar shows each day as a mini bar chart (driving, other work, POA, breaks — height by time), planned days outlined; shifts listed under the calendar (moved from the Driver log).
+- Earnings: week number with start and end dates.
+- Vehicles is now a plain fleet list (no selection ticks); pick today's vehicle on Today or in a plan.
+- Notebook tables: freeze rows/columns, header rows/columns, row/column/cell colours, column widths, insert/move/delete, and drag to rearrange rows and columns.
+- Widgets: every widget comes in small, medium, large and extra-large (iPad), plus all three Lock Screen sizes; the Lock Screen widget now shows both countdowns with bars, the next break and the rest deadline.
+
 ## 3.1.0 — Reorganised app, driver log, navigation & voice
 - New layout: Today · Hours · Driver log · Jobs · Earnings. Each tab has its own ⚙︎ for its settings; Settings (gear on Today) keeps the general ones.
 - Driver log: all activity tracking kept separately from planning — Days (chart, activities, events, overspeed), Shifts, Events, and Changes (every edit, addition and deletion is recorded and can't be removed).

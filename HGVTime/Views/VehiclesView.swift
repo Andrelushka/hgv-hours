@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Saved vehicles and trailers: add once, then select, edit or delete.
+/// The fleet list: saved vehicles and trailers to add, edit or delete. (Pick today's vehicle on the Today screen or in a plan.)
 struct VehiclesView: View {
     @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
@@ -17,20 +17,16 @@ struct VehiclesView: View {
         let trailers = vehicles.filter { $0.kind == .trailer }
         List {
             Section {
-                ForEach(units) { v in row(v, current: store.settings.currentVehicleID == v.id.uuidString) {
-                    store.settings.currentVehicleID = store.settings.currentVehicleID == v.id.uuidString ? "" : v.id.uuidString
-                } }
+                ForEach(units) { v in row(v) }
                 .onDelete { delete(units, $0) }
                 Button { adding = .tractor } label: { Label("Add vehicle", systemImage: "plus.circle.fill") }
             } header: {
                 Text("Vehicles")
             } footer: {
-                Text("Tap the circle to choose the vehicle you're driving. Its height shows on the Today screen.")
+                Text("Your fleet list. Tap a vehicle to edit it. Choose the one you're driving on the Today screen or in a job plan.")
             }
             Section("Trailers") {
-                ForEach(trailers) { v in row(v, current: store.settings.currentTrailerID == v.id.uuidString) {
-                    store.settings.currentTrailerID = store.settings.currentTrailerID == v.id.uuidString ? "" : v.id.uuidString
-                } }
+                ForEach(trailers) { v in row(v) }
                 .onDelete { delete(trailers, $0) }
                 Button { adding = .trailer } label: { Label("Add trailer", systemImage: "plus.circle.fill") }
             }
@@ -48,14 +44,8 @@ struct VehiclesView: View {
         }
     }
 
-    private func row(_ v: Vehicle, current: Bool, select: @escaping () -> Void) -> some View {
-        HStack(spacing: 12) {
-            Button(action: select) {
-                Image(systemName: current ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(current ? Color.accentColor : .secondary)
-            }
-            .buttonStyle(.borderless)
+    private func row(_ v: Vehicle) -> some View {
+        HStack(spacing: 8) {
             Button { editing = v } label: {
                 VStack(alignment: .leading, spacing: 2) {
                     Label(v.displayName, systemImage: v.kind.symbol).font(.subheadline.weight(.semibold))
@@ -67,6 +57,13 @@ struct VehiclesView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            Menu {
+                Button("Edit", systemImage: "pencil") { editing = v }
+                Button("Delete", systemImage: "trash", role: .destructive) { remove(v) }
+            } label: {
+                Image(systemName: "ellipsis.circle").font(.title3).frame(width: 32, height: 32)
+            }
+            .buttonStyle(.borderless)
         }
         .swipeActions {
             Button("Delete", systemImage: "trash", role: .destructive) { remove(v) }
@@ -74,15 +71,10 @@ struct VehiclesView: View {
         }
     }
 
-    /// Selects a saved vehicle/trailer with this registration, or offers to add it.
+    /// Opens a saved vehicle/trailer with this registration, or offers to add it.
     private func found(_ reg: String) {
         if let match = vehicles.first(where: { normalisedReg($0.registration) == reg || normalisedReg($0.fleetNumber) == reg }) {
-            if match.kind == .trailer {
-                store.settings.currentTrailerID = match.id.uuidString
-            } else {
-                store.settings.currentVehicleID = match.id.uuidString
-            }
-            matchMessage = "\(match.displayName) selected as your current \(match.kind == .trailer ? "trailer" : "vehicle")."
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { editing = match }
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { addingScanned = ScannedReg(reg: reg) }
         }

@@ -44,8 +44,6 @@ struct StopEditor: View {
     var onSave: (PlanStop) -> Void
     var onDelete: (() -> Void)?
 
-    @State private var search = AddressSearch()
-    @State private var searching = false
     @State private var hasBooking: Bool
 
     init(stop: PlanStop, isNew: Bool, onSave: @escaping (PlanStop) -> Void, onDelete: (() -> Void)? = nil) {
@@ -60,42 +58,41 @@ struct StopEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("Type", selection: $stop.kind) {
-                        ForEach(PlanStop.Kind.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 6) {
+                            ForEach(PlanStop.Kind.allCases) { k in
+                                let on = stop.kind == k
+                                Button { stop.kind = k } label: {
+                                    Label(k.title, systemImage: k.symbol)
+                                        .font(.caption.weight(.semibold))
+                                        .padding(.horizontal, 10).padding(.vertical, 7)
+                                        .foregroundStyle(on ? .white : k.color)
+                                        .background(on ? AnyShapeStyle(k.color) : AnyShapeStyle(k.color.opacity(0.12)), in: Capsule())
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.vertical, 2)
                     }
-                    .pickerStyle(.segmented)
+                    if stop.kind == .other {
+                        row("Custom stop name", text: Binding(get: { stop.customTitle ?? "" }, set: { stop.customTitle = $0 }),
+                            prompt: "e.g. Weighbridge, Customs, Wash, Tip")
+                    }
                     row("Company / site", text: Binding(get: { stop.company ?? "" }, set: { stop.company = $0 }), prompt: "e.g. Tesco Daventry DC")
                 } header: {
-                    Text("Stop")
+                    Text("Stop type")
                 }
 
                 Section {
-                    TextField("Search postcode, address or company", text: Binding(get: { search.query }, set: { search.query = $0; searching = !$0.isEmpty }))
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                    if searching {
-                        ForEach(search.results, id: \.self) { r in
-                            Button {
-                                Task { await choose(r) }
-                            } label: {
-                                VStack(alignment: .leading, spacing: 1) {
-                                    Text(r.title).font(.subheadline.weight(.semibold))
-                                    if !r.subtitle.isEmpty { Text(r.subtitle).font(.caption).foregroundStyle(.secondary) }
-                                }
-                            }
-                            .foregroundStyle(.primary)
-                        }
-                        if search.results.isEmpty { Text("No matches yet — keep typing, or fill in below.").font(.caption).foregroundStyle(.secondary) }
-                    }
-                    row("Address", text: Binding(get: { stop.address ?? stop.place }, set: { stop.address = $0; stop.place = $0 }), prompt: "Street, town", axis: .vertical)
-                    row("Postcode", text: Binding(get: { stop.postcode ?? "" }, set: { stop.postcode = $0.uppercased() }), prompt: "NN11 8XX")
-                    if stop.latitude != nil {
-                        Label("Location found", systemImage: "mappin.and.ellipse").font(.caption).foregroundStyle(.green)
-                    }
+                    AddressLookupFields(
+                        address: Binding(get: { stop.address ?? stop.place }, set: { stop.address = $0; stop.place = $0 }),
+                        postcode: Binding(get: { stop.postcode ?? "" }, set: { stop.postcode = $0 }),
+                        latitude: $stop.latitude, longitude: $stop.longitude,
+                        name: Binding(get: { stop.company ?? "" }, set: { stop.company = $0 }))
                 } header: {
                     Text("Address")
                 } footer: {
-                    Text("Search uses Apple Maps. Pick a result to fill the address and map location, or type it yourself.")
+                    Text("Search by postcode and pick the address from the list, type it yourself, or pinpoint the exact gate or bay on the map.")
                 }
 
                 Section("Booking") {
@@ -154,25 +151,6 @@ struct StopEditor: View {
             TextField(prompt, text: text, axis: axis).keyboardType(keyboard)
         }
     }
-
-    private func choose(_ completion: MKLocalSearchCompletion) async {
-        searching = false
-        guard let item = await search.resolve(completion) else {
-            stop.address = [completion.title, completion.subtitle].filter { !$0.isEmpty }.joined(separator: ", ")
-            stop.place = stop.address ?? ""
-            return
-        }
-        let pm = item.placemark
-        if (stop.company ?? "").isEmpty, let name = item.name, name != pm.thoroughfare { stop.company = name }
-        let street = [pm.subThoroughfare, pm.thoroughfare].compactMap { $0 }.joined(separator: " ")
-        stop.address = [street, pm.locality ?? ""].filter { !$0.isEmpty }.joined(separator: ", ")
-        if (stop.address ?? "").isEmpty { stop.address = completion.subtitle.isEmpty ? completion.title : completion.subtitle }
-        stop.place = stop.address ?? ""
-        stop.postcode = pm.postalCode ?? stop.postcode
-        stop.latitude = pm.coordinate.latitude
-        stop.longitude = pm.coordinate.longitude
-        search.query = ""
-    }
 }
 
 /// Summary row for a stop in the plan editor.
@@ -183,7 +161,7 @@ struct StopRow: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             ZStack {
-                Circle().fill(stop.kind == .collection ? Color.orange : .indigo).frame(width: 28, height: 28)
+                Circle().fill(stop.kind.color).frame(width: 28, height: 28)
                 Text("\(number)").font(.caption.weight(.bold)).foregroundStyle(.white)
             }
             VStack(alignment: .leading, spacing: 2) {
@@ -192,7 +170,7 @@ struct StopRow: View {
                     Spacer()
                     if !stop.bookingText.isEmpty { Text(stop.bookingText).font(.caption.weight(.semibold).monospacedDigit()) }
                 }
-                Text(stop.kind.title + (stop.fullAddress.isEmpty ? "" : " · " + stop.fullAddress)).font(.caption).foregroundStyle(.secondary)
+                Text(stop.kindTitle + (stop.fullAddress.isEmpty ? "" : " · " + stop.fullAddress)).font(.caption).foregroundStyle(.secondary)
                 let refs = [stop.reference.isEmpty ? "" : "Booking \(stop.reference)", (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                             stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.weight ?? ""].filter { !$0.isEmpty }
                 if !refs.isEmpty { Text(refs.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary) }

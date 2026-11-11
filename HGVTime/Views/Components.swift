@@ -38,7 +38,7 @@ struct LimitCard: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
     }
@@ -73,7 +73,7 @@ struct InfoCard: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
     }
@@ -207,7 +207,7 @@ struct RingTile: View {
                 .lineLimit(2)
                 .frame(minHeight: 28, alignment: .top)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(12)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .combine)
@@ -341,7 +341,7 @@ struct CountCard: View {
             }
             Text(caption).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .padding(12)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
     }
@@ -502,5 +502,71 @@ enum RuleInfo {
             return "An estimate before tax and deductions, from your pay settings (Earnings tab ⚙︎). Check your payslip."
         }
         return nil
+    }
+}
+
+/// A short message that slides in and disappears by itself.
+struct Toast: Identifiable, Equatable {
+    let id = UUID()
+    var symbol: String
+    var color: Color
+    var title: String
+    var detail: String = ""
+}
+
+struct ToastView: View {
+    var toast: Toast
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: toast.symbol)
+                .font(.headline)
+                .foregroundStyle(.white)
+                .frame(width: 34, height: 34)
+                .background(toast.color.gradient, in: Circle())
+            VStack(alignment: .leading, spacing: 1) {
+                Text(toast.title).font(.subheadline.weight(.bold))
+                if !toast.detail.isEmpty { Text(toast.detail).font(.caption).foregroundStyle(.secondary) }
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.regularMaterial, in: Capsule())
+        .overlay(Capsule().stroke(toast.color.opacity(0.5), lineWidth: 1))
+        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+        .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.updatesFrequently)
+    }
+}
+
+/// Square driver card tile: one tap records inserting or withdrawing the card.
+struct CardTile: View {
+    var inserted: Bool
+    var since: Date?
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 6) {
+                Label("Driver card", systemImage: "creditcard.fill").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    ZStack {
+                        Circle().fill(inserted ? Color.green : Color.red).frame(width: 30, height: 30)
+                        Image(systemName: inserted ? "checkmark" : "xmark").font(.subheadline.weight(.heavy)).foregroundStyle(.white)
+                    }
+                    Text(inserted ? "Inserted" : "Not inserted").font(.headline).lineLimit(1).minimumScaleFactor(0.7)
+                }
+                Text(inserted ? (since.map { "Since \(Fmt.time($0)) · tap to withdraw" } ?? "Tap to withdraw") : "Tap when you insert it")
+                    .font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(12)
+            .background((inserted ? Color.green : Color.red).opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke((inserted ? Color.green : Color.red).opacity(0.5), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.impact, trigger: inserted)
+        .accessibilityLabel(inserted ? "Driver card inserted. Tap to record withdrawing it." : "Driver card not inserted. Tap to record inserting it.")
     }
 }

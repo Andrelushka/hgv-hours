@@ -17,6 +17,10 @@ struct PlanEditor: View {
     @State private var vehicleID: String
     @State private var trailerID: String
     @State private var startLocation: String
+    @State private var startPostcode: String
+    @State private var startLatitude: Double?
+    @State private var startLongitude: Double?
+    @State private var editingLine: PlanLine?
     @State private var stops: [PlanStop]
     @State private var load: String
     @State private var pallets: String
@@ -42,6 +46,9 @@ struct PlanEditor: View {
         _vehicleID = State(initialValue: plan?.vehicleID ?? defaultVehicleID)
         _trailerID = State(initialValue: plan?.trailerID ?? defaultTrailerID)
         _startLocation = State(initialValue: plan?.startLocation ?? "")
+        _startPostcode = State(initialValue: plan?.startPostcode ?? "")
+        _startLatitude = State(initialValue: plan?.startLatitude)
+        _startLongitude = State(initialValue: plan?.startLongitude)
         _stops = State(initialValue: plan?.stops ?? [])
         _load = State(initialValue: plan?.load ?? "")
         _pallets = State(initialValue: plan?.pallets ?? "")
@@ -86,27 +93,68 @@ struct PlanEditor: View {
                         Text("None").tag("")
                         ForEach(vehicles.filter { $0.kind == .trailer }) { Text($0.displayName).tag($0.id.uuidString) }
                     }
-                    TextField("Start location / depot", text: $startLocation)
                 } header: {
                     Text("Job")
                 } footer: {
-                    if vehicles.isEmpty { Text("Add vehicles and trailers in Settings → Vehicles & trailers.") }
+                    if vehicles.isEmpty { Text("Add vehicles and trailers in Jobs → Vehicles.") }
+                }
+
+                Section {
+                    AddressLookupFields(address: $startLocation, postcode: $startPostcode,
+                                        latitude: $startLatitude, longitude: $startLongitude,
+                                        addressLabel: "Start location / depot")
+                } header: {
+                    Text("Start location")
+                } footer: {
+                    Text("Search the depot postcode and pick the address, type it, or pinpoint it on the map. The route on the map starts here.")
                 }
 
                 Section {
                     ForEach(Array(stops.enumerated()), id: \.element.id) { i, stop in
-                        Button { editingStop = EditableStop(stop: stop, isNew: false) } label: { StopRow(stop: stop, number: i + 1) }
-                            .foregroundStyle(.primary)
+                        HStack(spacing: 6) {
+                            Button { editingStop = EditableStop(stop: stop, isNew: false) } label: { StopRow(stop: stop, number: i + 1) }
+                                .foregroundStyle(.primary)
+                                .buttonStyle(.plain)
+                            Menu {
+                                Button("Edit", systemImage: "pencil") { editingStop = EditableStop(stop: stop, isNew: false) }
+                                Button("Duplicate", systemImage: "plus.square.on.square") {
+                                    var copy = stop
+                                    copy.id = UUID()
+                                    copy.arrivedAt = nil
+                                    copy.departedAt = nil
+                                    stops.insert(copy, at: i + 1)
+                                }
+                                if i > 0 { Button("Move up", systemImage: "arrow.up") { stops.swapAt(i, i - 1) } }
+                                if i < stops.count - 1 { Button("Move down", systemImage: "arrow.down") { stops.swapAt(i, i + 1) } }
+                                Button("Delete", systemImage: "trash", role: .destructive) { stops.removeAll { $0.id == stop.id } }
+                            } label: {
+                                Image(systemName: "ellipsis.circle").font(.title3).frame(width: 32, height: 32)
+                            }
+                            .buttonStyle(.borderless)
+                        }
                     }
                     .onDelete { stops.remove(atOffsets: $0) }
                     .onMove { stops.move(fromOffsets: $0, toOffset: $1) }
-                    Button {
+                    Menu {
+                        ForEach(PlanStop.Kind.allCases.filter { $0 != .other }) { k in
+                            Button(k.title, systemImage: k.symbol) { editingStop = EditableStop(stop: PlanStop(kind: k), isNew: true) }
+                        }
+                        Divider()
+                        Button("Custom stop…", systemImage: PlanStop.Kind.other.symbol) {
+                            editingStop = EditableStop(stop: PlanStop(kind: .other), isNew: true)
+                        }
+                    } label: {
+                        Label("Add stop", systemImage: "plus.circle.fill")
+                    } primaryAction: {
                         editingStop = EditableStop(stop: PlanStop(kind: stops.isEmpty ? .collection : .delivery), isNew: true)
-                    } label: { Label("Add stop", systemImage: "plus.circle.fill") }
+                    }
+                    Button {
+                        editingStop = EditableStop(stop: PlanStop(kind: .other), isNew: true)
+                    } label: { Label("Add custom stop", systemImage: "mappin.and.ellipse") }
                 } header: {
                     Text("Stops")
                 } footer: {
-                    Text("Tap a stop to fill in the site, address (search by postcode), booking time and reference, load references, pallets, weight and contact. Swipe to delete, hold and drag to reorder.")
+                    Text("Tap a stop to edit it, or use ⋯ to edit, duplicate, move or delete. Hold Add stop to pick the type (collection, delivery, depot, fuel, parking, trailer swap). A custom stop can be anything — name it yourself.")
                 }
 
                 Section("Load") {
@@ -116,19 +164,35 @@ struct PlanEditor: View {
                 }
 
                 Section {
-                    ForEach($lines) { $line in
-                        HStack {
-                            TextField("Label", text: $line.label).frame(maxWidth: 130)
-                            Divider()
-                            TextField("Value", text: $line.value)
+                    ForEach(Array(lines.enumerated()), id: \.element.id) { i, line in
+                        HStack(spacing: 6) {
+                            Button { editingLine = line } label: {
+                                VStack(alignment: .leading, spacing: 1) {
+                                    Text(line.label.isEmpty ? "No label" : line.label).font(.caption).foregroundStyle(.secondary)
+                                    Text(line.value.isEmpty ? "—" : line.value).font(.subheadline)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            Menu {
+                                Button("Edit", systemImage: "pencil") { editingLine = line }
+                                if i > 0 { Button("Move up", systemImage: "arrow.up") { lines.swapAt(i, i - 1) } }
+                                if i < lines.count - 1 { Button("Move down", systemImage: "arrow.down") { lines.swapAt(i, i + 1) } }
+                                Button("Delete", systemImage: "trash", role: .destructive) { lines.removeAll { $0.id == line.id } }
+                            } label: {
+                                Image(systemName: "ellipsis.circle").font(.title3).frame(width: 32, height: 32)
+                            }
+                            .buttonStyle(.borderless)
                         }
                     }
                     .onDelete { lines.remove(atOffsets: $0) }
-                    Button { lines.append(PlanLine()) } label: { Label("Add line", systemImage: "plus.circle.fill") }
+                    .onMove { lines.move(fromOffsets: $0, toOffset: $1) }
+                    Button { editingLine = PlanLine() } label: { Label("Add line", systemImage: "plus.circle.fill") }
                 } header: {
                     Text("Custom lines")
                 } footer: {
-                    Text("Anything else: seal number, gate code, contact, booking-in number…")
+                    Text("Anything else: seal number, gate code, contact, booking-in number… Tap a line or use ⋯ to edit, move or delete it.")
                 }
 
                 Section("Notes") {
@@ -167,6 +231,13 @@ struct PlanEditor: View {
                     stops.removeAll { $0.id == item.stop.id }
                 })
             }
+            .sheet(item: $editingLine) { line in
+                PlanLineEditor(line: line, isNew: !lines.contains { $0.id == line.id }) { saved in
+                    if let i = lines.firstIndex(where: { $0.id == saved.id }) { lines[i] = saved } else { lines.append(saved) }
+                } onDelete: {
+                    lines.removeAll { $0.id == line.id }
+                }
+            }
             .confirmationDialog("Delete this plan?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) {
                     if let plan { context.delete(plan); try? context.save() }
@@ -181,6 +252,9 @@ struct PlanEditor: View {
         vehicleID = p.vehicleID
         trailerID = p.trailerID
         startLocation = p.startLocation
+        startPostcode = p.startPostcode
+        startLatitude = p.startLatitude
+        startLongitude = p.startLongitude
         stops = p.stops.map { var s = $0; s.id = UUID(); return s }
         load = p.load
         pallets = p.pallets
@@ -206,6 +280,9 @@ struct PlanEditor: View {
         p.vehicleID = vehicleID
         p.trailerID = trailerID
         p.startLocation = startLocation
+        p.startPostcode = startPostcode
+        p.startLatitude = startLatitude
+        p.startLongitude = startLongitude
         p.stops = stops
         p.load = load
         p.pallets = pallets
@@ -214,6 +291,51 @@ struct PlanEditor: View {
         p.notes = notes
         try? context.save()
         dismiss()
+    }
+}
+
+/// Edit one custom line of a plan.
+struct PlanLineEditor: View {
+    @Environment(\.dismiss) private var dismiss
+    @State var line: PlanLine
+    var isNew: Bool
+    var onSave: (PlanLine) -> Void
+    var onDelete: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField("Label, e.g. Seal number", text: $line.label)
+                    TextField("Value", text: $line.value, axis: .vertical).lineLimit(1...6)
+                } footer: {
+                    Text("Quick labels:")
+                }
+                Section {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(["Seal number", "Gate code", "Booking-in no.", "Trailer no.", "Contact", "Bay", "Temperature", "Customs ref"], id: \.self) { l in
+                                Button(l) { line.label = l }.buttonStyle(.bordered).font(.caption)
+                            }
+                        }
+                    }
+                }
+                if !isNew {
+                    Section { Button("Delete line", role: .destructive) { onDelete(); dismiss() } }
+                }
+            }
+            .navigationTitle(isNew ? "New line" : "Edit line")
+            .navigationBarTitleDisplayMode(.inline)
+            .keyboardDoneButton()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") { onSave(line); dismiss() }
+                        .disabled(line.label.isEmpty && line.value.isEmpty)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 
@@ -261,12 +383,13 @@ struct PlanCard: View {
                 Text([vehicle?.displayName, trailer.map { "Trailer \($0.displayName)" }].compactMap { $0 }.joined(separator: " · "))
                     .font(.caption).foregroundStyle(.secondary)
             }
-            if !plan.startLocation.isEmpty { Label(plan.startLocation, systemImage: "building.2").font(.caption) }
+            let startText = [plan.startLocation, plan.startPostcode].filter { !$0.isEmpty }.joined(separator: ", ")
+            if !startText.isEmpty { Label("Start: \(startText)", systemImage: "flag.fill").font(.caption) }
             ForEach(plan.stops) { stop in
                 HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind == .collection ? .orange : .blue)
+                    Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text([stop.bookingText, stop.displayName].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption.weight(.semibold))
+                        Text([stop.bookingText, stop.kind == .other ? stop.kindTitle : "", stop.displayName].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption.weight(.semibold))
                         let extra = [stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
                                      (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                                      stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.notes]

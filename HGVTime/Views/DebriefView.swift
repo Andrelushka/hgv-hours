@@ -16,7 +16,7 @@ struct TodayJobCard: View {
                 .buttonStyle(.plain)
             ForEach(plan.stops) { stop in
                 HStack(spacing: 8) {
-                    Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind == .collection ? .orange : .blue)
+                    Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(stop.displayName).font(.caption.weight(.semibold)).lineLimit(1)
                         Text(statusText(stop)).font(.caption2).foregroundStyle(.secondary)
@@ -231,7 +231,7 @@ struct DebriefData {
 
         for (i, s) in (plan?.stops ?? []).enumerated() {
             let onSite = (s.arrivedAt != nil && s.departedAt != nil) ? Fmt.hm(s.departedAt!.timeIntervalSince(s.arrivedAt!)) : ""
-            d.stops.append(["\(i + 1)", s.kind.title, s.displayName, s.fullAddress, s.bookingText, s.arrivedAt.map(Fmt.time) ?? "",
+            d.stops.append(["\(i + 1)", s.kindTitle, s.displayName, s.fullAddress, s.bookingText, s.arrivedAt.map(Fmt.time) ?? "",
                             s.departedAt.map(Fmt.time) ?? "", onSite, s.reference, s.orderReference ?? "", s.pallets])
             if let lat = s.latitude, let lon = s.longitude {
                 d.mapPoints.append((s.place.isEmpty ? "Stop \(i + 1)" : s.place, CLLocationCoordinate2D(latitude: lat, longitude: lon)))

@@ -474,15 +474,51 @@ final class RulesEngineTests: XCTestCase {
         XCTAssertNil(VoiceCommand.parse("How long can I drive?"), "questions go to the assistant, not commands")
     }
 
-    func testTodayModulesOrderAndHidden() {
+    func testTodayTilesOrderAndHidden() {
         var s = AppSettings()
-        s.todayOrder = ["earnings", "status"]
+        s.todayOrder = ["earnings", "status", "buttons"]
         s.todayHidden = ["card"]
-        let m = s.todayModules
-        XCTAssertEqual(m.first, .earnings)
-        XCTAssertEqual(m[1], .status)
-        XCTAssertFalse(m.contains(.card))
-        XCTAssertTrue(m.contains(.buttons), "modules missing from the saved order are added at the end")
+        let order = s.tileOrder(.today)
+        let hidden = s.tileHidden(.today)
+        XCTAssertEqual(order.first, .date, "older layouts get the date tile at the top")
+        XCTAssertEqual(Array(order[1...3]), [.earnings, .status, .buttons])
+        XCTAssertEqual(Array(order[4...5]), [.driveLeft, .workLeft], "countdowns go after the buttons")
+        XCTAssertTrue(hidden.contains(.card))
+        XCTAssertFalse(hidden.contains(.inCab), "tiles shown by default stay visible")
+        XCTAssertTrue(hidden.contains(.restBy), "extra hours tiles start hidden on Today")
+
+        s.moveTile(.workLeft, before: .earnings, on: .today)
+        XCTAssertEqual(s.tileOrder(.today)[1], .workLeft)
+        s.setTile(.card, visible: true, on: .today)
+        XCTAssertFalse(s.tileHidden(.today).contains(.card))
+        XCTAssertTrue(s.tileHidden(.hours).isEmpty, "every Hours tile shows by default")
+    }
+
+    func testTableDocKeepsStyleAlignedWhenMoving() {
+        var doc = TableDoc(cells: [["A", "B"], ["1", "2"], ["3", "4"]], style: TableStyle())
+        doc.style.rowColors[2] = "red"
+        doc.style.colColors[1] = "blue"
+        doc.moveRows(from: [2], to: 1)
+        XCTAssertEqual(doc.cells[1], ["3", "4"])
+        XCTAssertEqual(doc.style.rowColors[1], "red")
+        doc.moveColumns(from: [1], to: 0)
+        XCTAssertEqual(doc.cells[0], ["B", "A"])
+        XCTAssertEqual(doc.style.colColors[0], "blue")
+        doc.insertRow(at: 0)
+        XCTAssertEqual(doc.style.headerRows, 2, "inserting above the header grows the header")
+        XCTAssertEqual(doc.rows, 4)
+        doc.deleteColumn(0)
+        XCTAssertEqual(doc.cols, 1)
+        XCTAssertEqual(doc.style.colColors.count, 1)
+        XCTAssertEqual(TableDoc.columnName(27), "AB")
+    }
+
+    func testNewActivitiesByVoice() {
+        XCTAssertEqual(VoiceCommand.parse("yard check"), .subtype(.yardCheck))
+        XCTAssertEqual(VoiceCommand.parse("on spare"), .subtype(.spare))
+        XCTAssertEqual(VoiceCommand.parse("waiting for shift"), .subtype(.waitingShift))
+        XCTAssertEqual(ActivitySubtype.waitingJob.kind, .availability)
+        XCTAssertEqual(ActivitySubtype.yardCheck.kind, .otherWork)
     }
 
     @MainActor

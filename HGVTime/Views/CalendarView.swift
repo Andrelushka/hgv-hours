@@ -65,7 +65,8 @@ struct CalendarHistoryView: View {
             VStack(spacing: 12) {
                 monthHeader
                 monthGrid(issueDays: issueDays)
-                if !planningOnly { ActivityLegend().padding(.horizontal, 4) }
+                ActivityLegend().padding(.horizontal, 4)
+                if planningOnly { shiftsList(analysis: analysis) }
                 dayDetail(analysis: analysis)
                 upcoming
             }
@@ -111,24 +112,31 @@ struct CalendarHistoryView: View {
     }
 
     private func monthGrid(issueDays: Set<Date>) -> some View {
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 7)
         let days = cal.daysForMonthGrid(month)
+        let weeks = stride(from: 0, to: days.count, by: 7).map { Array(days[$0..<min($0 + 7, days.count)]) }
         let symbols = ["M", "T", "W", "T", "F", "S", "S"]
-        return LazyVGrid(columns: columns, spacing: 4) {
-            ForEach(Array(symbols.enumerated()), id: \.offset) { _, s in
-                Text(s).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+        return Grid(horizontalSpacing: 4, verticalSpacing: 4) {
+            GridRow {
+                ForEach(Array(symbols.enumerated()), id: \.offset) { _, s in
+                    Text(s).font(.caption2.weight(.semibold)).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                }
             }
-            ForEach(days, id: \.self) { day in
-                let inMonth = cal.isDate(day, equalTo: month, toGranularity: .month)
-                let totals = planningOnly ? DayTotals() : DayTotals.compute(entriesTouching(day), day: day)
-                DayCell(day: day, totals: totals, inMonth: inMonth,
-                        isToday: cal.isDateInToday(day),
-                        isSelected: cal.isDate(day, inSameDayAs: selectedDay),
-                        hasIssue: issueDays.contains(cal.startOfDay(for: day)),
-                        isHoliday: payItems.contains { $0.kind == .holiday && cal.isDate($0.date, inSameDayAs: day) },
-                        isBankHoliday: BankHolidays.isBankHoliday(day),
-                        isPlanned: plans.contains { cal.isDate($0.plannedStart, inSameDayAs: day) })
-                    .onTapGesture { selectedDay = day }
+            ForEach(weeks, id: \.self) { week in
+                GridRow {
+                    ForEach(week, id: \.self) { day in
+                        let inMonth = cal.isDate(day, equalTo: month, toGranularity: .month)
+                        let totals = DayTotals.compute(entriesTouching(day), day: day)
+                        let planned = plans.filter { cal.isDate($0.plannedStart, inSameDayAs: day) }.reduce(0) { $0 + $1.length }
+                        DayCell(day: day, totals: totals, inMonth: inMonth,
+                                isToday: cal.isDateInToday(day),
+                                isSelected: cal.isDate(day, inSameDayAs: selectedDay),
+                                hasIssue: issueDays.contains(cal.startOfDay(for: day)),
+                                isHoliday: payItems.contains { $0.kind == .holiday && cal.isDate($0.date, inSameDayAs: day) },
+                                isBankHoliday: BankHolidays.isBankHoliday(day),
+                                isPlanned: planned > 0, plannedLength: planned)
+                            .onTapGesture { selectedDay = day }
+                    }
+                }
             }
         }
     }
@@ -283,6 +291,48 @@ struct CalendarHistoryView: View {
 }
 
 extension CalendarHistoryView {
+    /// Shifts of the selected day (and a way to all shifts), shown under the calendar in the planner.
+    @ViewBuilder
+    func shiftsList(analysis: Analysis) -> some View {
+        let shifts = analysis.shifts.filter { cal.isDate($0.period.start, inSameDayAs: selectedDay) }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Shifts").font(.headline)
+                Spacer()
+                NavigationLink {
+                    HistoryView(embedded: true).navigationTitle("All shifts")
+                } label: {
+                    Text("All shifts").font(.subheadline)
+                }
+            }
+            if shifts.isEmpty {
+                Text("No shift on \(Fmt.day(selectedDay)).").font(.subheadline).foregroundStyle(.secondary)
+            }
+            ForEach(shifts) { shift in
+                NavigationLink {
+                    ShiftDetailView(shiftStart: shift.period.start)
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: shift.issues.isEmpty ? "checkmark.seal.fill" : "exclamationmark.octagon.fill")
+                            .foregroundStyle(shift.issues.isEmpty ? .green : .red)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(Fmt.time(shift.period.start))–\(shift.period.isOpen ? "now" : Fmt.time(shift.period.end))")
+                                .font(.subheadline.weight(.semibold))
+                            Text("Drive \(Fmt.hm(shift.stats.allDriving)) · Work \(Fmt.hm(shift.stats.workingTime)) · POA \(Fmt.hm(shift.stats.availability))")
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if !shift.issues.isEmpty { Text("\(shift.issues.count) issue\(shift.issues.count == 1 ? "" : "s")").font(.caption).foregroundStyle(.red) }
+                        Image(systemName: "chevron.right").foregroundStyle(.tertiary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(12)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
+    }
+
     @ViewBuilder
     var upcoming: some View {
         let next = plans.filter { $0.plannedEnd >= .now }.prefix(10)
@@ -337,6 +387,7 @@ struct DayCell: View {
     var isHoliday = false
     var isBankHoliday = false
     var isPlanned = false
+    var plannedLength: TimeInterval = 0
 
     var body: some View {
         VStack(spacing: 3) {
@@ -350,19 +401,9 @@ struct DayCell: View {
                     Circle().fill(.red).frame(width: 5, height: 5)
                 }
             }
-            // Stacked bar of the day's duty, scaled to 15h.
-            GeometryReader { geo in
-                let scale = geo.size.width / (15 * 3600)
-                HStack(spacing: 0) {
-                    Rectangle().fill(DutyKind.drive.color).frame(width: min(geo.size.width, totals.driving * scale))
-                    Rectangle().fill(DutyKind.otherWork.color).frame(width: totals.otherWork * scale)
-                    Rectangle().fill(DutyKind.availability.color).frame(width: totals.availability * scale)
-                    Spacer(minLength: 0)
-                }
-            }
-            .frame(height: 5)
-            .background(Color(.tertiarySystemFill))
-            .clipShape(Capsule())
+            // Mini chart of the day: one bar per activity, height by time (full height = 10h).
+            DayMiniChart(totals: totals, plannedLength: plannedLength)
+                .frame(height: 22)
             Group {
                 if totals.driving > 0 {
                     Text(Fmt.hm(totals.driving)).foregroundStyle(DutyKind.drive.color)
@@ -384,7 +425,7 @@ struct DayCell: View {
         }
         .padding(.vertical, 5)
         .padding(.horizontal, 3)
-        .frame(maxWidth: .infinity, minHeight: 58)
+        .frame(maxWidth: .infinity, minHeight: 70)
         .background(background, in: RoundedRectangle(cornerRadius: 8))
         .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.indigo.opacity(isPlanned ? 0.7 : 0), style: StrokeStyle(lineWidth: 1.5, dash: [4, 2])))
         .overlay(RoundedRectangle(cornerRadius: 8).stroke(isSelected ? Color.accentColor : .clear, lineWidth: 2))
@@ -398,6 +439,45 @@ struct DayCell: View {
         if isHoliday && !totals.hasDuty { return Color.orange.opacity(0.12) }
         if totals.weeklyRest > 6 * 3600 && !totals.hasDuty { return RestType.weekly.color.opacity(0.12) }
         return totals.hasDuty ? Color(.secondarySystemBackground) : Color(.systemBackground)
+    }
+}
+
+/// Small bar chart for a calendar day: driving, other work, POA and breaks (and planned time when nothing is recorded).
+struct DayMiniChart: View {
+    var totals: DayTotals
+    var plannedLength: TimeInterval = 0
+
+    var body: some View {
+        let bars: [(TimeInterval, Color)] = [
+            (totals.driving, DutyKind.drive.color),
+            (totals.otherWork, DutyKind.otherWork.color),
+            (totals.availability, DutyKind.availability.color),
+            (totals.breaks, RestType.breakTime.color)
+        ]
+        GeometryReader { geo in
+            if totals.hasDuty || totals.breaks > 0 {
+                HStack(alignment: .bottom, spacing: 1.5) {
+                    ForEach(Array(bars.enumerated()), id: \.offset) { _, bar in
+                        let h = bar.0 > 0 ? max(2, geo.size.height * min(1, bar.0 / (10 * 3600))) : 0
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(bar.1.gradient)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: h)
+                    }
+                }
+                .frame(height: geo.size.height, alignment: .bottom)
+            } else if plannedLength > 0 {
+                // Planned but not worked yet: one dashed outline bar.
+                RoundedRectangle(cornerRadius: 2)
+                    .strokeBorder(Color.indigo, style: StrokeStyle(lineWidth: 1, dash: [2, 1.5]))
+                    .background(Color.indigo.opacity(0.15), in: RoundedRectangle(cornerRadius: 2))
+                    .frame(width: geo.size.width * 0.5, height: max(3, geo.size.height * min(1, plannedLength / (15 * 3600))))
+                    .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
+            } else {
+                Color.clear
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 

@@ -112,6 +112,10 @@ enum VoiceCommand: Equatable {
         if has("loading") { return .subtype(.loading) }
         if has("vehicle check", "walk round", "walkaround", "defect check") { return .subtype(.vehicleCheck) }
         if has("fuelling", "refuel", "fuel up") { return .subtype(.fuelling) }
+        if has("yard check") { return .subtype(.yardCheck) }
+        if has("spare", "standby") { return .subtype(.spare) }
+        if has("waiting for shift", "wait for shift") { return .subtype(.waitingShift) }
+        if has("waiting for job", "wait for job", "waiting for a job") { return .subtype(.waitingJob) }
         if has("waiting", "wait to") { return .subtype(t.contains("unload") || t.contains("tip") ? .waitingUnload : .waitingLoad) }
         if has("ferry", "train") { return .subtype(.ferryTrain) }
         if has("break", "stop for a break", "take a break") { return .activity(.rest) }

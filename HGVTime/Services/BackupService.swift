@@ -34,8 +34,9 @@ enum BackupService {
     struct Plan: Codable {
         var id: UUID; var start, end: Date; var company, vehicleID, trailerID, startLocation, load, pallets, reference, notes: String
         var stops, lines: Data; var createdAt: Date
+        var startPostcode: String?; var startLatitude, startLongitude: Double?; var completed: Bool?
     }
-    struct Note: Codable { var id: UUID; var title, body, kind: String; var table: Data; var isTemplate, pinned: Bool; var createdAt, updatedAt: Date }
+    struct Note: Codable { var id: UUID; var title, body, kind: String; var table: Data; var isTemplate, pinned: Bool; var createdAt, updatedAt: Date; var style: Data? }
     struct Card: Codable { var time: Date; var inserted: Bool }
     struct Speed: Codable { var start, end: Date; var maxKmh, limitKmh, latitude, longitude: Double }
     struct Day: Codable { var day: Date; var vehicleID: String; var startKm, endKm, gpsKm: Double; var notes: String }
@@ -68,11 +69,12 @@ enum BackupService {
         b.plans = all(WorkPlan.self, context).map {
             Plan(id: $0.id, start: $0.plannedStart, end: $0.plannedEnd, company: $0.company, vehicleID: $0.vehicleID, trailerID: $0.trailerID,
                  startLocation: $0.startLocation, load: $0.load, pallets: $0.pallets, reference: $0.reference, notes: $0.notes,
-                 stops: $0.stopsData, lines: $0.linesData, createdAt: $0.createdAt)
+                 stops: $0.stopsData, lines: $0.linesData, createdAt: $0.createdAt,
+                 startPostcode: $0.startPostcode, startLatitude: $0.startLatitude, startLongitude: $0.startLongitude, completed: $0.completed)
         }
         b.notes = all(NoteItem.self, context).map {
             Note(id: $0.id, title: $0.title, body: $0.body, kind: $0.kindRaw, table: $0.tableData, isTemplate: $0.isTemplate,
-                 pinned: $0.pinned, createdAt: $0.createdAt, updatedAt: $0.updatedAt)
+                 pinned: $0.pinned, createdAt: $0.createdAt, updatedAt: $0.updatedAt, style: $0.styleData)
         }
         b.cards = all(CardEvent.self, context).map { Card(time: $0.time, inserted: $0.inserted) }
         b.speeds = all(SpeedEvent.self, context).map {
@@ -151,11 +153,14 @@ enum BackupService {
             x.id = p.id; x.company = p.company; x.vehicleID = p.vehicleID; x.trailerID = p.trailerID; x.startLocation = p.startLocation
             x.load = p.load; x.pallets = p.pallets; x.reference = p.reference; x.notes = p.notes
             x.stopsData = p.stops; x.linesData = p.lines; x.createdAt = p.createdAt
+            x.startPostcode = p.startPostcode ?? ""; x.startLatitude = p.startLatitude; x.startLongitude = p.startLongitude
+            x.completed = p.completed ?? false
             context.insert(x)
         }
         for n in b.notes {
             let x = NoteItem(title: n.title, kind: n.kind, isTemplate: n.isTemplate)
             x.id = n.id; x.body = n.body; x.tableData = n.table; x.pinned = n.pinned; x.createdAt = n.createdAt; x.updatedAt = n.updatedAt
+            x.styleData = n.style ?? Data()
             context.insert(x)
         }
         b.cards.forEach { context.insert(CardEvent(time: $0.time, inserted: $0.inserted)) }

@@ -152,10 +152,15 @@ struct AppSettings: Codable, Equatable {
     var vehicleReg = ""
 
     // Today screen
-    /// Order of the Today modules (TodayModule raw values).
-    var todayOrder: [String] = TodayModule.allCases.map(\.rawValue)
-    /// Modules switched off.
+    /// Order of the Today tiles (Tile raw values; empty = default layout).
+    var todayOrder: [String] = []
+    /// Today tiles switched off.
     var todayHidden: [String] = []
+    /// Order and hidden tiles of the Hours page.
+    var hoursOrder: [String] = []
+    var hoursHidden: [String] = []
+    /// How Today's date tile shows the date ("long", "week", "medium", "short", "us", "iso").
+    var dateStyle = "long"
     /// "always", "shift" (only while on shift) or "never".
     var keepScreenOn = "shift"
 
@@ -318,54 +323,5 @@ final class SettingsStore {
             }
         }
         return result
-    }
-}
-
-
-/// The blocks on the Today screen, which you can switch on/off and reorder.
-enum TodayModule: String, CaseIterable, Identifiable {
-    case card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .card: "Driver card"
-        case .expiry: "Expiry warnings"
-        case .status: "Current activity"
-        case .buttons: "Activity buttons"
-        case .inCab: "In-cab automatic"
-        case .warnings: "Urgent warnings"
-        case .earnings: "Earnings"
-        case .nightOut: "Night out"
-        case .job: "Today's job"
-        case .vehicle: "Vehicle & height"
-        case .mileage: "Mileage & fuel"
-        }
-    }
-
-    var symbol: String {
-        switch self {
-        case .card: "creditcard.fill"
-        case .expiry: "calendar.badge.exclamationmark"
-        case .status: "timer"
-        case .buttons: "square.grid.2x2.fill"
-        case .inCab: "box.truck.fill"
-        case .warnings: "exclamationmark.triangle.fill"
-        case .earnings: "sterlingsign.circle.fill"
-        case .nightOut: "bed.double.fill"
-        case .job: "shippingbox.fill"
-        case .vehicle: "arrow.up.and.down"
-        case .mileage: "road.lanes"
-        }
-    }
-}
-
-extension AppSettings {
-    /// Visible Today modules in order (new modules are added at the end).
-    var todayModules: [TodayModule] {
-        var order = todayOrder.compactMap(TodayModule.init(rawValue:))
-        for m in TodayModule.allCases where !order.contains(m) { order.append(m) }
-        return order.filter { !todayHidden.contains($0.rawValue) }
     }
 }

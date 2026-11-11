@@ -2,10 +2,10 @@ import SwiftUI
 import SwiftData
 
 /// All activity tracking in one place, kept separately from planning:
-/// each day's activities and events, shifts, the full event log, and every change made to the records.
+/// each day's activities and events (shifts are in Jobs → Planner), the full event log, and every change made to the records.
 struct DriverLogView: View {
     enum Section: String, CaseIterable, Identifiable {
-        case days = "Days", shifts = "Shifts", events = "Events", changes = "Changes"
+        case days = "Days", events = "Events", changes = "Changes"
         var id: String { rawValue }
     }
 
@@ -23,7 +23,6 @@ struct DriverLogView: View {
                 .padding(.vertical, 6)
                 switch section {
                 case .days: DriverDayView()
-                case .shifts: HistoryView(embedded: true)
                 case .events: EventLogView(day: nil, kinds: nil)
                 case .changes: EventLogView(day: nil, kinds: [.correction])
                 }

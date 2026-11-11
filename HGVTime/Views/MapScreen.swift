@@ -61,10 +61,18 @@ struct MapScreen: View {
                     MapPolyline(r.polyline).stroke(.indigo.opacity(0.7), style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [8, 6]))
                 }
             }
+            if let plan, let lat = plan.startLatitude, let lon = plan.startLongitude {
+                Annotation("Start: \(plan.startLocation.isEmpty ? plan.startPostcode : plan.startLocation)",
+                           coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
+                    Image(systemName: "flag.fill").font(.caption.weight(.bold)).foregroundStyle(.white)
+                        .frame(width: 30, height: 30).background(Color.green, in: Circle())
+                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                }
+            }
             ForEach(planStops, id: \.stop.id) { item in
                 Annotation("\(item.index + 1). \(item.stop.displayName)", coordinate: item.coordinate) {
                     ZStack {
-                        Circle().fill(item.stop.departedAt != nil ? Color.gray : (item.stop.kind == .collection ? Color.orange : .indigo)).frame(width: 30, height: 30)
+                        Circle().fill(item.stop.departedAt != nil ? Color.gray : item.stop.kind.color).frame(width: 30, height: 30)
                         Text("\(item.index + 1)").font(.caption.weight(.bold)).foregroundStyle(.white)
                     }
                     .overlay(Circle().stroke(.white, lineWidth: 2))
@@ -183,7 +191,18 @@ struct MapScreen: View {
             }
         }
         if changed { plan.stops = stops }
-        let coords = stops.compactMap { s in s.latitude.map { CLLocationCoordinate2D(latitude: $0, longitude: s.longitude ?? 0) } }
+        // Start location / depot: geocode once from the postcode or address.
+        if plan.startLatitude == nil, !plan.startLocation.isEmpty || !plan.startPostcode.isEmpty {
+            let text = [plan.startLocation, plan.startPostcode].filter { !$0.isEmpty }.joined(separator: ", ")
+            if let c = try? await CLGeocoder().geocodeAddressString(text).first?.location?.coordinate {
+                plan.startLatitude = c.latitude
+                plan.startLongitude = c.longitude
+            }
+        }
+        var coords = stops.compactMap { s in s.latitude.map { CLLocationCoordinate2D(latitude: $0, longitude: s.longitude ?? 0) } }
+        if let lat = plan.startLatitude, let lon = plan.startLongitude {
+            coords.insert(CLLocationCoordinate2D(latitude: lat, longitude: lon), at: 0)
+        }
         guard coords.count >= 2 else { return }
         var routes: [MKRoute] = []
         for (a, b) in zip(coords, coords.dropFirst()) {

@@ -33,7 +33,12 @@ struct EarningsView: View {
                 HStack {
                     Button { offset -= 1 } label: { Image(systemName: "chevron.left") }
                     Spacer()
-                    Text(title(e)).font(.headline)
+                    VStack(spacing: 1) {
+                        Text(title(e)).font(.headline)
+                        if period == .week {
+                            Text(weekRange(e.start)).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                        }
+                    }
                     Spacer()
                     Button { offset += 1 } label: { Image(systemName: "chevron.right") }
                         .disabled(offset >= 0)
@@ -112,9 +117,16 @@ struct EarningsView: View {
         .navigationTitle("Earnings")
     }
 
+    /// "Mon 9 Nov – Sun 15 Nov 2026"
+    private func weekRange(_ start: Date) -> String {
+        let end = Calendar.hgv.date(byAdding: .day, value: 6, to: start) ?? start
+        let f = Date.FormatStyle.dateTime.weekday(.abbreviated).day().month(.abbreviated)
+        return "\(start.formatted(f)) – \(end.formatted(f.year()))"
+    }
+
     private func title(_ e: PeriodEarnings) -> String {
         switch e.period {
-        case .week: "w/c \(Fmt.day(e.start))"
+        case .week: "Week \(Calendar.hgv.component(.weekOfYear, from: e.start))"
         case .month: e.start.formatted(.dateTime.month(.wide).year())
         case .year: e.start.formatted(.dateTime.year())
         }
