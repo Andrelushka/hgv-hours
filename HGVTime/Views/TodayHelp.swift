@@ -8,22 +8,31 @@ enum TodayHelp {
         let tenLeft = max(0, Limits.maxExtensionsPerWeek - s.extensionsUsed)
         switch kind {
         case .drive:
-            let canDrive = s.breakRemaining > 0 ? 0 : s.driveAvailableNow
+            let canDrive = s.driveAvailableNow
             var lines: [String] = []
             if s.breakRemaining > 0 {
-                lines.append("You still need \(Fmt.hm(s.breakRemaining)) of break before driving again. Driving now is an infringement.")
+                // Stopping a break early is allowed; it just doesn't reset the 4h30.
+                if s.continuousDrivingRemaining <= 0 {
+                    lines.append("Your break isn't finished (\(Fmt.hm(s.breakRemaining)) to go) and you've used your 4h30 — you can't drive yet without an infringement.")
+                } else {
+                    let firstPart = s.currentRestLength >= Limits.splitBreakFirst - 1 && !s.splitFirstPartTaken
+                    lines.append(firstPart
+                        ? "Break stopped after \(Fmt.hm(s.currentRestLength)): it counts as the 15 min first part of a split break. Your next break only needs 30 min."
+                        : "Break stopped early (\(Fmt.hm(s.currentRestLength))), so it doesn't reset your 4h30. That's allowed — just take the full break before the 4h30 runs out.")
+                    lines.append("You can drive \(Fmt.hm(canDrive)) before a break — until about \(Fmt.time(now.addingTimeInterval(canDrive))).")
+                }
             } else {
-                lines.append("You can drive \(Fmt.hm(canDrive)) — until about \(Fmt.time(now.addingTimeInterval(canDrive))).")
+                lines.append("You can drive \(Fmt.hm(canDrive)) before your next break — until about \(Fmt.time(now.addingTimeInterval(canDrive))).")
                 if let plan = Deadlines.breakPlan(s, applyWorkingTime: settings.applyWorkingTime) {
                     lines.append("Next break: \(Fmt.hm(plan.recommended)) by \(Fmt.time(now.addingTimeInterval(plan.dueBy.timeIntervalSince(s.now)))) (\(plan.reason) rule).")
                 } else {
                     lines.append("Then take a 45 min break (or 15 min + 30 min, in that order).")
                 }
-                if canDrive < s.driveAvailableBeforeWorkingTime - 1 {
-                    lines.append("Limited by working time: driving counts as work, and you can't work more than 6h without a break.")
-                }
             }
-            lines.append("Today: \(Fmt.hm(s.stats.euDriving)) of \(Fmt.hm(s.dailyDrivingLimit)) driven. 10h days left this week: \(tenLeft) of 2.")
+            if settings.applyWorkingTime && s.wtdWorkBeforeBreak < s.continuousDrivingRemaining && s.continuousDrivingRemaining > 0 {
+                lines.append("Working time comes first: driving counts as work, and you can't work more than 6h without a break (\(Fmt.hm(s.wtdWorkBeforeBreak)) left).")
+            }
+            lines.append("Driving left today: \(Fmt.hm(s.drivingLeftToday)) (\(Fmt.hm(s.stats.euDriving)) of \(Fmt.hm(s.dailyDrivingLimit)) driven). 10h days left this week: \(tenLeft) of 2.")
             return HelpMessage(symbol: "steeringwheel", color: .blue, title: "Driving", lines: lines)
 
         case .otherWork:
@@ -43,17 +52,19 @@ enum TodayHelp {
 
         case .rest:
             var lines: [String] = []
-            let need = s.breakNeeded > 0 ? s.breakNeeded : Limits.fullBreak
-            if need == Limits.splitBreakSecond {
-                lines.append("You've had 15 min — take at least 30 min now to complete your break. Finish after \(Fmt.time(now.addingTimeInterval(Limits.splitBreakSecond))).")
+            if s.stats.continuousDriving <= 0 {
+                lines.append("No driving since your last full break, so this break isn't needed for the 4h30 rule — you have a fresh 4h30.")
+            } else if s.splitFirstPartTaken {
+                lines.append("SPLIT BREAK, part 2: you've already had 15 min. Take at least 30 min — done at \(Fmt.time(now.addingTimeInterval(Limits.splitBreakSecond))) — and your 4h30 resets.")
+                lines.append("Shorter is allowed, but then the 4h30 doesn't reset: you'll still need the 30 min before \(Fmt.hm(s.continuousDrivingRemaining)) more driving.")
             } else {
-                lines.append("A full break is 45 min — finish after \(Fmt.time(now.addingTimeInterval(Limits.fullBreak))).")
-                lines.append("Or split it: at least 15 min now, then at least 30 min later.")
+                lines.append("FULL BREAK: 45 min — done at \(Fmt.time(now.addingTimeInterval(Limits.fullBreak))). Resets your 4h30.")
+                lines.append("SPLIT BREAK: stop after at least 15 min (\(Fmt.time(now.addingTimeInterval(Limits.splitBreakFirst)))) and this counts as part 1. Then take 30 min later, before \(Fmt.hm(s.continuousDrivingRemaining)) more driving.")
+                lines.append("Under 15 min doesn't count as a break.")
             }
             if settings.applyWorkingTime && s.wtdBreakNeededToday > 0 {
-                lines.append("Working time: you still need \(Fmt.hm(s.wtdBreakNeededToday)) of breaks today.")
+                lines.append("Working time: you still need \(Fmt.hm(s.wtdBreakNeededToday)) of breaks today (in pieces of 15 min or more).")
             }
-            lines.append("After a full break you get a fresh 4h30 of driving.")
             return HelpMessage(symbol: "cup.and.saucer.fill", color: .green, title: "Break", lines: lines)
         }
     }
@@ -127,8 +138,13 @@ enum TodayHelp {
             }
             return nil
         case .rest:
-            if s.breakRemaining > 0 {
-                return "Break done at \(Fmt.time(now.addingTimeInterval(s.breakRemaining))) (\(Fmt.hm(s.breakRemaining)) to go)"
+            if let reset = s.breakResetAt, reset > now {
+                if let split = s.breakSplitPartAt, split > now {
+                    return "Split part 1 at \(Fmt.time(split)) · full 45 min break at \(Fmt.time(reset))"
+                }
+                return s.splitFirstPartTaken
+                    ? "Split break: 30 min done at \(Fmt.time(reset)) (\(Fmt.hm(reset.timeIntervalSince(now))) to go)"
+                    : "15 min part done — stop now (30 min needed later) or carry on to \(Fmt.time(reset)) for a full reset"
             }
             return "Break complete — 4h30 driving available"
         case .availability:

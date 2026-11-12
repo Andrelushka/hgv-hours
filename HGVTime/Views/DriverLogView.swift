@@ -113,7 +113,7 @@ struct DriverDayView: View {
                 Text("Activities")
             }
             Section {
-                SpeedEventsSection(from: day, to: end)
+                // One list: overspeed is logged here too, so the separate overspeed box isn't repeated.
                 ForEach(dayEvents.reversed()) { e in
                     HStack(spacing: 10) {
                         EventPin(event: e)

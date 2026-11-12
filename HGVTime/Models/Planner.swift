@@ -101,8 +101,8 @@ final class Vehicle {
     /// e.g. "4.95 m high · 16.5 m long · 44 t"
     var specsLine: String {
         var parts: [String] = []
-        if height > 0 { parts.append(String(format: "%.2f m (%@) high", height, Fmt.feetInches(height))) }
-        if length > 0 { parts.append(String(format: "%.1f m (%@) long", length, Fmt.feetInches(length))) }
+        if height > 0 { parts.append("\(Fmt.length(height)) high") }
+        if length > 0 { parts.append("\(Fmt.length(length)) long") }
         if weight > 0 { parts.append(String(format: "%g t", weight)) }
         if kind != .trailer { parts.append(fuel.title) }
         if !body.isEmpty { parts.append(body) }
@@ -207,6 +207,41 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var departedAt: Date?
     var latitude: Double?
     var longitude: Double?
+    /// What happened at this stop when it didn't go to plan (nil = normal).
+    var outcomeRaw: String?
+    var outcomeReason: String?
+    var outcomeAt: Date?
+
+    enum Outcome: String, CaseIterable, Identifiable {
+        case cancelled, failed, rejected
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .cancelled: "Cancelled"
+            case .failed: "Failed"
+            case .rejected: "Rejected"
+            }
+        }
+        var detail: String {
+            switch self {
+            case .cancelled: "Customer or office cancelled the stop"
+            case .failed: "Couldn't deliver or collect (closed, no access, no booking…)"
+            case .rejected: "Goods refused or load rejected"
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .cancelled: "xmark.octagon.fill"
+            case .failed: "exclamationmark.triangle.fill"
+            case .rejected: "hand.raised.fill"
+            }
+        }
+    }
+
+    var outcome: Outcome? {
+        get { outcomeRaw.flatMap(Outcome.init(rawValue:)) }
+        set { outcomeRaw = newValue?.rawValue; outcomeAt = newValue == nil ? nil : .now; if newValue == nil { outcomeReason = nil } }
+    }
 }
 
 /// A custom "label: value" line.
@@ -252,6 +287,13 @@ final class WorkPlan {
     var leaveOverride: Date?
     /// No wake-up alarm or leave reminder for this job.
     var alarmsOff: Bool = false
+    /// Where the job finishes: "same" (back to the start), "different" (the end fields below) or "unknown" (tramping / trunking).
+    var endModeRaw: String = "same"
+    var endName: String = ""
+    var endLocation: String = ""
+    var endPostcode: String = ""
+    var endLatitude: Double?
+    var endLongitude: Double?
 
     init(start: Date, end: Date) {
         self.plannedStart = start
@@ -269,6 +311,34 @@ final class WorkPlan {
     }
 
     var length: TimeInterval { plannedEnd.timeIntervalSince(plannedStart) }
+
+    enum EndMode: String, CaseIterable, Identifiable {
+        case same, different, unknown
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .same: "Same as start"
+            case .different: "Somewhere else"
+            case .unknown: "Not known yet"
+            }
+        }
+    }
+
+    var endMode: EndMode {
+        get { EndMode(rawValue: endModeRaw) ?? .same }
+        set { endModeRaw = newValue.rawValue }
+    }
+
+    /// "Back to start", the end place, or "Unknown".
+    var endText: String {
+        switch endMode {
+        case .same: return "Back to start"
+        case .unknown: return "Not known yet"
+        case .different:
+            let t = [endName, endLocation, endPostcode].filter { !$0.isEmpty }.joined(separator: ", ")
+            return t.isEmpty ? "Somewhere else" : t
+        }
+    }
 }
 
 // MARK: Notebook

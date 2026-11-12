@@ -272,7 +272,7 @@ struct TodayView: View {
                         Text("since").font(.caption).foregroundStyle(.secondary)
                         if let open = openEntry {
                             // Tap the time to correct it straight away.
-                            DatePicker("Start time", selection: Binding(
+                            NowDatePicker("Start time", selection: Binding(
                                 get: { open.start },
                                 set: { ActivityController.adjustStart(of: open, to: $0, context: context, settings: store.settings) }),
                                        in: (Date.now.addingTimeInterval(-24 * 3600))...Date.now,
@@ -585,6 +585,8 @@ struct TodayView: View {
                            displayedComponents: [.date, .hourAndMinute])
                     .datePickerStyle(.wheel)
                     .labelsHidden()
+                Button("Now") { pickedTime = .now }
+                    .buttonStyle(.bordered)
                 Text("The activity before it is shortened or lengthened to match.")
                     .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 Spacer()

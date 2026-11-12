@@ -66,12 +66,12 @@ struct EntryEditor: View {
                     }
                 }
                 Section {
-                    DatePicker("Start", selection: $start, in: ...Date.now)
+                    NowDatePicker("Start", selection: $start, in: ...Date.now)
                     if entry != nil && entry?.end == nil {
                         Toggle("Still in progress", isOn: $isOpen)
                     }
                     if !isOpen {
-                        DatePicker("End", selection: $end, in: start...)
+                        NowDatePicker("End", selection: $end, in: start...)
                         LabeledContent("Duration", value: Fmt.hm(end.timeIntervalSince(start)))
                     }
                 } header: {

@@ -40,12 +40,28 @@ enum Fmt {
 }
 
 extension Fmt {
-    /// "4.95 m (16′ 3″)" or "4.95 m".
-    static func length(_ metres: Double, feet: Bool) -> String {
+    /// Unit choices from Settings → Units (set when settings load or change).
+    nonisolated(unsafe) static var heightUnit = "m+ft"
+    nonisolated(unsafe) static var distanceBoth = false
+
+    static func applyUnits(_ s: AppSettings) {
+        heightUnit = s.heightUnit
+        distanceBoth = s.distanceBoth
+    }
+
+    /// A height or length in the units chosen in Settings: "4.95 m (16′ 3″)", "16′ 3″ (4.95 m)", "4.95 m" or "16′ 3″".
+    /// `feet: false` forces metres only.
+    static func length(_ metres: Double, feet: Bool = true) -> String {
         guard metres > 0 else { return "—" }
         let m = String(format: "%.2f m", metres)
         guard feet else { return m }
-        return "\(m) (\(feetInches(metres)))"
+        let ft = feetInches(metres)
+        switch heightUnit {
+        case "m": return m
+        case "ft": return ft
+        case "ft+m": return "\(ft) (\(m))"
+        default: return "\(m) (\(ft))"
+        }
     }
 
     /// 16′ 3″
@@ -56,9 +72,12 @@ extension Fmt {
 
     /// Distance in km or miles.
     static func distance(_ km: Double, miles: Bool) -> String {
-        miles ? String(format: "%.0f mi", km / 1.609344) : String(format: "%.0f km", km)
+        let mi = String(format: "%.0f mi", km / 1.609344), k = String(format: "%.0f km", km)
+        guard distanceBoth else { return miles ? mi : k }
+        return miles ? "\(mi) (\(k))" : "\(k) (\(mi))"
     }
 
+    /// Odometer readings stay in one unit (they're what the dashboard shows).
     static func odometer(_ km: Double, miles: Bool) -> String {
         guard km > 0 else { return "—" }
         return miles ? String(format: "%.0f mi", km / 1.609344) : String(format: "%.0f km", km)

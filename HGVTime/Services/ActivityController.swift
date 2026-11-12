@@ -318,6 +318,7 @@ enum ActivityController {
     }
 
     static func refreshSideEffects(context: ModelContext, settings: AppSettings) {
+        Fmt.applyUnits(settings)
         let now = Date()
         let snaps = recentSnapshots(context: context, settings: settings, now: now)
         let status = RulesEngine.status(snaps, now: now, config: settings.ruleConfig)

@@ -188,7 +188,7 @@ struct CalendarHistoryView: View {
                     Image(systemName: "ellipsis.circle").font(.title3)
                 }
             }
-            ForEach(plans.filter { cal.isDate($0.plannedStart, inSameDayAs: selectedDay) }) { plan in
+            ForEach(plans.filter { cal.isDate($0.plannedStart, inSameDayAs: selectedDay) }.reversed()) { plan in
                 PlanCard(plan: plan)
                     .onTapGesture { editingPlan = plan }
                     .contextMenu {
@@ -209,7 +209,7 @@ struct CalendarHistoryView: View {
             if BankHolidays.isBankHoliday(selectedDay) {
                 Label("Bank holiday", systemImage: "flag.fill").font(.subheadline).foregroundStyle(.red)
             }
-            ForEach(dayItems) { item in
+            ForEach(dayItems.reversed()) { item in
                 HStack {
                     Label(item.kind == .holiday ? "Holiday (\(String(format: "%.1f", item.hours)) h paid)" : (item.title.isEmpty ? "Bonus" : item.title),
                           systemImage: item.kind.symbol)
@@ -251,7 +251,7 @@ struct CalendarHistoryView: View {
                         if totals.weeklyRest > 0 { MiniStat(title: "Weekly rest", value: Fmt.hm(totals.weeklyRest), tint: RestType.weekly.color) }
                     }
                 }
-                ForEach(shifts) { shift in
+                ForEach(shifts.reversed()) { shift in
                     NavigationLink {
                         ShiftDetailView(shiftStart: shift.period.start)
                     } label: {
@@ -268,7 +268,7 @@ struct CalendarHistoryView: View {
                     .buttonStyle(.plain)
                 }
                 Divider()
-                ForEach(dayEntries) { entry in
+                ForEach(dayEntries.reversed()) { entry in
                     HStack(spacing: 8) {
                         Button { editing = entry } label: { EntryRow(entry: entry) }
                             .buttonStyle(.plain)
@@ -308,7 +308,7 @@ extension CalendarHistoryView {
             if shifts.isEmpty {
                 Text("No shift on \(Fmt.day(selectedDay)).").font(.subheadline).foregroundStyle(.secondary)
             }
-            ForEach(shifts) { shift in
+            ForEach(shifts.reversed()) { shift in
                 NavigationLink {
                     ShiftDetailView(shiftStart: shift.period.start)
                 } label: {

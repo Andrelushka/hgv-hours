@@ -2,6 +2,22 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.8.0 — Hours fixes, navigation voice fixes, stop outcomes
+- Fixed: "Driving left" showed 0 during a break. It now shows the driving you have left today (9h/10h, weekly and GB limits); when the next break is due is shown underneath and on the "Break due" tile.
+- Fixed: "Driving left" and "Working left" were often identical, because both were capped by the 6h working-time clock. "Working left" now means working time left in the shift (until your daily rest must start, the 60h week, night and GB duty limits), with the 6h break shown underneath.
+- Fixed: pressing Drive during a break said it was "an infringement". Stopping a break early is allowed — it just doesn't reset the 4h30. The message now says so, and a break of 15 min or more counts as the first part of a split break.
+- Break guidance: when you press Break you see both options with clock times — full 45 min (done at …) or split (15 min part done at …, then 30 min later). After a 15, further short breaks don't reset; the next 30 min does.
+- Fixed navigation voice: instructions were repeated after every 3-minute traffic check and reroute, and could play late (a queued "turn left" heard when the next turn was right). Prompts are now said once per junction, a new one cuts off an old one, and your position is tracked along the road for correct turn timing. Earlier warnings on fast roads.
+- Fixed turn arrows picking the wrong side from road names (e.g. "Turn right onto Leftwich Road").
+- Mute button for navigation directions; the same spoken alert is no longer repeated within 90 s anywhere in the app.
+- Navigation tracks your position far more efficiently (no longer scans the whole route on every GPS update).
+- Jobs: end location — same as start, somewhere else, or not known yet (for trunking/tramping).
+- Stops: mark a single stop cancelled, failed or rejected (with a reason) from ⋯ on Today's job; shown in the plan and debrief. Cancelling the whole job moved into the job editor.
+- Newest first in the driver log, events, calendar day, vehicles and overspeed lists; the driver log day shows one combined events list instead of two.
+- Settings → Units: miles or km, feet or metres, or both.
+- "Now" button next to start, end and other time pickers.
+- 5 new tests (88 in total).
+
 ## 3.7.0 — Reset & erase, new assistant look
 - Settings → Reset & erase replaces the old "Erase all activity data" button. Quick choices: factory reset (erase everything and go back to all defaults, as if newly installed), reset all settings but keep your records, or erase all records but keep your settings.
 - Or choose exactly what to do. Records to erase: driver log, jobs and debriefs, earnings extras and nights out, vehicles/mileage/fuel, notes, reminders, event log/speed/routes, assistant keys and AI models (each shows how many items it holds). Settings to reset: driver profile and home, pay, country and hours rules, alerts/voice/alarm, in-cab and navigation, layout and units, assistant, app lock, everything else.

@@ -5,7 +5,7 @@ import SwiftData
 struct VehiclesView: View {
     @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
-    @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
+    @Query(sort: \Vehicle.createdAt, order: .reverse) private var vehicles: [Vehicle]
     @State private var editing: Vehicle?
     @State private var adding: VehicleKind?
     @State private var scanning = false

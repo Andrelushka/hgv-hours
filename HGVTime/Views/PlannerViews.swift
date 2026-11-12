@@ -24,6 +24,14 @@ struct PlanEditor: View {
     @State private var startName: String
     @State private var startLatitude: Double?
     @State private var startLongitude: Double?
+    @State private var endMode: WorkPlan.EndMode
+    @State private var endName: String
+    @State private var endLocation: String
+    @State private var endPostcode: String
+    @State private var endLatitude: Double?
+    @State private var endLongitude: Double?
+    @State private var cancelled: Bool
+    @State private var cancelReason: String
     @State private var editingLine: PlanLine?
     @State private var stops: [PlanStop]
     @State private var load: String
@@ -57,6 +65,14 @@ struct PlanEditor: View {
         _startName = State(initialValue: plan?.startName ?? "")
         _startLatitude = State(initialValue: plan?.startLatitude)
         _startLongitude = State(initialValue: plan?.startLongitude)
+        _endMode = State(initialValue: plan?.endMode ?? .same)
+        _endName = State(initialValue: plan?.endName ?? "")
+        _endLocation = State(initialValue: plan?.endLocation ?? "")
+        _endPostcode = State(initialValue: plan?.endPostcode ?? "")
+        _endLatitude = State(initialValue: plan?.endLatitude)
+        _endLongitude = State(initialValue: plan?.endLongitude)
+        _cancelled = State(initialValue: plan?.cancelled ?? false)
+        _cancelReason = State(initialValue: plan?.cancelReason ?? "")
         _stops = State(initialValue: plan?.stops ?? [])
         _load = State(initialValue: plan?.load ?? "")
         _pallets = State(initialValue: plan?.pallets ?? "")
@@ -72,8 +88,8 @@ struct PlanEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    DatePicker("Start", selection: $start)
-                    DatePicker("Finish", selection: $end, in: start...)
+                    NowDatePicker("Start", selection: $start)
+                    NowDatePicker("Finish", selection: $end, in: start...)
                     LabeledContent("Shift length", value: Fmt.hm(end.timeIntervalSince(start)))
                 } header: {
                     Text("When")
@@ -116,6 +132,24 @@ struct PlanEditor: View {
                     Text("Start location")
                 } footer: {
                     Text("Search the depot postcode and pick the address, type it, or pinpoint it on the map. The route on the map starts here.")
+                }
+
+                Section {
+                    Picker("Finish", selection: $endMode) {
+                        ForEach(WorkPlan.EndMode.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    if endMode == .different {
+                        AddressLookupFields(address: $endLocation, postcode: $endPostcode,
+                                            latitude: $endLatitude, longitude: $endLongitude,
+                                            name: $endName, addressLabel: "End location")
+                    }
+                } header: {
+                    Text("End location")
+                } footer: {
+                    Text(endMode == .unknown
+                         ? "For trunking and tramping when you don't know yet where you'll finish. You can set it later."
+                         : endMode == .same ? "The job finishes back at the start location." : "Where the job finishes (e.g. a different depot or the parking for the night).")
                 }
 
                 Section {
@@ -222,6 +256,14 @@ struct PlanEditor: View {
 
                 if plan != nil {
                     Section {
+                        Toggle("Whole job cancelled", isOn: $cancelled.animation())
+                        if cancelled {
+                            TextField("Reason (optional)", text: $cancelReason)
+                        }
+                    } footer: {
+                        Text("To cancel a single drop or collection, use ⋯ on that stop in Today's job.")
+                    }
+                    Section {
                         Button("Delete plan", role: .destructive) { confirmDelete = true }
                     }
                 }
@@ -268,7 +310,13 @@ struct PlanEditor: View {
         startName = p.startName
         startLatitude = p.startLatitude
         startLongitude = p.startLongitude
-        stops = p.stops.map { var s = $0; s.id = UUID(); return s }
+        endMode = p.endMode
+        endName = p.endName
+        endLocation = p.endLocation
+        endPostcode = p.endPostcode
+        endLatitude = p.endLatitude
+        endLongitude = p.endLongitude
+        stops = p.stops.map { var s = $0; s.id = UUID(); s.arrivedAt = nil; s.departedAt = nil; s.outcomeRaw = nil; s.outcomeReason = nil; s.outcomeAt = nil; return s }
         load = p.load
         pallets = p.pallets
         reference = p.reference
@@ -300,6 +348,20 @@ struct PlanEditor: View {
         p.startName = startName
         p.startLatitude = startLatitude
         p.startLongitude = startLongitude
+        p.endMode = endMode
+        p.endName = endName
+        p.endLocation = endLocation
+        p.endPostcode = endPostcode
+        p.endLatitude = endLatitude
+        p.endLongitude = endLongitude
+        if plan != nil && cancelled != p.cancelled {
+            p.cancelled = cancelled
+            p.cancelledAt = cancelled ? .now : nil
+            EventRecorder.log(.note, title: cancelled ? "Job cancelled" : "Job restored",
+                              detail: [company, reference].filter { !$0.isEmpty }.joined(separator: " · "),
+                              context: context, settings: store.settings)
+        }
+        p.cancelReason = cancelled ? cancelReason.trimmingCharacters(in: .whitespaces) : ""
         p.stops = stops
         p.load = load
         p.pallets = pallets
@@ -409,11 +471,16 @@ struct PlanCard: View {
             let startText = [plan.startName, AddressParts.join(flat: plan.startFlat, houseName: plan.startHouseName, houseNumber: plan.startHouseNumber,
                                                                 street: plan.startLocation, postcode: plan.startPostcode)].filter { !$0.isEmpty }.joined(separator: ", ")
             if !startText.isEmpty { Label("Start: \(startText)", systemImage: "flag.fill").font(.caption) }
+            if plan.endMode != .same || !startText.isEmpty {
+                Label("Finish: \(plan.endText)", systemImage: plan.endMode == .unknown ? "questionmark.circle" : "flag.checkered")
+                    .font(.caption).foregroundStyle(plan.endMode == .unknown ? .orange : .primary)
+            }
             ForEach(showStops ? plan.stops : []) { stop in
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
                     VStack(alignment: .leading, spacing: 1) {
-                        Text([stop.bookingText, stop.kind == .other ? stop.kindTitle : "", stop.displayName].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption.weight(.semibold))
+                        Text([stop.bookingText, stop.kind == .other ? stop.kindTitle : "", stop.displayName,
+                              stop.outcome.map { $0.title.uppercased() } ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption.weight(.semibold))
                         let extra = [stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
                                      (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                                      stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.notes]

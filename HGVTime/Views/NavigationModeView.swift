@@ -101,6 +101,16 @@ struct NavigationModeView: View {
                             }
                             .accessibilityLabel("Re-centre")
                         }
+                        Button {
+                            store.settings.navVoiceOn.toggle()
+                            engine.voiceOn = store.settings.navVoiceOn
+                            if !engine.voiceOn { VoiceService.shared.stopSpeaking() }
+                        } label: {
+                            Image(systemName: store.settings.navVoiceOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                                .font(.title3).frame(width: 44, height: 44)
+                                .background(.regularMaterial, in: Circle())
+                        }
+                        .accessibilityLabel(store.settings.navVoiceOn ? "Mute directions" : "Unmute directions")
                         Button { showingSteps = true } label: {
                             Image(systemName: "list.bullet").font(.title3).frame(width: 44, height: 44)
                                 .background(.regularMaterial, in: Circle())
@@ -136,6 +146,7 @@ struct NavigationModeView: View {
         .onAppear {
             engine.driveLeft = { driveLeftNow() }
             engine.limiterKmh = limiterKmh
+            engine.voiceOn = store.settings.navVoiceOn
             if let c = target.coordinate {
                 engine.start(to: c, name: target.name)
             } else {
@@ -150,19 +161,17 @@ struct NavigationModeView: View {
 
     private var instructionBanner: some View {
         HStack(spacing: 12) {
-            let nextText = engine.route.flatMap { r in engine.stepIndex + 1 < r.steps.count ? r.steps[engine.stepIndex + 1].instructions : nil }
-                ?? engine.currentStep?.instructions ?? ""
+            let nextText = engine.nextInstruction
             Image(systemName: Self.maneuverSymbol(nextText)).font(.system(size: 40, weight: .bold)).foregroundStyle(.white)
                 .frame(width: 52)
             VStack(alignment: .leading, spacing: 2) {
                 if let d = engine.distanceToNextManeuver {
                     Text(NavigationEngine.distanceText(d)).font(.title2.weight(.bold)).foregroundStyle(.white)
                 }
-                let next = engine.route.flatMap { r in engine.stepIndex + 1 < r.steps.count ? r.steps[engine.stepIndex + 1].instructions : nil }
-                if let n = next.flatMap(RoadSpeedLimit.roadNumber) {
+                if let n = RoadSpeedLimit.roadNumber(in: nextText) {
                     RoadShield(text: n, large: true)
                 }
-                Text(next ?? engine.currentStep?.instructions ?? engine.status)
+                Text(nextText.isEmpty ? engine.status : nextText)
                     .font(.headline).foregroundStyle(.white).lineLimit(2)
             }
             Spacer()
@@ -324,17 +333,29 @@ struct NavigationModeView: View {
     }
 
     /// Arrow for a spoken instruction.
+    /// Arrow for an instruction. Only the manoeuvre part is read ("Turn right onto Leftwich Road" → right),
+    /// and only whole words count, so road names can't flip the arrow.
     static func maneuverSymbol(_ text: String) -> String {
         let t = text.lowercased()
         if t.contains("arrive") || t.contains("destination") { return "flag.checkered" }
-        if t.contains("roundabout") { return "arrow.triangle.turn.up.right.circle.fill" }
-        if t.contains("u-turn") || t.contains("make a u") { return "arrow.uturn.down" }
-        if t.contains("exit") || t.contains("slip") { return t.contains("left") ? "arrow.up.left" : "arrow.up.right" }
-        if t.contains("keep left") || t.contains("bear left") || t.contains("slight left") { return "arrow.up.left" }
-        if t.contains("keep right") || t.contains("bear right") || t.contains("slight right") { return "arrow.up.right" }
-        if t.contains("left") { return "arrow.turn.up.left" }
-        if t.contains("right") { return "arrow.turn.up.right" }
-        if t.contains("merge") { return "arrow.merge" }
+        var action = t
+        for cut in [" onto ", " toward ", " towards ", " to stay on ", " on to ", " for "] {
+            if let r = action.range(of: cut) { action = String(action[..<r.lowerBound]) }
+        }
+        func has(_ w: String) -> Bool { action.range(of: "\\b\(w)\\b", options: .regularExpression) != nil }
+        let left = has("left"), right = has("right")
+        let side: String? = left && !right ? "left" : right && !left ? "right" : nil
+        if has("roundabout") {
+            if has("1st") || has("first") { return "arrow.triangle.turn.up.right.circle.fill" }
+            return "arrow.triangle.turn.up.right.circle.fill"
+        }
+        if has("u-turn") || action.contains("make a u") { return "arrow.uturn.down" }
+        if has("merge") { return "arrow.merge" }
+        if has("exit") || has("slip") || has("keep") || has("bear") || has("slight") || has("fork") {
+            return side == "left" ? "arrow.up.left" : side == "right" ? "arrow.up.right" : "arrow.up"
+        }
+        if side == "left" { return has("sharp") ? "arrow.turn.left.down" : "arrow.turn.up.left" }
+        if side == "right" { return has("sharp") ? "arrow.turn.right.down" : "arrow.turn.up.right" }
         return "arrow.up"
     }
 

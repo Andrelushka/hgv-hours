@@ -141,6 +141,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.todayOrder = d.todayOrder; s.todayHidden = d.todayHidden
             s.hoursOrder = d.hoursOrder; s.hoursHidden = d.hoursHidden
             s.dateStyle = d.dateStyle; s.useMiles = d.useMiles; s.showFeet = d.showFeet
+            s.distanceBoth = d.distanceBoth; s.heightUnit = d.heightUnit
         case .assistant:
             s.assistantUseClaude = d.assistantUseClaude; s.assistantUseLocal = d.assistantUseLocal
             s.assistantLocalModel = d.assistantLocalModel

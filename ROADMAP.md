@@ -59,6 +59,12 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.8 (3.8.0) — Hours and voice fixes, stop outcomes
+- ✅ Driving/working left fixed; split-break guidance; navigation voice repeats and late prompts fixed; mute
+- ✅ Job end location; stop cancelled/failed/rejected; newest first; units; Now buttons
+- ⬜ Next (3.9): report filters, loaded/empty, custom shift checklists, AI matching app design, alarm snooze, quiet during rest, leave alarm
+- ⬜ Next (3.10): Valhalla lorry routing with lanes, nav UI (speed sign, road, arrows, smooth marker), cameras and reports, Live Activity, larger widgets, map settings, Piper voices
+
 ## V3.7 (3.7.0) — Reset & erase, new assistant look
 - ✅ Factory reset and selective erase of records and settings
 - ✅ Futuristic assistant design

@@ -35,7 +35,21 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     @ObservationIgnored private let manager = CLLocationManager()
     @ObservationIgnored private var lastETACheck = Date.distantPast
     @ObservationIgnored private var baselineTravelTime: TimeInterval?
-    @ObservationIgnored private var spokenForStep: Set<String> = []
+    /// Prompts already spoken, keyed by the manoeuvre's position and text — kept across traffic re-checks
+    /// and reroutes, so the same "turn left" is never repeated.
+    @ObservationIgnored private var spoken: Set<String> = []
+    /// Route geometry cached for fast progress tracking.
+    @ObservationIgnored private var coords: [CLLocationCoordinate2D] = []
+    /// Distance along the route at each polyline point.
+    @ObservationIgnored private var cumulative: [CLLocationDistance] = []
+    /// Distance along the route at the end of each step.
+    @ObservationIgnored private var stepEnds: [CLLocationDistance] = []
+    /// Index of the polyline segment we're on (search starts here).
+    @ObservationIgnored private var segmentIndex = 0
+    /// Distance travelled along the route.
+    private(set) var progress: CLLocationDistance = 0
+    /// Navigation voice on/off (the speaker button).
+    var voiceOn = true
     @ObservationIgnored private var lastReroute = Date.distantPast
     @ObservationIgnored private var warnedAboutTime = false
 
@@ -44,9 +58,19 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         return route.steps[stepIndex]
     }
 
+    /// Along-the-road distance to the next manoeuvre (end of the current step).
     var distanceToNextManeuver: CLLocationDistance? {
-        guard let step = currentStep, let loc = location, let end = step.polyline.coordinates.last else { return nil }
-        return loc.distance(from: CLLocation(latitude: end.latitude, longitude: end.longitude))
+        guard route != nil, stepIndex < stepEnds.count else { return nil }
+        return max(0, stepEnds[stepIndex] - progress)
+    }
+
+    /// The next thing to do ("Turn left onto A45"): the instruction of the step that starts where this one ends.
+    var nextInstruction: String {
+        guard let route else { return "" }
+        if stepIndex + 1 < route.steps.count, !route.steps[stepIndex + 1].instructions.isEmpty {
+            return route.steps[stepIndex + 1].instructions
+        }
+        return stepIndex + 1 >= route.steps.count ? "Arrive at \(destinationName)" : (currentStep?.instructions ?? "")
     }
 
     func start(to coordinate: CLLocationCoordinate2D, name: String) {
@@ -54,6 +78,7 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         destinationName = name
         isRunning = true
         warnedAboutTime = false
+        spoken = []
         baselineTravelTime = nil
         parkingOptions = []
         notEnoughTime = false
@@ -63,7 +88,7 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         manager.requestWhenInUseAuthorization()
         manager.startUpdatingLocation()
         UIApplication.shared.isIdleTimerDisabled = true
-        VoiceService.shared.say("Starting navigation to \(name).", force: true)
+        say("Starting navigation to \(name).")
         Task { await calculate(announce: true) }
     }
 
@@ -90,28 +115,24 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
             return
         }
         let best = choose(response.routes)
-        route = best
+        setRoute(best)
         majorShare = Self.majorShare(best)
         travelTime = adjustedTime(best)
-        stepIndex = best.steps.first?.distance == 0 ? 1 : 0
-        spokenForStep = []
         remainingDistance = best.distance
         eta = Date.now.addingTimeInterval(travelTime)
         status = "\(Self.distanceText(best.distance)) · arrive \(Fmt.time(eta!))"
         if announce {
             var lines = ["Route found. \(Self.distanceText(best.distance)), arriving about \(Fmt.time(eta!))."]
             lines += best.advisoryNotices
-            VoiceService.shared.say(lines.joined(separator: " "), force: true)
+            say(lines.joined(separator: " "))
         }
         // Traffic: compare the new travel time with the first one.
         if let base = baselineTravelTime {
             let delay = travelTime - base
             if delay > 5 * 60 {
-                VoiceService.shared.say("Traffic ahead. About \(Int(delay / 60)) minutes of delay. New arrival time \(Fmt.time(eta!)).", force: true)
+                sayOnce("traffic-\(Int(delay / 600))", "Traffic ahead. About \(Int(delay / 60)) minutes of delay. New arrival time \(Fmt.time(eta!)).")
             }
-            if !best.advisoryNotices.isEmpty && announce == false {
-                VoiceService.shared.say(best.advisoryNotices.joined(separator: " "), force: true)
-            }
+            for notice in best.advisoryNotices where !announce { sayOnce("notice-\(notice)", notice) }
         }
         baselineTravelTime = travelTime
         await checkDrivingTime()
@@ -160,7 +181,7 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         if let first = parkingOptions.first {
             text += " Nearest place to stop within reach: \(first.name ?? "services"). Check it's suitable for your vehicle."
         }
-        VoiceService.shared.say(text, force: true)
+        say(text)
     }
 
     /// Services, truck stops and lorry parks near a point.
@@ -184,44 +205,128 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
 
     // MARK: Following the route
 
+    /// Caches the route's geometry: points, distance along the route at each point, and where each step ends.
+    private func setRoute(_ r: MKRoute) {
+        route = r
+        coords = r.polyline.coordinates
+        cumulative = [0]
+        cumulative.reserveCapacity(coords.count)
+        for i in 1..<max(1, coords.count) {
+            cumulative.append(cumulative[i - 1] + Self.metres(coords[i - 1], coords[i]))
+        }
+        // Step distances add up to the route length; scale to the polyline's own length so they line up.
+        let total = cumulative.last ?? r.distance
+        let stepSum = max(1, r.steps.reduce(0) { $0 + $1.distance })
+        var run: CLLocationDistance = 0
+        stepEnds = r.steps.map { run += $0.distance * total / stepSum; return run }
+        segmentIndex = 0
+        progress = 0
+        stepIndex = 0
+        if let loc = location { _ = locate(loc, fullSearch: true) }
+    }
+
+    /// Fast flat-earth distance (good to a few metres over short distances).
+    static func metres(_ a: CLLocationCoordinate2D, _ b: CLLocationCoordinate2D) -> CLLocationDistance {
+        let k = 111_320.0
+        let dx = (b.longitude - a.longitude) * k * cos((a.latitude + b.latitude) / 2 * .pi / 180)
+        let dy = (b.latitude - a.latitude) * k
+        return (dx * dx + dy * dy).squareRoot()
+    }
+
+    /// Snaps the location onto the route near where we last were. Returns the distance off the route (m).
+    private func locate(_ loc: CLLocation, fullSearch: Bool = false) -> CLLocationDistance {
+        guard coords.count > 1 else { return .infinity }
+        let p = loc.coordinate
+        let from = fullSearch ? 0 : max(0, segmentIndex - 10)
+        let to = fullSearch ? coords.count - 1 : min(coords.count - 1, segmentIndex + 400)
+        var best = (dist: CLLocationDistance.infinity, seg: segmentIndex, along: progress)
+        let k = 111_320.0, cosLat = cos(p.latitude * .pi / 180)
+        for i in from..<to {
+            let a = coords[i], b = coords[i + 1]
+            // Project p onto segment a→b in a local flat frame (metres).
+            let bx = (b.longitude - a.longitude) * k * cosLat, by = (b.latitude - a.latitude) * k
+            let px = (p.longitude - a.longitude) * k * cosLat, py = (p.latitude - a.latitude) * k
+            let len2 = bx * bx + by * by
+            let t = len2 > 0 ? max(0, min(1, (px * bx + py * by) / len2)) : 0
+            let dx = px - t * bx, dy = py - t * by
+            let d = (dx * dx + dy * dy).squareRoot()
+            if d < best.dist { best = (d, i, cumulative[i] + t * len2.squareRoot()) }
+        }
+        // Never jump backwards more than a little (GPS noise near junctions).
+        if best.dist < 80 && best.along >= progress - 30 {
+            segmentIndex = best.seg
+            progress = best.along
+            stepIndex = stepEnds.firstIndex { $0 > progress + 1 } ?? max(0, stepEnds.count - 1)
+        }
+        return best.dist
+    }
+
     private func update(with loc: CLLocation) {
         location = loc
-        guard let route, let step = currentStep else { return }
+        guard route != nil else { return }
         // Arrived?
         if let dest = destination, loc.distance(from: CLLocation(latitude: dest.latitude, longitude: dest.longitude)) < 60 {
-            VoiceService.shared.say("You have arrived at \(destinationName).", force: true)
+            say("You have arrived at \(destinationName).", interrupt: true)
             stop()
             status = "Arrived"
             return
         }
-        // Off route? Recalculate (at most every 30 s).
-        let nearest = route.polyline.coordinates.map { loc.distance(from: CLLocation(latitude: $0.latitude, longitude: $0.longitude)) }.min() ?? 0
-        if nearest > 120, Date.now.timeIntervalSince(lastReroute) > 30 {
+        var off = locate(loc)
+        if off > 80 { off = locate(loc, fullSearch: true) }
+        // Off route (allowing for poor GPS)? Recalculate, at most every 30 s.
+        let tolerance = max(80, loc.horizontalAccuracy * 2)
+        if off > tolerance, Date.now.timeIntervalSince(lastReroute) > 30 {
             lastReroute = .now
-            VoiceService.shared.say("Recalculating.", force: true)
+            sayOnce("reroute-\(Int(Date.now.timeIntervalSince1970 / 30))", "Recalculating.")
             Task { await calculate(announce: false) }
             return
         }
-        // Spoken directions before each turn.
-        if let d = distanceToNextManeuver {
-            let next = stepIndex + 1 < route.steps.count ? route.steps[stepIndex + 1] : nil
-            let instruction = (next?.instructions.isEmpty == false ? next!.instructions : step.instructions)
-            for (threshold, label) in [(1000.0, "far"), (300.0, "near"), (40.0, "now")] where d < threshold {
-                let key = "\(stepIndex)-\(label)"
-                if !spokenForStep.contains(key) && !instruction.isEmpty {
-                    spokenForStep.insert(key)
-                    VoiceService.shared.say(label == "now" ? instruction : "In \(Self.distanceText(d)), \(instruction.lowercased())", force: true)
-                    break
+        // Spoken directions before each manoeuvre: early, close, and at it — each once.
+        if let d = distanceToNextManeuver, let route, stepIndex + 1 <= route.steps.count {
+            let instruction = nextInstruction
+            let speed = max(loc.speed, 0)
+            // On fast roads warn earlier.
+            let far: Double = speed > 22 ? 2000 : 1000
+            let near: Double = speed > 22 ? 500 : 300
+            let now: Double = max(40, speed * 4)
+            let end = stepIndex < route.steps.count ? route.steps[stepIndex].polyline.coordinates.last : nil
+            let id = end.map { String(format: "%.3f,%.3f", $0.latitude, $0.longitude) } ?? "\(stepIndex)"
+            let stage: (String, String)? =
+                d <= now ? ("now", instruction) :
+                d <= near ? ("near", "In \(Self.distanceText(d)), \(instruction.lowercased())") :
+                d <= far && d > near + 150 ? ("far", "In \(Self.distanceText(d)), \(instruction.lowercased())") : nil
+            if let (label, text) = stage, !instruction.isEmpty {
+                let key = "\(id)|\(instruction)|\(label)"
+                // Saying "now" also covers the earlier prompts for this turn.
+                if !spoken.contains(key) && !spoken.contains("\(id)|\(instruction)|now") {
+                    spoken.insert(key)
+                    say(text, interrupt: true)
                 }
             }
-            if d < 25 && stepIndex + 1 < route.steps.count { stepIndex += 1 }
         }
-        remainingDistance = route.steps[stepIndex...].reduce(0) { $0 + $1.distance }
-        // Re-check traffic every 3 minutes.
+        remainingDistance = max(0, (cumulative.last ?? 0) - progress)
+        if travelTime > 0, let r = self.route, r.distance > 0 {
+            eta = Date.now.addingTimeInterval(travelTime * remainingDistance / r.distance)
+        }
+        // Re-check traffic every 3 minutes (keeps what's already been said).
         if Date.now.timeIntervalSince(lastETACheck) > 180 {
             lastETACheck = .now
             Task { await calculate(announce: false) }
         }
+    }
+
+    // MARK: Voice
+
+    /// Navigation prompts: a newer one replaces one still being spoken, so you never hear a stale turn.
+    private func say(_ text: String, interrupt: Bool = false) {
+        guard voiceOn else { return }
+        VoiceService.shared.sayNavigation(text, interrupt: interrupt)
+    }
+
+    private func sayOnce(_ key: String, _ text: String) {
+        guard !spoken.contains(key) else { return }
+        spoken.insert(key)
+        say(text)
     }
 
     static func distanceText(_ m: CLLocationDistance) -> String {

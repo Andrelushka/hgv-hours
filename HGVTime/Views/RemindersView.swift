@@ -85,7 +85,7 @@ struct ReminderEditor: View {
                         ForEach(ReminderTrigger.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
                     }
                     if trigger == .time {
-                        DatePicker("Time", selection: $time, displayedComponents: repeatRule == .once ? [.date, .hourAndMinute] : [.hourAndMinute])
+                        NowDatePicker("Time", selection: $time, displayedComponents: repeatRule == .once ? [.date, .hourAndMinute] : [.hourAndMinute])
                         Picker("Repeat", selection: $repeatRule) {
                             ForEach(ReminderRepeat.allCases) { Text($0.title).tag($0) }
                         }

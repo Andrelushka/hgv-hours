@@ -27,7 +27,7 @@ struct EventLogView: View {
             }
             ForEach(byDay.keys.sorted(by: >), id: \.self) { d in
                 Section {
-                    ForEach(byDay[d] ?? []) { e in
+                    ForEach((byDay[d] ?? []).sorted { $0.time > $1.time }) { e in
                         Button { selected = e } label: {
                             HStack(spacing: 10) {
                                 EventPin(event: e)

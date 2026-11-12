@@ -62,8 +62,19 @@ final class VoiceService: NSObject, AVSpeechSynthesizerDelegate {
             .sorted { ($0.quality.rawValue, $0.language == "en-GB" ? 1 : 0) > ($1.quality.rawValue, $1.language == "en-GB" ? 1 : 0) }
     }
 
+    /// What was said recently, so the same alert isn't repeated (e.g. by both a notification and the timer).
+    private var recent: [String: Date] = [:]
+
     func say(_ text: String, force: Bool = false) {
         guard settings.voiceEnabled || force else { return }
+        speak(text, dedupe: true)
+    }
+
+    private func speak(_ text: String, dedupe: Bool) {
+        let now = Date.now
+        recent = recent.filter { now.timeIntervalSince($0.value) < 90 }
+        if dedupe, recent[text] != nil { return }
+        recent[text] = now
         let session = AVAudioSession.sharedInstance()
         // While the microphone session is set up, keep it: switching to playback mid-listen breaks the input.
         if session.category != .playAndRecord {
@@ -76,6 +87,14 @@ final class VoiceService: NSObject, AVSpeechSynthesizerDelegate {
             ? (AVSpeechSynthesisVoice(language: "en-GB") ?? AVSpeechSynthesisVoice(language: "en-US"))
             : AVSpeechSynthesisVoice(identifier: settings.voiceIdentifier)
         synth.speak(u)
+    }
+
+    func stopSpeaking() { synth.stopSpeaking(at: .immediate) }
+
+    /// Turn-by-turn prompts. `interrupt` cuts off whatever is being said so the instruction is never late.
+    func sayNavigation(_ text: String, interrupt: Bool) {
+        if interrupt && synth.isSpeaking { synth.stopSpeaking(at: .immediate) }
+        speak(text, dedupe: false)
     }
 
     func activityChanged(to text: String) {

@@ -50,7 +50,7 @@ struct JobSettingsView: View {
                 NavigationLink { ShiftSettingsView() } label: { Label("Shift start & double-manning", systemImage: "play.circle") }
                 NavigationLink { VehiclesView() } label: { Label("Vehicles & trailers", systemImage: "box.truck") }
                 NavigationLink { LookupSettingsView() } label: { Label("Registration & postcode lookup", systemImage: "magnifyingglass") }
-                Toggle("Distances in miles", isOn: Binding(get: { store.settings.useMiles }, set: { store.settings.useMiles = $0 }))
+                NavigationLink { UnitsSettingsView() } label: { Label("Units (miles/km, feet/metres)", systemImage: "ruler") }
             }
         }
         .navigationTitle("Jobs settings")

@@ -100,7 +100,7 @@ struct StopEditor: View {
                 Section("Booking") {
                     Toggle("Booked time", isOn: $hasBooking)
                     if hasBooking {
-                        DatePicker("Time", selection: Binding(get: { stop.bookingTime ?? .now }, set: { stop.bookingTime = $0 }))
+                        NowDatePicker("Time", selection: Binding(get: { stop.bookingTime ?? .now }, set: { stop.bookingTime = $0 }))
                     }
                     row("Booking reference", text: $stop.reference, prompt: "e.g. BK123456")
                 }

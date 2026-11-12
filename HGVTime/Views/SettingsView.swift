@@ -47,6 +47,10 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink { UnitsSettingsView() } label: {
+                        SettingsRow(title: "Units", symbol: "ruler.fill", color: .teal,
+                                    value: "\(s.useMiles ? "mi" : "km") · \(s.heightUnit.hasPrefix("ft") ? "ft" : "m")")
+                    }
                     NavigationLink { TodayCustomiseView() } label: {
                         SettingsRow(title: "Customise Today", symbol: "slider.horizontal.below.square.and.square.filled", color: .indigo, value: "")
                     }
@@ -724,5 +728,51 @@ struct RateEditor: View {
         } else {
             fixed = 0
         }
+    }
+}
+
+
+/// Settings → Units: main distance and height units, or both.
+struct UnitsSettingsView: View {
+    @Environment(SettingsStore.self) private var store
+
+    var body: some View {
+        Form {
+            Section {
+                Picker("Distances", selection: Binding(
+                    get: { "\(store.settings.useMiles ? "mi" : "km")\(store.settings.distanceBoth ? "+" : "")" },
+                    set: { v in
+                        store.settings.useMiles = v.hasPrefix("mi")
+                        store.settings.distanceBoth = v.hasSuffix("+")
+                    })) {
+                    Text("Miles").tag("mi")
+                    Text("Kilometres").tag("km")
+                    Text("Miles (and km)").tag("mi+")
+                    Text("Kilometres (and miles)").tag("km+")
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } header: {
+                Text("Distances")
+            } footer: {
+                Text("Example: \(Fmt.distance(100, miles: store.settings.useMiles)). Odometer readings use the main unit only.")
+            }
+
+            Section {
+                Picker("Heights", selection: Binding(get: { store.settings.heightUnit }, set: { store.settings.heightUnit = $0 })) {
+                    Text("Metres").tag("m")
+                    Text("Feet and inches").tag("ft")
+                    Text("Metres (and feet)").tag("m+ft")
+                    Text("Feet (and metres)").tag("ft+m")
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } header: {
+                Text("Vehicle heights and lengths")
+            } footer: {
+                Text("Example: \(Fmt.length(4.95)). UK bridge signs show both; height warnings always compare in metres.")
+            }
+        }
+        .navigationTitle("Units")
     }
 }

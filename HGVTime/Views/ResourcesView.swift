@@ -132,7 +132,7 @@ struct ResourceEditor: View {
                     Picker("What", selection: $kind) {
                         ForEach(ResourceKind.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
                     }
-                    DatePicker("When", selection: $date)
+                    NowDatePicker("When", selection: $date)
                     LabeledContent("Quantity") {
                         HStack(spacing: 4) {
                             TextField("0", value: $quantity.emptyIfZero, format: .number.precision(.fractionLength(0...2)))

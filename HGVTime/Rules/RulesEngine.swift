@@ -111,6 +111,15 @@ struct ComplianceStatus {
     var breakNeeded: TimeInterval = 0
     /// While on a break: time left until it qualifies.
     var breakRemaining: TimeInterval = 0
+    /// While on a break that counts for driving: when it becomes the 15 min first part of a split break
+    /// (nil if that's already done or not needed) and when it fully resets the 4h30 (45 min, or 30 min after a 15).
+    var breakSplitPartAt: Date?
+    var breakResetAt: Date?
+    /// You've already had the 15 min first part of a split break, so the next 30 min break resets the 4h30.
+    var splitFirstPartTaken: Bool { stats.splitBreakFirstTaken }
+
+    /// Driving left today under the daily / weekly / GB limits, ignoring breaks still to take.
+    var drivingLeftToday: TimeInterval = Limits.extendedDailyDriving
 
     // Daily driving
     var dailyDrivingLimit: TimeInterval = Limits.extendedDailyDriving
@@ -476,6 +485,10 @@ enum RulesEngine {
             if before.continuousDriving > 0 {
                 s.breakNeeded = before.splitBreakFirstTaken ? Limits.splitBreakSecond : Limits.fullBreak
                 s.breakRemaining = max(0, s.breakNeeded - s.currentRestLength)
+                s.breakResetAt = last.start.addingTimeInterval(s.breakNeeded)
+                if !before.splitBreakFirstTaken {
+                    s.breakSplitPartAt = last.start.addingTimeInterval(Limits.splitBreakFirst)
+                }
             }
         } else if st.continuousDriving > 0 {
             s.breakNeeded = st.splitBreakFirstTaken ? Limits.splitBreakSecond : Limits.fullBreak
@@ -503,12 +516,18 @@ enum RulesEngine {
         s.gbDrivingRemaining = max(0, Limits.gbDailyDriving - st.allDriving)
         s.gbDutyRemaining = max(0, Limits.gbDailyDuty - st.workingTime)
 
-        var available = min(s.continuousDrivingRemaining, s.dailyDrivingRemaining, s.weeklyDrivingRemaining)
-        if s.gbApplies { available = min(available, s.gbDrivingRemaining, s.gbDutyRemaining) }
+        var today = min(s.dailyDrivingRemaining, s.weeklyDrivingRemaining)
+        if s.gbApplies { today = min(today, s.gbDrivingRemaining, s.gbDutyRemaining) }
         if config.primaryRegime == .gbDomestic && !openShiftHasEU(st) {
-            available = min(s.gbDrivingRemaining, s.gbDutyRemaining)
+            today = min(s.gbDrivingRemaining, s.gbDutyRemaining)
         }
-        if s.isOnDailyRest || (last.kind == .rest && s.breakRemaining > 0) { available = 0 }
+        s.drivingLeftToday = today
+        // Before the next break is due. A break you stop early is allowed — it just doesn't reset the 4h30,
+        // so driving left isn't zero while you're on one.
+        var available = today
+        if !(config.primaryRegime == .gbDomestic && !openShiftHasEU(st)) {
+            available = min(available, s.continuousDrivingRemaining)
+        }
         s.driveAvailableNow = available
 
         // --- Weekly rest

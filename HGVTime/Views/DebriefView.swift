@@ -9,8 +9,8 @@ struct TodayJobCard: View {
     @Bindable var plan: WorkPlan
     var onEdit: () -> Void
     @State private var busy: UUID?
-    @State private var confirmCancel = false
     @State private var reason = ""
+    @State private var pendingOutcome: (id: UUID, outcome: PlanStop.Outcome)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -29,12 +29,15 @@ struct TodayJobCard: View {
                 jobStops
             }
         }
-        .alert("Cancel this job?", isPresented: $confirmCancel) {
+        .alert(pendingOutcome.map { "Mark stop as \($0.outcome.title.lowercased())?" } ?? "",
+               isPresented: Binding(get: { pendingOutcome != nil }, set: { if !$0 { pendingOutcome = nil } })) {
             TextField("Reason (optional)", text: $reason)
-            Button("Cancel job", role: .destructive) { setCancelled(true) }
-            Button("Keep job", role: .cancel) {}
+            Button(pendingOutcome?.outcome.title ?? "OK", role: .destructive) {
+                if let p = pendingOutcome { setOutcome(p.id, p.outcome) }
+            }
+            Button("Back", role: .cancel) { reason = "" }
         } message: {
-            Text("It stays in your records marked as cancelled. You can restore it.")
+            Text(pendingOutcome?.outcome.detail ?? "")
         }
     }
 
@@ -64,7 +67,10 @@ struct TodayJobCard: View {
                         Text(statusText(stop)).font(.caption2).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    if busy == stop.id {
+                    if let o = stop.outcome {
+                        Label(o.title, systemImage: o.symbol).labelStyle(.titleAndIcon)
+                            .font(.caption2.weight(.bold)).foregroundStyle(.red)
+                    } else if busy == stop.id {
                         ProgressView()
                     } else if stop.arrivedAt == nil {
                         Button("Arrived") { mark(stop.id, arrived: true) }.buttonStyle(.borderedProminent).tint(.green)
@@ -73,8 +79,24 @@ struct TodayJobCard: View {
                     } else {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                     }
+                    Menu {
+                        if stop.outcome != nil {
+                            Button("Back to normal", systemImage: "arrow.uturn.backward") { setOutcome(stop.id, nil) }
+                        }
+                        ForEach(PlanStop.Outcome.allCases) { o in
+                            Button("Stop \(o.title.lowercased())", systemImage: o.symbol, role: .destructive) {
+                                reason = ""
+                                pendingOutcome = (stop.id, o)
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle").font(.title3).foregroundStyle(.secondary)
+                            .frame(width: 30, height: 30)
+                    }
+                    .accessibilityLabel("Stop options")
                 }
                 .font(.caption)
+                .opacity(stop.outcome == nil ? 1 : 0.6)
             }
             HStack {
                 Button { addUnplannedStop() } label: { Label("Arrived somewhere else", systemImage: "mappin.and.ellipse") }
@@ -83,15 +105,27 @@ struct TodayJobCard: View {
             }
             .buttonStyle(.bordered)
             .font(.caption.weight(.semibold))
-            Button(role: .destructive) { confirmCancel = true } label: {
-                Label("Job cancelled", systemImage: "xmark.octagon").frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .font(.caption.weight(.semibold))
+    }
+
+    private func setOutcome(_ id: UUID, _ outcome: PlanStop.Outcome?) {
+        var place = ""
+        updateStop(id) {
+            $0.outcome = outcome
+            $0.outcomeReason = outcome == nil ? nil : reason.trimmingCharacters(in: .whitespaces)
+            place = $0.displayName
+        }
+        EventRecorder.log(.note, title: outcome.map { "Stop \($0.title.lowercased())" } ?? "Stop back to normal",
+                          detail: [place, reason].filter { !$0.isEmpty }.joined(separator: " — "),
+                          context: context, settings: store.settings)
+        reason = ""
+        pendingOutcome = nil
     }
 
     private func statusText(_ stop: PlanStop) -> String {
         var parts: [String] = []
+        if let o = stop.outcome {
+            parts.append("\(o.title)\(stop.outcomeAt.map { " at \(Fmt.time($0))" } ?? "")\((stop.outcomeReason ?? "").isEmpty ? "" : " — \(stop.outcomeReason!)")")
+        }
         if !stop.bookingText.isEmpty { parts.append("Booked \(stop.bookingText)") }
         if let a = stop.arrivedAt { parts.append("Arrived \(Fmt.time(a))") }
         if let d = stop.departedAt {
@@ -246,7 +280,7 @@ struct DebriefView: View {
 
 /// Everything shown in a debrief, also as plain text for sharing.
 struct DebriefData {
-    static let stopHeader = ["#", "Type", "Site", "Address", "Booked", "Arrived", "Left", "On site", "Booking ref", "Order ref", "Pallets"]
+    static let stopHeader = ["#", "Type", "Site", "Address", "Booked", "Arrived", "Left", "On site", "Booking ref", "Order ref", "Pallets", "Outcome"]
 
     var company = "", vehicle = "", trailer = "", shift = "", card = "", pay = ""
     var stops: [[String]] = []
@@ -281,7 +315,8 @@ struct DebriefData {
         for (i, s) in (plan?.stops ?? []).enumerated() {
             let onSite = (s.arrivedAt != nil && s.departedAt != nil) ? Fmt.hm(s.departedAt!.timeIntervalSince(s.arrivedAt!)) : ""
             d.stops.append(["\(i + 1)", s.kindTitle, s.displayName, s.fullAddress, s.bookingText, s.arrivedAt.map(Fmt.time) ?? "",
-                            s.departedAt.map(Fmt.time) ?? "", onSite, s.reference, s.orderReference ?? "", s.pallets])
+                            s.departedAt.map(Fmt.time) ?? "", onSite, s.reference, s.orderReference ?? "", s.pallets,
+                            s.outcome.map { "\($0.title)\((s.outcomeReason ?? "").isEmpty ? "" : ": \(s.outcomeReason!)")" } ?? ""])
             if let lat = s.latitude, let lon = s.longitude {
                 d.mapPoints.append((s.place.isEmpty ? "Stop \(i + 1)" : s.place, CLLocationCoordinate2D(latitude: lat, longitude: lon)))
             }

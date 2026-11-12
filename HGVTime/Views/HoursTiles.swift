@@ -50,10 +50,10 @@ struct HoursTileView: View {
         switch tile {
         case .driveLeft:
             RingTile(title: "Driving left", value: Fmt.hm(d.driveLeft), caption: d.driveLeftReason,
-                     fraction: d.driveLeft / Limits.continuousDriving, color: .blue, symbol: "steeringwheel")
+                     fraction: d.driveLeft / max(1, d.dailyDrivingLimit), color: .blue, symbol: "steeringwheel")
         case .workLeft:
-            RingTile(title: "Working left", value: Fmt.hm(d.workLeft), caption: d.workLeftReason.isEmpty ? "" : "Then: \(d.workLeftReason)",
-                     fraction: d.workLeft / Limits.wtdMaxWorkWithoutBreak, color: .orange, symbol: "briefcase.fill")
+            RingTile(title: "Working left", value: Fmt.hm(d.workLeft), caption: d.workLeftReason,
+                     fraction: d.workLeft / .hours(15), color: .orange, symbol: "briefcase.fill")
         case .restBy:
             if let restBy = d.restBy {
                 let left = restBy.timeIntervalSince(s.now)

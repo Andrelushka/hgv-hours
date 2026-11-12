@@ -241,6 +241,10 @@ struct AppSettings: Codable, Equatable {
     var useMiles = true
     /// Show heights/lengths in feet and inches as well as metres.
     var showFeet = true
+    /// Also show the other distance unit in brackets (e.g. "62 mi (100 km)").
+    var distanceBoth = false
+    /// Heights: "m", "ft", "m+ft" (metres first) or "ft+m" (feet first).
+    var heightUnit = "m+ft"
 
     // Driver card
     var cardInserted = false
@@ -275,6 +279,8 @@ struct AppSettings: Codable, Equatable {
     var harshBrakeMS2: Double = 3.4
     /// Look up the road's speed limit from OpenStreetMap while navigating.
     var onlineSpeedLimits = true
+    /// Spoken turn-by-turn directions.
+    var navVoiceOn = true
 
     // Wake-up alarm and "time to leave" (worked out from the next planned job)
     var wakeAlarmEnabled = false
@@ -321,11 +327,14 @@ struct AppSettings: Codable, Equatable {
 final class SettingsStore {
     private static let key = "hgv.settings.v1"
 
-    var settings: AppSettings
+    var settings: AppSettings {
+        didSet { if settings.heightUnit != oldValue.heightUnit || settings.distanceBoth != oldValue.distanceBoth { Fmt.applyUnits(settings) } }
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.settings = Self.load(from: defaults)
+        Fmt.applyUnits(settings)
     }
 
     @ObservationIgnored private let defaults: UserDefaults

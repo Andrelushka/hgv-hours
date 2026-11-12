@@ -44,6 +44,8 @@ enum BackupService {
         var startPostcode: String?; var startLatitude, startLongitude: Double?; var completed: Bool?
         var startName, startHouseNumber, startHouseName, startFlat: String?
         var cancelled: Bool?; var cancelledAt: Date?; var cancelReason: String?
+        var endMode, endName, endLocation, endPostcode: String?; var endLatitude, endLongitude: Double?
+        var wakeOverride, leaveOverride: Date?; var alarmsOff: Bool?
     }
     struct Note: Codable { var id: UUID; var title, body, kind: String; var table: Data; var isTemplate, pinned: Bool; var createdAt, updatedAt: Date; var style: Data? }
     struct Card: Codable { var time: Date; var inserted: Bool }
@@ -82,7 +84,10 @@ enum BackupService {
                  stops: $0.stopsData, lines: $0.linesData, createdAt: $0.createdAt,
                  startPostcode: $0.startPostcode, startLatitude: $0.startLatitude, startLongitude: $0.startLongitude, completed: $0.completed,
                  startName: $0.startName, startHouseNumber: $0.startHouseNumber, startHouseName: $0.startHouseName, startFlat: $0.startFlat,
-                 cancelled: $0.cancelled, cancelledAt: $0.cancelledAt, cancelReason: $0.cancelReason)
+                 cancelled: $0.cancelled, cancelledAt: $0.cancelledAt, cancelReason: $0.cancelReason,
+                 endMode: $0.endModeRaw, endName: $0.endName, endLocation: $0.endLocation, endPostcode: $0.endPostcode,
+                 endLatitude: $0.endLatitude, endLongitude: $0.endLongitude,
+                 wakeOverride: $0.wakeOverride, leaveOverride: $0.leaveOverride, alarmsOff: $0.alarmsOff)
         }
         b.notes = all(NoteItem.self, context).map {
             Note(id: $0.id, title: $0.title, body: $0.body, kind: $0.kindRaw, table: $0.tableData, isTemplate: $0.isTemplate,
@@ -176,6 +181,9 @@ enum BackupService {
             x.startName = p.startName ?? ""; x.startHouseNumber = p.startHouseNumber ?? ""
             x.startHouseName = p.startHouseName ?? ""; x.startFlat = p.startFlat ?? ""
             x.cancelled = p.cancelled ?? false; x.cancelledAt = p.cancelledAt; x.cancelReason = p.cancelReason ?? ""
+            x.endModeRaw = p.endMode ?? "same"; x.endName = p.endName ?? ""; x.endLocation = p.endLocation ?? ""
+            x.endPostcode = p.endPostcode ?? ""; x.endLatitude = p.endLatitude; x.endLongitude = p.endLongitude
+            x.wakeOverride = p.wakeOverride; x.leaveOverride = p.leaveOverride; x.alarmsOff = p.alarmsOff ?? false
             context.insert(x)
         }
         for n in b.notes {

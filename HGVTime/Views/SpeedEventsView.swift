@@ -18,7 +18,7 @@ struct SpeedEventsSection: View {
                       systemImage: "gauge.with.dots.needle.100percent")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(infringements > 0 ? .red : .orange)
-                ForEach(list) { e in
+                ForEach(list.reversed()) { e in
                     HStack {
                         Image(systemName: e.isInfringement ? "exclamationmark.octagon.fill" : "exclamationmark.triangle.fill")
                             .foregroundStyle(e.isInfringement ? .red : .orange)
