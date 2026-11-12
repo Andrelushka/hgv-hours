@@ -36,7 +36,8 @@ struct WorldHoursSection: View {
                 ForEach(world.limits) { l in
                     LimitCard(title: l.title, value: "\(Fmt.hm(l.used)) / \(Fmt.hm(l.limit))",
                               caption: "\(Fmt.hm(l.remaining)) left · \(l.note)", progress: l.used / l.limit,
-                              symbol: l.drivingOnly ? "steeringwheel" : "clock.fill")
+                              symbol: l.drivingOnly ? "steeringwheel" : "clock.fill",
+                              info: "\(l.title): \(l.note).")
                 }
             }
             if let next = world.nextStart {

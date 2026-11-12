@@ -1079,6 +1079,34 @@
       }
     },
     "90": {},
+    "A 9-hour reduced daily rest lets your day stretch to 15 hours. You can use up to 3 between weekly rests.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skrócony odpoczynek dzienny 9 h pozwala wydłużyć dzień do 15 h. Możesz go użyć do 3 razy między odpoczynkami tygodniowymi."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O odihnă zilnică redusă de 9 h îți permite să lungești ziua până la 15 h. O poți folosi de până la 3 ori între repausurile săptămânale."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сокращённый ежедневный отдых 9 ч позволяет растянуть день до 15 ч. Можно использовать до 3 раз между еженедельными отдыхами."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скорочений щоденний відпочинок 9 год дозволяє розтягнути день до 15 год. Можна використати до 3 разів між щотижневими відпочинками."
+          }
+        }
+      }
+    },
     "A real alarm: it rings even on silent and shows full screen. Wake-up = leave time − get-ready time.": {
       "localizations": {
         "pl": {
@@ -1131,6 +1159,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Правило або ліміт виглядає неправильно"
+          }
+        }
+      }
+    },
+    "A weekly rest of 45 hours (or reduced, 24 hours) must start no later than 6 × 24 hours after the end of the previous one. In any two weeks at least one must be a regular 45-hour rest. A reduced weekly rest must be made up in one block before the end of the third week after it.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpoczynek tygodniowy 45 h (lub skrócony, 24 h) musi się zacząć najpóźniej 6 × 24 h po zakończeniu poprzedniego. W ciągu dowolnych dwóch tygodni co najmniej jeden musi być regularnym 45-godzinnym. Skrócony odpoczynek tygodniowy trzeba odebrać jednym blokiem przed końcem trzeciego tygodnia po nim."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un repaus săptămânal de 45 h (sau redus, de 24 h) trebuie să înceapă cel târziu la 6 × 24 h după sfârșitul celui anterior. În oricare două săptămâni, cel puțin unul trebuie să fie normal, de 45 h. Un repaus săptămânal redus trebuie compensat dintr-o bucată înainte de sfârșitul celei de-a treia săptămâni de după el."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Еженедельный отдых 45 ч (или сокращённый, 24 ч) должен начаться не позже чем через 6 × 24 ч после окончания предыдущего. За любые две недели хотя бы один должен быть обычным 45-часовым. Сокращённый еженедельный отдых нужно компенсировать одним блоком до конца третьей недели после него."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щотижневий відпочинок 45 год (або скорочений, 24 год) має початися не пізніше ніж через 6 × 24 год після закінчення попереднього. За будь-які два тижні хоча б один має бути звичайним 45-годинним. Скорочений щотижневий відпочинок треба компенсувати одним блоком до кінця третього тижня після нього."
           }
         }
       }
@@ -2034,6 +2090,34 @@
         }
       }
     },
+    "After 4h30 of driving you must take a 45-minute break. You can split it: at least 15 minutes, then at least 30 minutes later (in that order). A break of 15–29 minutes on its own doesn't reset the 4h30, but it counts as the first part. Breaks also count towards your working-time breaks.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Po 4 h 30 min jazdy musisz zrobić 45-minutową przerwę. Możesz ją podzielić: co najmniej 15 minut, potem co najmniej 30 minut później (w tej kolejności). Sama przerwa 15–29 minut nie zeruje 4 h 30 min, ale liczy się jako pierwsza część. Przerwy liczą się też do przerw w czasie pracy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "După 4h30 de condus trebuie să iei o pauză de 45 de minute. O poți împărți: cel puțin 15 minute, apoi cel puțin 30 de minute mai târziu (în această ordine). O pauză de 15–29 de minute singură nu resetează cele 4h30, dar contează ca prima parte. Pauzele contează și ca pauze de timp de lucru."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "После 4 ч 30 мин вождения нужен перерыв 45 минут. Его можно разделить: не менее 15 минут, затем не менее 30 минут позже (именно в таком порядке). Перерыв 15–29 минут сам по себе не обнуляет 4 ч 30 мин, но считается первой частью. Перерывы также засчитываются в перерывы по рабочему времени."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Після 4 год 30 хв водіння потрібна перерва 45 хвилин. Її можна розділити: щонайменше 15 хвилин, потім щонайменше 30 хвилин пізніше (саме в такому порядку). Перерва 15–29 хвилин сама по собі не обнуляє 4 год 30 хв, але вважається першою частиною. Перерви також зараховуються до перерв за робочим часом."
+          }
+        }
+      }
+    },
     "After hours in a shift": {
       "localizations": {
         "pl": {
@@ -2848,6 +2932,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сума"
+          }
+        }
+      }
+    },
+    "An estimate before tax and deductions, from your pay settings (Earnings tab ⚙︎). Check your payslip.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szacunek przed podatkiem i potrąceniami, według Twoich ustawień płac (karta „Zarobki” ⚙︎). Sprawdzaj z odcinkiem wypłaty."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O estimare înainte de taxe și rețineri, din setările tale de plată (fila „Câștiguri” ⚙︎). Verifică fluturașul."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оценка до налогов и вычетов по вашим настройкам оплаты (вкладка «Заработок» ⚙︎). Сверяйтесь с расчётным листом."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оцінка до податків і утримань за вашими налаштуваннями оплати (вкладка «Заробіток» ⚙︎). Звіряйтеся з розрахунковим листом."
           }
         }
       }
@@ -6599,6 +6711,34 @@
         }
       }
     },
+    "Daily rest must be completed within 24 hours of the start of your shift: 11 hours normally, 9 hours reduced (up to 3 times between weekly rests), or split 3 hours + 9 hours.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpoczynek dzienny musi się zakończyć w ciągu 24 godzin od początku zmiany: zwykle 11 godzin, skrócony 9 godzin (do 3 razy między odpoczynkami tygodniowymi) lub dzielony 3 h + 9 h."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odihna zilnică trebuie încheiată în 24 de ore de la începutul turei: 11 ore normal, 9 ore redusă (de până la 3 ori între repausurile săptămânale) sau fracționată 3 h + 9 h."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ежедневный отдых должен быть завершён в пределах 24 часов от начала смены: обычно 11 часов, сокращённый 9 часов (до 3 раз между еженедельными отдыхами) или раздельный 3 ч + 9 ч."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щоденний відпочинок має бути завершено в межах 24 годин від початку зміни: зазвичай 11 годин, скорочений 9 годин (до 3 разів між щотижневими відпочинками) або розділений 3 год + 9 год."
+          }
+        }
+      }
+    },
     "Data": {
       "localizations": {
         "pl": {
@@ -8879,6 +9019,90 @@
         }
       }
     },
+    "Driving plus other work in this shift (POA and breaks don't count). It's what the working-time break rules and the night-work limit use.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jazda plus inna praca w tej zmianie (POA i przerwy się nie liczą). Z tego czasu korzystają zasady przerw w czasie pracy i limit pracy w nocy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condus plus altă muncă în această tură (POA și pauzele nu se numără). Pe acest timp se bazează regulile pauzelor de timp de lucru și limita muncii de noapte."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вождение плюс другая работа в этой смене (POA и перерывы не считаются). По этому времени работают правила перерывов рабочего времени и лимит ночной работы."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Водіння плюс інша робота в цій зміні (POA й перерви не рахуються). За цим часом працюють правила перерв робочого часу й ліміт нічної роботи."
+          }
+        }
+      }
+    },
+    "Driving plus other work recorded today. POA and breaks are not working time.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jazda plus inna praca zapisane dziś. POA i przerwy nie są czasem pracy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condus plus altă muncă înregistrate azi. POA și pauzele nu sunt timp de lucru."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вождение плюс другая работа, записанные сегодня. POA и перерывы — не рабочее время."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Водіння плюс інша робота, записані сьогодні. POA й перерви — не робочий час."
+          }
+        }
+      }
+    },
+    "Driving recorded today against your daily limit: 9 hours, or 10 hours on up to two days in a fixed week.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jazda zapisana dziś względem limitu dziennego: 9 godzin albo 10 godzin w maksymalnie dwa dni tygodnia stałego."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Condusul înregistrat azi față de limita zilnică: 9 ore sau 10 ore în cel mult două zile dintr-o săptămână fixă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вождение, записанное сегодня, относительно дневного лимита: 9 часов или 10 часов не более двух дней в фиксированную неделю."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Водіння, записане сьогодні, відносно денного ліміту: 9 годин або 10 годин не більше двох днів у фіксований тиждень."
+          }
+        }
+      }
+    },
     "Driving style": {
       "localizations": {
         "pl": {
@@ -8903,6 +9127,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Стиль водіння"
+          }
+        }
+      }
+    },
+    "Driving you can do before your next break: what's left of the 4h30, or less if your daily (9h/10h) or weekly (56h, 90h in two weeks) driving runs out first. It doesn't drop to zero during a break — stopping a break early is allowed, it just doesn't reset the 4h30. After 45 minutes (or 15 then 30) you get a fresh 4h30. Driving left for the whole day is on the Hours page.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ile możesz jechać do następnej przerwy: to, co zostało z 4 h 30 min, albo mniej, jeśli wcześniej skończy się jazda dzienna (9/10 h) lub tygodniowa (56 h, 90 h w dwa tygodnie). W czasie przerwy nie spada do zera — możesz przerwać przerwę, tylko nie wyzeruje ona 4 h 30 min. Po 45 minutach (lub 15, potem 30) masz znów 4 h 30 min. Jazdę pozostałą na cały dzień znajdziesz na stronie „Godziny”."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cât poți conduce până la următoarea pauză: ce a rămas din 4h30 sau mai puțin, dacă se termină mai devreme condusul zilnic (9/10 h) ori săptămânal (56 h, 90 h în două săptămâni). Nu scade la zero în pauză — poți întrerupe pauza, doar că nu resetează cele 4h30. După 45 de minute (sau 15, apoi 30) ai iar 4h30. Condusul rămas pe toată ziua e pe pagina „Ore”."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сколько можно ехать до следующего перерыва: остаток от 4 ч 30 мин или меньше, если раньше закончится дневное (9/10 ч) или недельное (56 ч, 90 ч за две недели) вождение. Во время перерыва не падает до нуля — прервать перерыв можно, просто он не обнулит 4 ч 30 мин. После 45 минут (или 15, затем 30) снова доступно 4 ч 30 мин. Остаток вождения на весь день — на странице «Часы»."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скільки можна їхати до наступної перерви: залишок від 4 год 30 хв або менше, якщо раніше закінчиться денне (9/10 год) чи тижневе (56 год, 90 год за два тижні) водіння. Під час перерви не падає до нуля — перервати перерву можна, просто вона не обнулить 4 год 30 хв. Після 45 хвилин (або 15, потім 30) знову доступно 4 год 30 хв. Залишок водіння на весь день — на сторінці «Години»."
           }
         }
       }
@@ -11626,6 +11878,62 @@
         }
       }
     },
+    "GB domestic rules: no more than 10 hours of driving in a working day.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krajowe przepisy GB: nie więcej niż 10 godzin jazdy w dniu roboczym."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reguli interne GB: cel mult 10 ore de condus într-o zi de lucru."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внутренние правила GB: не более 10 часов вождения за рабочий день."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внутрішні правила GB: не більше 10 годин водіння за робочий день."
+          }
+        }
+      }
+    },
+    "GB domestic rules: no more than 11 hours on duty in a working day (driving and other work).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krajowe przepisy GB: nie więcej niż 11 godzin służby w dniu roboczym (jazda i inna praca)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reguli interne GB: cel mult 11 ore în serviciu într-o zi de lucru (condus și altă muncă)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внутренние правила GB: не более 11 часов на смене за рабочий день (вождение и другая работа)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внутрішні правила GB: не більше 11 годин на зміні за робочий день (водіння й інша робота)."
+          }
+        }
+      }
+    },
     "GB driving": {
       "localizations": {
         "pl": {
@@ -12844,6 +13152,34 @@
         }
       }
     },
+    "Hours missing from a reduced weekly rest must be added, in one block, to a rest of 9 hours or more before the end of the third week after it.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brakujące godziny skróconego odpoczynku tygodniowego trzeba dodać jednym blokiem do odpoczynku 9 godzin lub dłuższego przed końcem trzeciego tygodnia po nim."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orele lipsă dintr-un repaus săptămânal redus trebuie adăugate, dintr-o bucată, la o odihnă de 9 ore sau mai mult, înainte de sfârșitul celei de-a treia săptămâni de după el."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Недостающие часы сокращённого еженедельного отдыха нужно добавить одним блоком к отдыху от 9 часов до конца третьей недели после него."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відсутні години скороченого щотижневого відпочинку треба додати одним блоком до відпочинку від 9 годин до кінця третього тижня після нього."
+          }
+        }
+      }
+    },
     "House / building name": {
       "localizations": {
         "pl": {
@@ -12868,6 +13204,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Назва будинку / будівлі"
+          }
+        }
+      }
+    },
+    "How long you've been resting. 9 hours is a reduced daily rest and 11 hours a regular one; 24 hours is a reduced weekly rest and 45 hours a regular weekly rest.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jak długo już odpoczywasz. 9 godzin to skrócony odpoczynek dzienny, 11 godzin regularny; 24 godziny to skrócony odpoczynek tygodniowy, a 45 godzin regularny tygodniowy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De cât timp te odihnești. 9 ore înseamnă odihnă zilnică redusă, 11 ore una normală; 24 de ore e repaus săptămânal redus, iar 45 de ore repaus săptămânal normal."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сколько вы уже отдыхаете. 9 часов — сокращённый ежедневный отдых, 11 часов — обычный; 24 часа — сокращённый еженедельный отдых, 45 часов — обычный еженедельный."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скільки ви вже відпочиваєте. 9 годин — скорочений щоденний відпочинок, 11 годин — звичайний; 24 години — скорочений щотижневий відпочинок, 45 годин — звичайний щотижневий."
           }
         }
       }
@@ -13064,6 +13428,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ідея / побажання"
+          }
+        }
+      }
+    },
+    "If your shift includes any time between 00:00 and 04:00, you may work no more than 10 hours in that shift, unless a collective or workforce agreement allows more.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeśli zmiana obejmuje jakikolwiek czas między 00:00 a 04:00, w tej zmianie możesz pracować nie więcej niż 10 godzin, chyba że porozumienie zbiorowe pozwala na więcej."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dacă tura include orice moment între 00:00 și 04:00, poți lucra cel mult 10 ore în acea tură, dacă un acord colectiv nu permite mai mult."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если смена включает время с 00:00 до 04:00, в этой смене можно работать не более 10 часов, если коллективное соглашение не разрешает больше."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Якщо зміна включає час з 00:00 до 04:00, у цій зміні можна працювати не більше 10 годин, якщо колективна угода не дозволяє більше."
           }
         }
       }
@@ -17373,6 +17765,90 @@
         }
       }
     },
+    "No more than 56 hours of driving in a fixed week (Monday 00:00 to Sunday 24:00).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie więcej niż 56 godzin jazdy w tygodniu stałym (od poniedziałku 00:00 do niedzieli 24:00)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cel mult 56 de ore de condus într-o săptămână fixă (de luni 00:00 până duminică 24:00)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не более 56 часов вождения за фиксированную неделю (с понедельника 00:00 до воскресенья 24:00)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не більше 56 годин водіння за фіксований тиждень (з понеділка 00:00 до неділі 24:00)."
+          }
+        }
+      }
+    },
+    "No more than 60 hours of working time in any week. Driving and other work count; POA and breaks don't.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie więcej niż 60 godzin czasu pracy w dowolnym tygodniu. Jazda i inna praca się liczą; POA i przerwy nie."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cel mult 60 de ore de timp de lucru în orice săptămână. Condusul și altă muncă se numără; POA și pauzele nu."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не более 60 часов рабочего времени за любую неделю. Вождение и другая работа считаются; POA и перерывы — нет."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не більше 60 годин робочого часу за будь-який тиждень. Водіння й інша робота рахуються; POA й перерви — ні."
+          }
+        }
+      }
+    },
+    "No more than 90 hours of driving in any two consecutive fixed weeks.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie więcej niż 90 godzin jazdy w dowolnych dwóch kolejnych tygodniach stałych."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cel mult 90 de ore de condus în oricare două săptămâni fixe consecutive."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не более 90 часов вождения за любые две подряд фиксированные недели."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не більше 90 годин водіння за будь-які два поспіль фіксовані тижні."
+          }
+        }
+      }
+    },
     "No notes yet": {
       "localizations": {
         "pl": {
@@ -17677,6 +18153,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Звичайна ставка"
+          }
+        }
+      }
+    },
+    "Normally 9 hours of driving between daily rests. Twice a week you may drive 10 hours.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwykle 9 godzin jazdy między odpoczynkami dziennymi. Dwa razy w tygodniu możesz jechać 10 godzin."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În mod normal 9 ore de condus între odihnele zilnice. De două ori pe săptămână poți conduce 10 ore."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычно 9 часов вождения между ежедневными отдыхами. Дважды в неделю можно ехать 10 часов."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зазвичай 9 годин водіння між щоденними відпочинками. Двічі на тиждень можна їхати 10 годин."
           }
         }
       }
@@ -27390,6 +27894,34 @@
         }
       }
     },
+    "The earliest time your next shift can start: after at least 9 hours' rest (reduced, if you have any left) or 11 hours (regular), or after your weekly rest if one is due.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najwcześniejszy start następnej zmiany: po co najmniej 9 godzinach odpoczynku (skrócony, jeśli jeszcze Ci zostały) lub 11 godzinach (regularny), albo po odpoczynku tygodniowym, jeśli należy się."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cel mai devreme poate începe tura următoare: după cel puțin 9 ore de odihnă (redusă, dacă mai ai) sau 11 ore (normală), ori după repausul săptămânal, dacă îți e datorat."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Самое раннее начало следующей смены: после не менее 9 часов отдыха (сокращённый, если ещё остались) или 11 часов (обычный), либо после еженедельного отдыха, если он положен."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найраніший початок наступної зміни: після щонайменше 9 годин відпочинку (скорочений, якщо ще залишились) або 11 годин (звичайний), або після щотижневого відпочинку, якщо він належить."
+          }
+        }
+      }
+    },
     "The job finishes back at the start location.": {
       "localizations": {
         "pl": {
@@ -27414,6 +27946,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Робота завершується там же, де почалася."
+          }
+        }
+      }
+    },
+    "The latest time to start your daily rest so it fits within 24 hours of your shift start: 11 hours normally, or 9 hours reduced (up to 3 times between weekly rests).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpóźniejsza godzina rozpoczęcia odpoczynku dziennego, aby zmieścił się w 24 godzinach od startu zmiany: zwykle 11 godzin albo skrócony 9 godzin (do 3 razy między odpoczynkami tygodniowymi)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cea mai târzie oră de a începe odihna zilnică astfel încât să încapă în 24 de ore de la începutul turei: 11 ore normal sau 9 ore redusă (de până la 3 ori între repausurile săptămânale)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Самое позднее время начала ежедневного отдыха, чтобы он уложился в 24 часа от начала смены: обычно 11 часов или сокращённый 9 часов (до 3 раз между еженедельными отдыхами)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Найпізніший час початку щоденного відпочинку, щоб він вклався в 24 години від початку зміни: зазвичай 11 годин або скорочений 9 годин (до 3 разів між щотижневими відпочинками)."
           }
         }
       }
@@ -27868,6 +28428,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Час на збори"
+          }
+        }
+      }
+    },
+    "Time until you must start your daily rest. A shift can last up to 13 hours if you then rest 11 hours, or 15 hours with a reduced 9-hour rest (up to 3 times between weekly rests) — all within 24 hours of the shift start.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czas do obowiązkowego rozpoczęcia odpoczynku dziennego. Zmiana może trwać do 13 godzin, jeśli potem odpoczywasz 11 godzin, lub do 15 godzin przy skróconym odpoczynku 9 godzin (do 3 razy między odpoczynkami tygodniowymi) — wszystko w ciągu 24 godzin od startu zmiany."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timp până trebuie să începi odihna zilnică. O tură poate dura până la 13 ore dacă apoi te odihnești 11 ore, sau 15 ore cu o odihnă redusă de 9 ore (de până la 3 ori între repausurile săptămânale) — totul în 24 de ore de la începutul turei."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Время до обязательного начала ежедневного отдыха. Смена может длиться до 13 часов, если затем отдых 11 часов, или до 15 часов с сокращённым отдыхом 9 часов (до 3 раз между еженедельными отдыхами) — всё в пределах 24 часов от начала смены."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Час до обов'язкового початку щоденного відпочинку. Зміна може тривати до 13 годин, якщо потім відпочинок 11 годин, або до 15 годин зі скороченим відпочинком 9 годин (до 3 разів між щотижневими відпочинками) — усе в межах 24 годин від початку зміни."
+          }
+        }
+      }
+    },
+    "Time until your next break is due if you carry on as you are: the sooner of the 4h30 driving limit and the 6-hour working-time limit.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czas do następnej obowiązkowej przerwy, jeśli będziesz kontynuować tak samo: co nastąpi wcześniej — limit 4 h 30 min jazdy czy 6 godzin czasu pracy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timp până la următoarea pauză obligatorie dacă continui la fel: ce vine mai devreme — limita de 4h30 de condus sau cea de 6 ore de timp de lucru."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Время до следующего обязательного перерыва, если продолжать так же: что наступит раньше — лимит 4 ч 30 мин вождения или 6 часов рабочего времени."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Час до наступної обов'язкової перерви, якщо продовжувати так само: що настане раніше — ліміт 4 год 30 хв водіння чи 6 годин робочого часу."
           }
         }
       }
@@ -31196,6 +31812,34 @@
         }
       }
     },
+    "Working Time rules: no more than 6 hours of work in a row. Any break of 15 minutes or more resets the 6 hours. Over the day, breaks must add up to 30 minutes if you work 6–9 hours, or 45 minutes over 9 hours, in pieces of at least 15 minutes. Driving and other work count; POA and breaks don't.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przepisy o czasie pracy: nie więcej niż 6 godzin pracy z rzędu. Każda przerwa 15 minut lub dłuższa zeruje 6 godzin. W ciągu dnia przerwy muszą wynieść 30 minut przy pracy 6–9 godzin lub 45 minut powyżej 9 godzin, w częściach co najmniej 15-minutowych. Jazda i inna praca się liczą; POA i przerwy nie."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regulile timpului de lucru: cel mult 6 ore de muncă la rând. Orice pauză de 15 minute sau mai mult resetează cele 6 ore. Pe zi, pauzele trebuie să însumeze 30 de minute dacă lucrezi 6–9 ore sau 45 de minute peste 9 ore, în bucăți de cel puțin 15 minute. Condusul și altă muncă se numără; POA și pauzele nu."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Правила рабочего времени: не более 6 часов работы подряд. Любой перерыв от 15 минут обнуляет 6 часов. За день перерывы должны составить 30 минут, если вы работаете 6–9 часов, или 45 минут, если больше 9 часов, частями не менее 15 минут. Вождение и другая работа считаются; POA и перерывы — нет."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Правила робочого часу: не більше 6 годин роботи поспіль. Будь-яка перерва від 15 хвилин обнуляє 6 годин. За день перерви мають становити 30 хвилин, якщо ви працюєте 6–9 годин, або 45 хвилин, якщо понад 9 годин, частинами щонайменше по 15 хвилин. Водіння й інша робота рахуються; POA й перерви — ні."
+          }
+        }
+      }
+    },
     "Working left": {
       "localizations": {
         "pl": {
@@ -31276,6 +31920,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Робочий час"
+          }
+        }
+      }
+    },
+    "Working time you can do before a working-time break: what's left of the 6 hours, or less if the 60-hour week or the night-work limit is nearer. Driving and other work count; POA and breaks don't. Any break of 15 minutes or more resets the 6 hours.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ile możesz pracować do przerwy w czasie pracy: to, co zostało z 6 godzin, albo mniej, jeśli bliżej jest tygodniowy limit 60 godzin lub limit pracy w nocy. Jazda i inna praca się liczą; POA i przerwy nie. Każda przerwa 15 minut lub dłuższa zeruje 6 godzin."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cât poți lucra până la o pauză de timp de lucru: ce a rămas din 6 ore sau mai puțin, dacă e mai aproape limita de 60 de ore pe săptămână sau limita muncii de noapte. Condusul și altă muncă se numără; POA și pauzele nu. Orice pauză de 15 minute sau mai mult resetează cele 6 ore."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сколько можно работать до перерыва по рабочему времени: остаток от 6 часов или меньше, если ближе недельный лимит 60 часов или лимит ночной работы. Вождение и другая работа считаются; POA и перерывы — нет. Любой перерыв от 15 минут обнуляет 6 часов."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скільки можна працювати до перерви за робочим часом: залишок від 6 годин або менше, якщо ближче тижневий ліміт 60 годин чи ліміт нічної роботи. Водіння й інша робота рахуються; POA й перерви — ні. Будь-яка перерва від 15 хвилин обнуляє 6 годин."
           }
         }
       }
@@ -31528,6 +32200,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Мову застосунку також можна змінити в Параметри iPhone → Програми → HGV Hours → Мова."
+          }
+        }
+      }
+    },
+    "You may extend daily driving to 10 hours twice in a fixed week.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dwa razy w tygodniu stałym możesz wydłużyć jazdę dzienną do 10 godzin."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De două ori într-o săptămână fixă poți prelungi condusul zilnic la 10 ore."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дважды за фиксированную неделю можно увеличить дневное вождение до 10 часов."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Двічі за фіксований тиждень можна збільшити денне водіння до 10 годин."
           }
         }
       }
@@ -31864,6 +32564,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваші машини й причепи, пробіг за зміну, пальне, AdBlue й інші витратні"
+          }
+        }
+      }
+    },
+    "Your working time must average no more than 48 hours a week over the reference period (17 weeks unless an agreement says 26).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czas pracy nie może przekraczać średnio 48 godzin tygodniowo w okresie rozliczeniowym (17 tygodni, chyba że porozumienie mówi 26)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timpul de lucru trebuie să aibă o medie de cel mult 48 de ore pe săptămână pe perioada de referință (17 săptămâni, dacă un acord nu prevede 26)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рабочее время в среднем не должно превышать 48 часов в неделю за расчётный период (17 недель, если соглашение не устанавливает 26)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Робочий час у середньому не повинен перевищувати 48 годин на тиждень за розрахунковий період (17 тижнів, якщо угода не встановлює 26)."
           }
         }
       }

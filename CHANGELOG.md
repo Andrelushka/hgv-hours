@@ -2,6 +2,14 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.13.1 — Info (ⓘ) texts checked
+- Every ⓘ explanation now matches the tile it's on. Driving left explains the 4h30 period (and that it doesn't drop to zero on a break); Working left the 6-hour working-time period (any 15-minute break resets it).
+- New explanations for Driven today, Worked today, Shift working time, Shift time left, Next shift can start, Break due in and Resting for.
+- Separate texts for GB driving (10 h) and GB duty (11 h); clearer weekly rest and compensation wording.
+- Fixed: for other countries' rules, "On duty (14h)" showed the UK GB-domestic text. Their limits now explain themselves.
+- All ⓘ texts are translated into Polish, Romanian, Russian and Ukrainian.
+- 3 new tests (101 in total).
+
 ## 3.13.0 — Map filters
 - Every map has a filter (the ☰ button on the day/main map, "Show on map" in the navigation view menu). Choices are remembered.
 - Driver log day map: route driven, planned route, job start and stops, "problems only", and each event type on its own — shift start/end, activity changes, card in/out, arrived/departed, fuel, overspeed, infringements, harsh braking, notes, record changes — with how many there are that day, plus All / None. The filter icon fills in when something is hidden.

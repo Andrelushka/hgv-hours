@@ -8,6 +8,8 @@ struct LimitCard: View {
     var progress: Double
     var symbol: String
     var cautionAt: Double = 0.85
+    /// ⓘ text; defaults to the UK/EU rule for this title.
+    var info: String? = nil
 
     private var tint: Color {
         if progress >= 1 { return .red }
@@ -23,7 +25,7 @@ struct LimitCard: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                 Spacer(minLength: 0)
-                if let info = RuleInfo.text(for: title) { InfoDot(title: title, text: info).padding(-6) }
+                if let info = info ?? RuleInfo.text(for: title) { InfoDot(title: title, text: info).padding(-6) }
             }
             Text(value)
                 .font(.title3.weight(.bold).monospacedDigit())
@@ -454,54 +456,70 @@ struct InfoDot: View {
 }
 
 /// Plain-English explanations for the limits shown on cards.
+/// The ⓘ explanation for each tile, matched to its exact title so the text always describes what the tile shows.
 enum RuleInfo {
+    static let fourThirty = String(localized: "After 4h30 of driving you must take a 45-minute break. You can split it: at least 15 minutes, then at least 30 minutes later (in that order). A break of 15–29 minutes on its own doesn't reset the 4h30, but it counts as the first part. Breaks also count towards your working-time breaks.")
+    static let sixHours = String(localized: "Working Time rules: no more than 6 hours of work in a row. Any break of 15 minutes or more resets the 6 hours. Over the day, breaks must add up to 30 minutes if you work 6–9 hours, or 45 minutes over 9 hours, in pieces of at least 15 minutes. Driving and other work count; POA and breaks don't.")
+    static let dailyRest = String(localized: "Daily rest must be completed within 24 hours of the start of your shift: 11 hours normally, 9 hours reduced (up to 3 times between weekly rests), or split 3 hours + 9 hours.")
+
     static func text(for title: String) -> String? {
+        switch title {
+        case "Driving left":
+            return String(localized: "Driving you can do before your next break: what's left of the 4h30, or less if your daily (9h/10h) or weekly (56h, 90h in two weeks) driving runs out first. It doesn't drop to zero during a break — stopping a break early is allowed, it just doesn't reset the 4h30. After 45 minutes (or 15 then 30) you get a fresh 4h30. Driving left for the whole day is on the Hours page.")
+        case "Working left":
+            return String(localized: "Working time you can do before a working-time break: what's left of the 6 hours, or less if the 60-hour week or the night-work limit is nearer. Driving and other work count; POA and breaks don't. Any break of 15 minutes or more resets the 6 hours.")
+        case "Before break":
+            return fourThirty
+        case "Before 6h break":
+            return sixHours
+        case "Break due in":
+            return String(localized: "Time until your next break is due if you carry on as you are: the sooner of the 4h30 driving limit and the 6-hour working-time limit.")
+        case "Daily driving":
+            return String(localized: "Normally 9 hours of driving between daily rests. Twice a week you may drive 10 hours.")
+        case "Driven today":
+            return String(localized: "Driving recorded today against your daily limit: 9 hours, or 10 hours on up to two days in a fixed week.")
+        case "This week", "Week driving":
+            return String(localized: "No more than 56 hours of driving in a fixed week (Monday 00:00 to Sunday 24:00).")
+        case "Fortnight":
+            return String(localized: "No more than 90 hours of driving in any two consecutive fixed weeks.")
+        case "Week working":
+            return String(localized: "No more than 60 hours of working time in any week. Driving and other work count; POA and breaks don't.")
+        case "Night shift work":
+            return String(localized: "If your shift includes any time between 00:00 and 04:00, you may work no more than 10 hours in that shift, unless a collective or workforce agreement allows more.")
+        case "Worked today":
+            return String(localized: "Driving plus other work recorded today. POA and breaks are not working time.")
+        case "Shift working time":
+            return String(localized: "Driving plus other work in this shift (POA and breaks don't count). It's what the working-time break rules and the night-work limit use.")
+        case "Shift time left":
+            return String(localized: "Time until you must start your daily rest. A shift can last up to 13 hours if you then rest 11 hours, or 15 hours with a reduced 9-hour rest (up to 3 times between weekly rests) — all within 24 hours of the shift start.")
+        case "Start daily rest by":
+            return String(localized: "The latest time to start your daily rest so it fits within 24 hours of your shift start: 11 hours normally, or 9 hours reduced (up to 3 times between weekly rests).")
+        case "Daily rest":
+            return dailyRest
+        case "Resting for":
+            return String(localized: "How long you've been resting. 9 hours is a reduced daily rest and 11 hours a regular one; 24 hours is a reduced weekly rest and 45 hours a regular weekly rest.")
+        case "Next shift can start":
+            return String(localized: "The earliest time your next shift can start: after at least 9 hours' rest (reduced, if you have any left) or 11 hours (regular), or after your weekly rest if one is due.")
+        case "Reduced rests":
+            return String(localized: "A 9-hour reduced daily rest lets your day stretch to 15 hours. You can use up to 3 between weekly rests.")
+        case "Weekly rest", "Weekly rest by":
+            return String(localized: "A weekly rest of 45 hours (or reduced, 24 hours) must start no later than 6 × 24 hours after the end of the previous one. In any two weeks at least one must be a regular 45-hour rest. A reduced weekly rest must be made up in one block before the end of the third week after it.")
+        case "Compensation owed":
+            return String(localized: "Hours missing from a reduced weekly rest must be added, in one block, to a rest of 9 hours or more before the end of the third week after it.")
+        case "GB driving":
+            return String(localized: "GB domestic rules: no more than 10 hours of driving in a working day.")
+        case "GB duty":
+            return String(localized: "GB domestic rules: no more than 11 hours on duty in a working day (driving and other work).")
+        default:
+            break
+        }
         let t = title.lowercased()
-        if t.contains("before break") || t.contains("driving left") {
-            return "After 4h30 of driving you must take a 45-minute break. You can split it: at least 15 minutes, then at least 30 minutes later (in that order). The break also counts towards your working-time breaks."
-        }
-        if t.contains("daily driving") {
-            return "Normally 9 hours of driving between daily rests. Twice a week you may drive 10 hours."
-        }
-        if t.contains("this week") && !t.contains("work") || t.contains("week driving") {
-            return "No more than 56 hours of driving in a fixed week (Monday 00:00 to Sunday 24:00)."
-        }
-        if t.contains("fortnight") {
-            return "No more than 90 hours of driving in any two consecutive fixed weeks."
-        }
-        if t.contains("6h break") || t.contains("working left") || t.contains("working-time") {
-            return "Working Time rules: no more than 6 hours of work without a break. Breaks must total 30 minutes if you work 6–9 hours, 45 minutes over 9 hours, taken in pieces of at least 15 minutes. POA and breaks are not working time."
-        }
-        if t.contains("week working") {
-            return "No more than 60 hours of working time in any week."
-        }
         if t.contains("average") {
-            return "Your working time must average no more than 48 hours a week over the reference period (17 weeks unless an agreement says 26)."
+            return String(localized: "Your working time must average no more than 48 hours a week over the reference period (17 weeks unless an agreement says 26).")
         }
-        if t.contains("night") {
-            return "If your shift includes any time between 00:00 and 04:00, you may work no more than 10 hours in that shift, unless a collective or workforce agreement allows more."
-        }
-        if t.contains("rest by") || t.contains("daily rest") || t.contains("resting") {
-            return "Daily rest must be completed within 24 hours of the start of your shift: 11 hours normally, 9 hours reduced (up to 3 times between weekly rests), or split 3h + 9h."
-        }
-        if t.contains("reduced rest") || t.contains("15h day") {
-            return "A 9-hour reduced daily rest lets your day stretch to 15 hours. You can use up to 3 between weekly rests."
-        }
-        if t.contains("10h driving") {
-            return "You may extend daily driving to 10 hours twice in a fixed week."
-        }
-        if t.contains("weekly rest") {
-            return "A weekly rest of 45 hours (or reduced 24 hours) must start no later than 6 × 24 hours after the end of the previous one. A reduced weekly rest must be paid back in one block within 3 weeks."
-        }
-        if t.contains("compensation") {
-            return "Hours missing from a reduced weekly rest must be added to a rest of 9 hours or more before the end of the third week after it."
-        }
-        if t.contains("gb") || t.contains("duty") {
-            return "GB domestic rules: no more than 10 hours of driving and 11 hours of duty in a working day."
-        }
-        if t.contains("earned") || t.contains("pay") {
-            return "An estimate before tax and deductions, from your pay settings (Earnings tab ⚙︎). Check your payslip."
-        }
+        if t.contains("10h driving") { return String(localized: "You may extend daily driving to 10 hours twice in a fixed week.") }
+        if t.contains("15h day") { return String(localized: "A 9-hour reduced daily rest lets your day stretch to 15 hours. You can use up to 3 between weekly rests.") }
+        if t.contains("earned") { return String(localized: "An estimate before tax and deductions, from your pay settings (Earnings tab ⚙︎). Check your payslip.") }
         return nil
     }
 }
