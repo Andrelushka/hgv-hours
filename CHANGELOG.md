@@ -2,6 +2,10 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.20.1 — Your Today layout is the default
+- A new install (or Customise → Reset to default layout) now starts with this Today page, in groups: date, in-cab automatic, current activity, activity buttons, driving left, working left, driver card and Emergency side by side, expiry warnings, earnings, today's job, vehicle height, vehicle & height, mileage. Driving left and Working left sit in the Today group. Everything else starts hidden and can be added in Edit layout.
+- 1 new test (120 in total).
+
 ## 3.20.0 — Smoother navigation, driven route, new vehicle check, pay and rest fixes
 - Fixed: earnings kept counting after End shift (with "pay breaks" on, the rest after the shift was paid as a break). Pay now stops when you stop working.
 - Back on Today: the daily / weekly rest counter — how long you've rested, when reduced (9h / 24h) and full (11h / 45h) rest are done, a progress ring, and the countdown to your next job.

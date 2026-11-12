@@ -138,7 +138,7 @@ final class LayoutAndGroupsTests: XCTestCase {
         s.setGroup(.dailyRest, .now)
         XCTAssertEqual(s.group(of: .dailyRest), .now)
         s.setGroup(.dailyRest, .rest)
-        XCTAssertTrue(s.tileGroups.isEmpty, "back in its own group is not stored")
+        XCTAssertNil(s.tileGroups[Tile.dailyRest.rawValue], "back in its own group is not stored")
         s.moveGroup(.alerts, by: -100)
         XCTAssertEqual(s.orderedGroups.first, .alerts)
         XCTAssertEqual(Set(s.orderedGroups), Set(TileGroup.allCases))
@@ -260,5 +260,19 @@ final class Release320Tests: XCTestCase {
         let thinned = NavigationModeView.thin(pts, metres: 25)
         XCTAssertLessThan(thinned.count, 30)
         XCTAssertGreaterThan(thinned.count, 15)
+    }
+}
+
+/// 3.20.1: a new install starts with the driver's chosen Today layout.
+@MainActor
+final class DefaultTodayLayoutTests: XCTestCase {
+    func testDefaultTodayLayout() {
+        let s = AppSettings()
+        let hidden = s.tileHidden(.today)
+        let shown = s.tileOrder(.today).filter { !hidden.contains($0) }
+        XCTAssertEqual(shown, [.date, .inCab, .status, .buttons, .driveLeft, .workLeft, .card, .emergency,
+                               .expiry, .earnings, .job, .heightCheck, .vehicle, .mileage])
+        XCTAssertTrue(s.todayGrouped)
+        XCTAssertEqual(s.group(of: .driveLeft), .today)
     }
 }

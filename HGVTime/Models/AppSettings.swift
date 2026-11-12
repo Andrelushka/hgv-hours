@@ -162,14 +162,14 @@ struct AppSettings: Codable, Equatable {
     /// Tile sizes you chose: Tile raw value → "wide" or "half" (no entry = the tile's own size).
     var tileSizes: [String: String] = [:]
     /// Tiles you moved to another group on the Hours page: Tile raw value → TileGroup raw value.
-    var tileGroups: [String: String] = [:]
+    var tileGroups: [String: String] = ["driveLeft": "today", "workLeft": "today"]
     /// Order of the Hours page groups (TileGroup raw values; empty = default) and groups you switched off.
     var groupOrder: [String] = []
     var groupsHidden: [String] = []
     /// Your own names for groups (TileGroup raw value → name).
     var groupNames: [String: String] = [:]
     /// Show Today's tiles in groups (like Hours) instead of one free list.
-    var todayGrouped = false
+    var todayGrouped = true
     /// Blocks on the other pages (Driver log day, Earnings, Jobs, debrief…): page id → block order, and hidden blocks.
     var pageOrders: [String: [String]] = [:]
     var pageHidden: [String: [String]] = [:]

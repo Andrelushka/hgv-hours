@@ -194,9 +194,11 @@ enum TilePage: String {
     var allowed: [Tile] {
         switch self {
         case .today:
-            [.date, .heightCheck, .emergency, .company, .status, .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .buttons, .driveLeft, .workLeft, .checks, .vehicleCheck, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
-             .job, .vehicle, .mileage, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .nextBreak,
-             .tenHourDays, .fifteenHourDays, .shiftLength]
+            // Default order (the layout the driver set up and asked to be the default).
+            [.date, .inCab, .status, .buttons, .driveLeft, .workLeft, .card, .emergency, .company,
+             .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .checks, .vehicleCheck, .nightOut,
+             .warnings, .expiry, .earnings, .job, .heightCheck, .vehicle, .mileage,
+             .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .nextBreak, .tenHourDays, .fifteenHourDays, .shiftLength]
         case .hours:
             Tile.allCases.filter { ![.today].contains($0.group) }
         }
@@ -205,7 +207,8 @@ enum TilePage: String {
     /// Shown until the driver changes the layout.
     var defaultVisible: Set<Tile> {
         switch self {
-        case .today: [.date, .card, .heightCheck, .company, .emergency, .expiry, .status, .buttons, .navTurn, .navMap, .navArrival, .driveLeft, .workLeft, .checks, .vehicleCheck, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
+        case .today: [.date, .inCab, .status, .buttons, .driveLeft, .workLeft, .card, .emergency, .expiry, .earnings, .job,
+                      .heightCheck, .vehicle, .mileage]
         case .hours: Set(allowed)
         }
     }
@@ -700,11 +703,16 @@ struct TileCustomiseView: View {
                 Button("Reset to default layout") {
                     store.settings.setTiles(page, order: [], hidden: [])
                     if page == .today { store.settings.todayOrder = [] }
-                    for t in page.allowed { store.settings.tileGroups[t.rawValue] = nil; store.settings.tileSizes[t.rawValue] = nil }
+                    let defaults = AppSettings()
+                    for t in page.allowed {
+                        store.settings.tileGroups[t.rawValue] = defaults.tileGroups[t.rawValue]
+                        store.settings.tileSizes[t.rawValue] = nil
+                    }
+                    if page == .today { store.settings.todayGrouped = defaults.todayGrouped }
                 }
                 Button("Reset groups") {
                     store.settings.groupOrder = []; store.settings.groupsHidden = []; store.settings.groupNames = [:]
-                    store.settings.tileGroups = [:]
+                    store.settings.tileGroups = AppSettings().tileGroups
                 }
             } footer: {
                 Text("Tip: on the \(page == .today ? "Today" : "Hours") page, tap Edit to drag tiles around and hide or add them right there.")
