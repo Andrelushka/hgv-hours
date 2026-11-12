@@ -46,6 +46,9 @@ struct EarningsView: View {
                 .buttonStyle(.borderless)
             }
 
+          ForEach(store.settings.blocks(.earnings), id: \.self) { block in
+            switch block {
+            case "total":
             Section {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -71,6 +74,9 @@ struct EarningsView: View {
                         Text(e.estimateNote).font(.caption).foregroundStyle(.secondary)
                     }
                 }
+            }
+            case "chart":
+            Section {
                 Chart(Array(e.bars.enumerated()), id: \.offset) { item in
                     BarMark(x: .value("When", item.element.label), y: .value("Earned", item.element.amount))
                         .foregroundStyle(Color.green.gradient)
@@ -81,6 +87,7 @@ struct EarningsView: View {
                 .padding(.vertical, 4)
             }
 
+            case "breakdown":
             Section("Breakdown") {
                 ForEach(e.breakdown.lines.filter { $0.amount != 0 || $0.isInfo }) { line in
                     LabeledContent {
@@ -101,6 +108,7 @@ struct EarningsView: View {
                 }
             }
 
+            default:
             Section {
                 if period == .week {
                     NavigationLink { WeeksView(initialOffset: offset) } label: {
@@ -113,6 +121,8 @@ struct EarningsView: View {
             } footer: {
                 Text("Estimates are before tax and deductions.")
             }
+            }
+          }
         }
         .navigationTitle("Earnings")
     }

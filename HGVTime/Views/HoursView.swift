@@ -38,14 +38,8 @@ struct HoursView: View {
                             }
                             let hidden = store.settings.tileHidden(.hours)
                             let order = store.settings.tileOrder(.hours).filter { !hidden.contains($0) }
-                            ForEach(TileGroup.allCases) { group in
-                                let tiles = order.filter { $0.group == group && (editing || data.applies($0)) }
-                                if !tiles.isEmpty {
-                                    TileGroupHeader(group: group, page: .hours)
-                                    TileGrid(page: .hours, tiles: tiles, editing: editing) { tile in
-                                        if data.applies(tile) { HoursTileView(tile: tile, data: data) } else { TilePlaceholder(tile: tile) }
-                                    }
-                                }
+                            GroupedTiles(page: .hours, tiles: order.filter { editing || data.applies($0) }, editing: editing) { tile in
+                                if data.applies(tile) { HoursTileView(tile: tile, data: data) } else { TilePlaceholder(tile: tile) }
                             }
                             if editing { HiddenTilesTray(page: .hours) }
                         }

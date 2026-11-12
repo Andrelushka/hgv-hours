@@ -59,6 +59,11 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.17 (3.17.0) — Layout everywhere, groups, debrief tables
+- ✅ Vehicle check in shift checks and at pick-ups (only when turned on)
+- ✅ Edit layout on Driver log, Jobs, Earnings and the debrief; move tiles between groups, rename/reorder/hide groups
+- ✅ Day debrief as tables
+
 ## V3.16 (3.16.0) — Vehicle check, trailer swaps, tile sizes
 - ✅ Optional full walk-round vehicle check (vehicle + up to 6 trailers, defects, height, declaration, history, share)
 - ✅ Drop and pick up trailers at any stop; Finish shown at the end of the job

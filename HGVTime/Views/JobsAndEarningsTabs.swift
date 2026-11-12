@@ -2,27 +2,30 @@ import SwiftUI
 
 /// Jobs tab: planner (calendar), vehicles & trailers, fuel & resources, and notes.
 struct JobsTab: View {
-    enum Section: String, CaseIterable, Identifiable {
-        case planner = "Planner", vehicles = "Vehicles", fuel = "Fuel", notes = "Notes"
-        var id: String { rawValue }
-    }
-    @State private var section: Section = .planner
+    @Environment(SettingsStore.self) private var store
+    @State private var section = ""
     @State private var showingSettings = false
 
     var body: some View {
+        let tabs = store.settings.blocks(.jobsTabs)
+        let current = tabs.contains(section) ? section : tabs[0]
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("Show", selection: $section) {
-                    ForEach(Section.allCases) { Text($0.rawValue).tag($0) }
+                if tabs.count > 1 {
+                    Picker("Show", selection: Binding(get: { current }, set: { section = $0 })) {
+                        ForEach(tabs, id: \.self) { id in
+                            Text(LayoutPage.jobsTabs.blocks.first { $0.id == id }?.title ?? id).tag(id)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+                    .padding(.vertical, 6)
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 6)
-                switch section {
-                case .planner: CalendarHistoryView(planningOnly: true)
-                case .vehicles: VehiclesView()
-                case .fuel: ResourcesView()
-                case .notes: NotebookView(embedded: true)
+                switch current {
+                case "vehicles": VehiclesView()
+                case "fuel": ResourcesView()
+                case "notes": NotebookView(embedded: true)
+                default: CalendarHistoryView(planningOnly: true)
                 }
             }
             .navigationTitle("Jobs")
@@ -31,6 +34,7 @@ struct JobsTab: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button { showingSettings = true } label: { Image(systemName: "gearshape") }
                 }
+                ToolbarItem(placement: .topBarLeading) { EditLayoutButton(pages: [.jobsTabs, .debrief]) }
             }
             .sheet(isPresented: $showingSettings) {
                 NavigationStack {
@@ -67,6 +71,7 @@ struct EarningsTab: View {
                     ToolbarItem(placement: .topBarLeading) {
                         Button { showingSettings = true } label: { Image(systemName: "gearshape") }
                     }
+                    ToolbarItem(placement: .topBarLeading) { EditLayoutButton(pages: [.earnings]) }
                 }
                 .sheet(isPresented: $showingSettings) {
                     NavigationStack {

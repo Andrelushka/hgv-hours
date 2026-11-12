@@ -2,6 +2,17 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.17.0 — Vehicle check where you want it, editable layout everywhere, debrief tables
+- Vehicle check is only where you turn it on (Shift checks → ⚙︎ → Full vehicle check):
+  - Add to start-of-shift checks: it shows in the Shift checks tile until today's check is signed.
+  - When I pick up a vehicle or trailer: at a pick-up stop (or a trailer swap) the trailer/vehicle is added to today's check; a check button sits next to Departed, and the check opens when you tap Departed if it isn't finished.
+  - Vehicle check tile on Today: show or hide it.
+- Edit layout on every page: Driver log (sections and the day's blocks), Jobs (sections and the debrief), Earnings (total, chart, breakdown, links) and the Day debrief — reorder and hide blocks with the grid button at the top.
+- Groups: move a tile to another group (folder button, or drag it onto a tile or heading in another group), move groups up/down, rename them or hide a whole group. Today can be shown in groups too (Customise → Show Today in groups).
+- Day debrief in table format: Job, Vehicle check, Stops (with trailer changes), Activities, Mileage, Fuel & resources, Events and Pay as spreadsheet-style tables. Shared text is comma-separated.
+- All new texts translated into Polish, Romanian, Russian and Ukrainian.
+- 3 new tests (110 in total).
+
 ## 3.16.0 — Vehicle check, trailer swaps, resizable tiles
 - Full vehicle check (walk-round / pre-use), like a paper operator check sheet: a column for your vehicle and one for each trailer you take today (up to 6). Tap a line to mark ✓ OK, ✗ needs action (with a note) or N/A; Yes/No lines for questions like "coupling tug test done". "All ✓" per column, height when leaving site, defect book reference, declaration and a share button. History keeps every check.
 - The check is optional: it's a Today tile ("Vehicle check") you can show or hide in Edit layout. Not mandatory.

@@ -117,6 +117,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.applyWorkingTime = d.applyWorkingTime; s.nightWorkLimitHours = d.nightWorkLimitHours
             s.wtdReferenceWeeks = d.wtdReferenceWeeks; s.allowConsecutiveReducedWeekly = d.allowConsecutiveReducedWeekly
             s.currentRegime = d.currentRegime; s.multiManned = d.multiManned; s.shiftStartKind = d.shiftStartKind
+            s.vehicleCheckInShift = d.vehicleCheckInShift; s.vehicleCheckAtPickup = d.vehicleCheckAtPickup
         case .alerts:
             s.notificationsEnabled = d.notificationsEnabled; s.warningLeadMinutes = d.warningLeadMinutes
             s.liveActivityEnabled = d.liveActivityEnabled
@@ -151,6 +152,8 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
         case .layout:
             s.todayOrder = d.todayOrder; s.todayHidden = d.todayHidden
             s.hoursOrder = d.hoursOrder; s.hoursHidden = d.hoursHidden; s.tileSizes = d.tileSizes
+            s.tileGroups = d.tileGroups; s.groupOrder = d.groupOrder; s.groupsHidden = d.groupsHidden; s.groupNames = d.groupNames; s.todayGrouped = d.todayGrouped
+            s.pageOrders = d.pageOrders; s.pageHidden = d.pageHidden
             s.dateStyle = d.dateStyle; s.useMiles = d.useMiles; s.showFeet = d.showFeet
             s.distanceBoth = d.distanceBoth; s.heightUnit = d.heightUnit
         case .assistant:

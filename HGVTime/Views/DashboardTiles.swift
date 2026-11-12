@@ -206,8 +206,6 @@ enum TilePage: String {
         }
     }
 
-    /// Hours is shown in groups; Today is one free-order list.
-    var grouped: Bool { self == .hours }
 }
 
 extension Tile {
@@ -216,6 +214,46 @@ extension Tile {
 }
 
 extension AppSettings {
+    /// Hours is always in groups; Today only if you turn groups on.
+    func isGrouped(_ page: TilePage) -> Bool { page == .hours || todayGrouped }
+
+    /// The group a tile sits in (yours if you moved it).
+    func group(of tile: Tile) -> TileGroup {
+        tileGroups[tile.rawValue].flatMap(TileGroup.init(rawValue:)) ?? tile.group
+    }
+
+    mutating func setGroup(_ tile: Tile, _ group: TileGroup) {
+        tileGroups[tile.rawValue] = group == tile.group ? nil : group.rawValue
+    }
+
+    /// Groups in your order.
+    var orderedGroups: [TileGroup] {
+        var out = groupOrder.compactMap(TileGroup.init(rawValue:))
+        for g in TileGroup.allCases where !out.contains(g) { out.append(g) }
+        return out
+    }
+
+    mutating func moveGroup(_ group: TileGroup, by delta: Int) {
+        var order = orderedGroups
+        guard let i = order.firstIndex(of: group) else { return }
+        let j = max(0, min(order.count - 1, i + delta))
+        order.remove(at: i)
+        order.insert(group, at: j)
+        groupOrder = order.map(\.rawValue)
+    }
+
+    func groupTitle(_ group: TileGroup) -> String {
+        let custom = groupNames[group.rawValue]?.trimmingCharacters(in: .whitespaces) ?? ""
+        return custom.isEmpty ? group.title : custom
+    }
+
+    func isGroupHidden(_ group: TileGroup) -> Bool { groupsHidden.contains(group.rawValue) }
+
+    mutating func setGroupHidden(_ group: TileGroup, _ hidden: Bool) {
+        groupsHidden.removeAll { $0 == group.rawValue }
+        if hidden { groupsHidden.append(group.rawValue) }
+    }
+
     /// Full width or half width, as you set it in Edit layout.
     func isWide(_ tile: Tile) -> Bool {
         guard tile.canResize, let size = tileSizes[tile.rawValue] else { return tile.isWide }
@@ -375,6 +413,21 @@ struct TileGrid<Content: View>: View {
                 }
                 .overlay(alignment: .topTrailing) {
                     HStack(spacing: 4) {
+                        if store.settings.isGrouped(page) {
+                            Menu {
+                                ForEach(store.settings.orderedGroups) { g in
+                                    Button {
+                                        withAnimation(.snappy) { store.settings.setGroup(tile, g) }
+                                    } label: {
+                                        if store.settings.group(of: tile) == g { Label(store.settings.groupTitle(g), systemImage: "checkmark") } else { Text(store.settings.groupTitle(g)) }
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: "folder").font(.caption.weight(.bold)).padding(6)
+                                    .background(Color.accentColor, in: Circle()).foregroundStyle(.white)
+                            }
+                            .accessibilityLabel("Move \(tile.title) to another group")
+                        }
                         if tile.canResize {
                             // Wide ↔ half width.
                             Button {
@@ -397,7 +450,11 @@ struct TileGrid<Content: View>: View {
                 }
                 .dropDestination(for: String.self) { items, _ in
                     guard let raw = items.first, let dragged = Tile(rawValue: raw) else { return false }
-                    withAnimation(.snappy) { store.settings.moveTile(dragged, before: tile, on: page) }
+                    withAnimation(.snappy) {
+                        // Dropped onto a tile in another group: it joins that group.
+                        if store.settings.isGrouped(page) { store.settings.setGroup(dragged, store.settings.group(of: tile)) }
+                        store.settings.moveTile(dragged, before: tile, on: page)
+                    }
                     return true
                 }
         } else {
@@ -413,14 +470,15 @@ struct HiddenTilesTray: View {
 
     var body: some View {
         let hidden = store.settings.tileHidden(page)
-        let groups = TileGroup.allCases.filter { g in page.allowed.contains { $0.group == g && hidden.contains($0) } }
+        let s = store.settings
+        let groups = s.orderedGroups.filter { g in page.allowed.contains { s.group(of: $0) == g && hidden.contains($0) } }
         VStack(alignment: .leading, spacing: 10) {
             Text("Add tiles").font(.headline)
             if groups.isEmpty { Text("Everything is showing.").font(.caption).foregroundStyle(.secondary) }
             ForEach(groups) { g in
-                Text(g.title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text(s.groupTitle(g)).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 FlowRow {
-                    ForEach(page.allowed.filter { $0.group == g && hidden.contains($0) }) { t in
+                    ForEach(page.allowed.filter { s.group(of: $0) == g && hidden.contains($0) }) { t in
                         Button {
                             withAnimation(.snappy) { store.settings.setTile(t, visible: true, on: page) }
                         } label: {
@@ -437,30 +495,93 @@ struct HiddenTilesTray: View {
     }
 }
 
-/// Group heading with a switch menu for the group's tiles.
+/// Group heading with a switch menu for the group's tiles; while editing also rename, move and hide the group.
+/// Drop a tile on the heading to move it into the group.
 struct TileGroupHeader: View {
     @Environment(SettingsStore.self) private var store
     var group: TileGroup
     var page: TilePage
+    var editing = false
+    @State private var renaming = false
+    @State private var name = ""
 
     var body: some View {
-        HStack {
-            Text(group.title.uppercased()).font(.caption.weight(.bold)).foregroundStyle(.secondary)
+        let s = store.settings
+        let hidden = s.isGroupHidden(group)
+        HStack(spacing: 8) {
+            Text(s.groupTitle(group).uppercased()).font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                .strikethrough(hidden)
+            if hidden { Text("Hidden").font(.caption2.weight(.semibold)).foregroundStyle(.orange) }
             Spacer()
+            if editing {
+                Button { withAnimation(.snappy) { store.settings.moveGroup(group, by: -1) } } label: { Image(systemName: "arrow.up") }
+                    .accessibilityLabel("Move group up")
+                Button { withAnimation(.snappy) { store.settings.moveGroup(group, by: 1) } } label: { Image(systemName: "arrow.down") }
+                    .accessibilityLabel("Move group down")
+            }
             Menu {
-                ForEach(page.allowed.filter { $0.group == group }) { t in
+                if editing {
+                    Button("Rename group", systemImage: "pencil") { name = s.groupTitle(group); renaming = true }
+                    Button(hidden ? "Show group" : "Hide group", systemImage: hidden ? "eye" : "eye.slash") {
+                        withAnimation(.snappy) { store.settings.setGroupHidden(group, !hidden) }
+                    }
+                    Divider()
+                }
+                ForEach(page.allowed.filter { s.group(of: $0) == group }) { t in
                     Toggle(isOn: Binding(get: { !store.settings.tileHidden(page).contains(t) },
                                          set: { store.settings.setTile(t, visible: $0, on: page) })) {
                         Label(t.title, systemImage: t.symbol)
                     }
                 }
             } label: {
-                Image(systemName: "switch.2").font(.subheadline).padding(4)
+                Image(systemName: editing ? "ellipsis.circle" : "switch.2").font(.subheadline).padding(4)
             }
-            .accessibilityLabel("Choose \(group.title) tiles")
+            .accessibilityLabel("Choose \(s.groupTitle(group)) tiles")
         }
+        .font(.subheadline)
         .padding(.horizontal, 4)
+        .padding(.vertical, editing ? 6 : 0)
         .padding(.top, 6)
+        .background(editing ? Color.accentColor.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 10))
+        .dropDestination(for: String.self) { items, _ in
+            guard editing, let raw = items.first, let dragged = Tile(rawValue: raw) else { return false }
+            withAnimation(.snappy) { store.settings.setGroup(dragged, group) }
+            return true
+        }
+        .alert("Group name", isPresented: $renaming) {
+            TextField(group.title, text: $name)
+            Button("Save") { store.settings.groupNames[group.rawValue] = name.trimmingCharacters(in: .whitespaces) }
+            Button("Default name") { store.settings.groupNames[group.rawValue] = nil }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+}
+
+/// Tiles laid out under group headings, in your group order. While editing, empty groups show so tiles can be dropped in.
+struct GroupedTiles<Content: View>: View {
+    @Environment(SettingsStore.self) private var store
+    var page: TilePage
+    var tiles: [Tile]
+    var editing: Bool
+    @ViewBuilder var content: (Tile) -> Content
+
+    var body: some View {
+        let s = store.settings
+        ForEach(s.orderedGroups) { group in
+            let inGroup = tiles.filter { s.group(of: $0) == group }
+            let hidden = s.isGroupHidden(group)
+            if editing || (!inGroup.isEmpty && !hidden) {
+                TileGroupHeader(group: group, page: page, editing: editing)
+                if inGroup.isEmpty {
+                    Text("Drag a tile onto this heading to move it here.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 4)
+                } else {
+                    TileGrid(page: page, tiles: inGroup, editing: editing, content: content)
+                        .opacity(hidden ? 0.4 : 1)
+                }
+            }
+        }
     }
 }
 
@@ -501,14 +622,23 @@ struct TileCustomiseView: View {
         let order = store.settings.tileOrder(page)
         let hidden = store.settings.tileHidden(page)
         List {
-            let groups: [TileGroup?] = page.grouped ? TileGroup.allCases.filter { g in order.contains { $0.group == g } } : [nil]
+            let s = store.settings
+            let groups: [TileGroup?] = s.isGrouped(page) ? s.orderedGroups.filter { g in order.contains { s.group(of: $0) == g } } : [nil]
             ForEach(groups, id: \.self) { group in
                 Section {
-                    let items = order.filter { group == nil || $0.group == group }
+                    let items = order.filter { group == nil || s.group(of: $0) == group }
                     ForEach(items) { t in
                         HStack {
                             Toggle(isOn: Binding(get: { !hidden.contains(t) }, set: { store.settings.setTile(t, visible: $0, on: page) })) {
                                 Label(t.title, systemImage: t.symbol)
+                            }
+                            if let group {
+                                Menu {
+                                    ForEach(s.orderedGroups) { g in
+                                        Button(s.groupTitle(g)) { store.settings.setGroup(t, g) }.disabled(g == group)
+                                    }
+                                } label: { Image(systemName: "folder") }
+                                .accessibilityLabel("Move to group")
                             }
                             if t.canResize {
                                 Picker("Size", selection: Binding(get: { store.settings.isWide(t) }, set: { store.settings.setWide(t, $0) })) {
@@ -531,7 +661,21 @@ struct TileCustomiseView: View {
                         store.settings.setTiles(page, order: full, hidden: hidden)
                     }
                 } header: {
-                    Text(group?.title ?? "Tiles")
+                    Text(group.map { s.groupTitle($0) } ?? "Tiles")
+                }
+            }
+            if page == .today || s.isGrouped(page) {
+                Section {
+                    if page == .today {
+                        Toggle("Show Today in groups", isOn: Binding(get: { store.settings.todayGrouped }, set: { store.settings.todayGrouped = $0 }))
+                    }
+                    if s.isGrouped(page) {
+                        NavigationLink { TileGroupsEditor() } label: { Label("Groups: order, names, hide", systemImage: "folder") }
+                    }
+                } header: {
+                    Text("Groups")
+                } footer: {
+                    Text("Move a tile to another group with the folder button, or in Edit layout drag it onto a tile or heading in another group.")
                 }
             }
             if page == .today {
@@ -552,6 +696,11 @@ struct TileCustomiseView: View {
                 Button("Reset to default layout") {
                     store.settings.setTiles(page, order: [], hidden: [])
                     if page == .today { store.settings.todayOrder = [] }
+                    for t in page.allowed { store.settings.tileGroups[t.rawValue] = nil; store.settings.tileSizes[t.rawValue] = nil }
+                }
+                Button("Reset groups") {
+                    store.settings.groupOrder = []; store.settings.groupsHidden = []; store.settings.groupNames = [:]
+                    store.settings.tileGroups = [:]
                 }
             } footer: {
                 Text("Tip: on the \(page == .today ? "Today" : "Hours") page, tap Edit to drag tiles around and hide or add them right there.")
@@ -559,5 +708,35 @@ struct TileCustomiseView: View {
         }
         .environment(\.editMode, .constant(.active))
         .navigationTitle(page == .today ? "Customise Today" : "Customise Hours")
+    }
+}
+
+
+/// Reorder, rename and hide the tile groups (shared by Today and Hours).
+struct TileGroupsEditor: View {
+    @Environment(SettingsStore.self) private var store
+
+    var body: some View {
+        List {
+            Section {
+                ForEach(store.settings.orderedGroups) { g in
+                    HStack {
+                        Toggle(isOn: Binding(get: { !store.settings.isGroupHidden(g) }, set: { store.settings.setGroupHidden(g, !$0) })) {
+                            TextField(g.title, text: Binding(get: { store.settings.groupNames[g.rawValue] ?? "" },
+                                                             set: { store.settings.groupNames[g.rawValue] = $0.isEmpty ? nil : $0 }))
+                        }
+                    }
+                }
+                .onMove { from, to in
+                    var order = store.settings.orderedGroups
+                    order.move(fromOffsets: from, toOffset: to)
+                    store.settings.groupOrder = order.map(\.rawValue)
+                }
+            } footer: {
+                Text("Drag to reorder. Type to rename (leave empty for the default name). Switch off to hide a whole group.")
+            }
+        }
+        .environment(\.editMode, .constant(.active))
+        .navigationTitle("Groups")
     }
 }

@@ -117,3 +117,54 @@ final class VehicleCheck {
         return n
     }
 }
+
+extension VehicleCheck {
+    /// Today's check, or a new one with your current vehicle and trailer as columns.
+    @MainActor
+    static func today(in context: ModelContext, settings: AppSettings) -> VehicleCheck {
+        let start = Calendar.hgv.startOfDay(for: .now)
+        var fd = FetchDescriptor<VehicleCheck>(predicate: #Predicate { $0.date >= start }, sortBy: [SortDescriptor(\.date, order: .reverse)])
+        fd.fetchLimit = 1
+        if let existing = try? context.fetch(fd).first { return existing }
+        let vehicles = (try? context.fetch(FetchDescriptor<Vehicle>())) ?? []
+        let c = VehicleCheck(driverName: settings.driverName)
+        let unit = vehicles.first { $0.id.uuidString == settings.currentVehicleID }
+        c.columns = [unit.map(Self.columnName) ?? String(localized: "Vehicle")]
+        c.trailerColumns = [false]
+        c.heights = [unit?.height ?? 0]
+        if let trailer = vehicles.first(where: { $0.id.uuidString == settings.currentTrailerID }) {
+            c.addColumn(Self.columnName(trailer), trailer: true, height: trailer.height)
+        }
+        context.insert(c)
+        try? context.save()
+        return c
+    }
+
+    static func columnName(_ v: Vehicle) -> String {
+        v.registration.isEmpty ? (v.fleetNumber.isEmpty ? v.displayName : v.fleetNumber) : v.registration
+    }
+
+    /// Adds a column (up to 7) unless one with that name is already there; returns its index.
+    @discardableResult
+    func addColumn(_ name: String, trailer: Bool, height: Double) -> Int? {
+        if let i = columns.firstIndex(where: { $0.caseInsensitiveCompare(name) == .orderedSame }) { return i }
+        guard columns.count < 7 else { return nil }
+        var h = heights
+        while h.count < columns.count { h.append(0) }
+        h.append(height)
+        columns += [name]
+        trailerColumns += [trailer]
+        heights = h
+        return columns.count - 1
+    }
+
+    /// Lines in one column still blank.
+    func openCount(column c: Int) -> Int {
+        guard c < columns.count else { return 0 }
+        let trailer = c < trailerColumns.count && trailerColumns[c]
+        return CheckItem.all.filter { $0.applies(toTrailer: trailer) && answers[Self.key($0.id, c)] == nil }.count
+    }
+
+    /// Done for the shift checks: signed with every line answered.
+    var isComplete: Bool { signed }
+}

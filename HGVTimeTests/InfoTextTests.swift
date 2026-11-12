@@ -127,3 +127,42 @@ final class VehicleCheckAndTileTests: XCTestCase {
         XCTAssertEqual(s.isWide(.buttons), Tile.buttons.isWide, "buttons can't be resized")
     }
 }
+
+/// 3.17: tile groups, page blocks and adding pick-ups to the vehicle check.
+@MainActor
+final class LayoutAndGroupsTests: XCTestCase {
+    func testTileGroups() {
+        var s = AppSettings()
+        XCTAssertEqual(s.group(of: .dailyRest), .rest)
+        s.setGroup(.dailyRest, .now)
+        XCTAssertEqual(s.group(of: .dailyRest), .now)
+        s.setGroup(.dailyRest, .rest)
+        XCTAssertTrue(s.tileGroups.isEmpty, "back in its own group is not stored")
+        s.moveGroup(.alerts, by: -100)
+        XCTAssertEqual(s.orderedGroups.first, .alerts)
+        XCTAssertEqual(Set(s.orderedGroups), Set(TileGroup.allCases))
+        s.groupNames[TileGroup.rest.rawValue] = "Sleep"
+        XCTAssertEqual(s.groupTitle(.rest), "Sleep")
+    }
+
+    func testPageBlocks() {
+        var s = AppSettings()
+        XCTAssertEqual(s.blocks(.debrief), LayoutPage.debrief.blocks.map(\.id))
+        s.moveBlocks(.debrief, from: IndexSet(integer: 6), to: 0)
+        XCTAssertEqual(s.blocks(.debrief).first, "pay")
+        s.setBlock("pay", visible: false, on: .debrief)
+        XCTAssertFalse(s.blocks(.debrief).contains("pay"))
+        // A section switcher always keeps one section.
+        for b in LayoutPage.jobsTabs.blocks { s.setBlock(b.id, visible: false, on: .jobsTabs) }
+        XCTAssertFalse(s.blocks(.jobsTabs).isEmpty)
+    }
+
+    func testCheckAddColumn() {
+        let c = VehicleCheck()
+        c.columns = ["AB12 CDE"]; c.trailerColumns = [false]; c.heights = [4]
+        XCTAssertEqual(c.addColumn("T42", trailer: true, height: 4.2), 1)
+        XCTAssertEqual(c.addColumn("t42", trailer: true, height: 4.2), 1, "same trailer isn't added twice")
+        XCTAssertEqual(c.heights, [4, 4.2])
+        XCTAssertGreaterThan(c.openCount(column: 1), 0)
+    }
+}

@@ -4,32 +4,35 @@ import SwiftData
 /// All activity tracking in one place, kept separately from planning:
 /// each day's activities and events (shifts are in Jobs → Planner), the full event log, and every change made to the records.
 struct DriverLogView: View {
-    enum Section: String, CaseIterable, Identifiable {
-        case days = "Days", events = "Events", changes = "Changes"
-        var id: String { rawValue }
-    }
-
-    @State private var section: Section = .days
+    @Environment(SettingsStore.self) private var store
+    @State private var section = ""
     @State private var showingSettings = false
 
     var body: some View {
+        let tabs = store.settings.blocks(.driverLogTabs)
+        let current = tabs.contains(section) ? section : tabs[0]
         NavigationStack {
             VStack(spacing: 0) {
-                Picker("Show", selection: $section) {
-                    ForEach(Section.allCases) { Text($0.rawValue).tag($0) }
+                if tabs.count > 1 {
+                    Picker("Show", selection: Binding(get: { current }, set: { section = $0 })) {
+                        ForEach(tabs, id: \.self) { id in
+                            Text(LayoutPage.driverLogTabs.blocks.first { $0.id == id }?.title ?? id).tag(id)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal)
+                    .padding(.vertical, 6)
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.vertical, 6)
-                switch section {
-                case .days: DriverDayView()
-                case .events: EventLogView(day: nil, kinds: nil)
-                case .changes: EventLogView(day: nil, kinds: [.correction])
+                switch current {
+                case "events": EventLogView(day: nil, kinds: nil)
+                case "changes": EventLogView(day: nil, kinds: [.correction])
+                default: DriverDayView()
                 }
             }
             .navigationTitle("Driver log")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) { EditLayoutButton(pages: [.driverLogTabs, .driverDay]) }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         NavigationLink { SummaryView() } label: { Label("Summary table", systemImage: "tablecells") }
@@ -71,7 +74,8 @@ struct DriverDayView: View {
         let dayEvents = events.filter { $0.time >= day && $0.time < end && $0.kind != .activity }
         let totals = DayTotals.compute(dayEntries, day: day)
         List {
-            Section {
+          // The day switcher always stays at the top.
+          Section {
                 HStack {
                     Button { day = cal.date(byAdding: .day, value: -1, to: day) ?? day } label: { Image(systemName: "chevron.left") }
                     Spacer()
@@ -82,6 +86,11 @@ struct DriverDayView: View {
                         .disabled(cal.isDateInToday(day))
                 }
                 .buttonStyle(.borderless)
+          }
+          ForEach(store.settings.blocks(.driverDay), id: \.self) { block in
+            switch block {
+            case "dayBar":
+            Section {
                 if !dayEntries.isEmpty {
                     DayTimelineBar(entries: dayEntries, day: day, height: 28)
                     HStack(spacing: 6) {
@@ -92,6 +101,7 @@ struct DriverDayView: View {
                     }
                 }
             }
+            case "activities":
             Section {
                 if dayEntries.isEmpty {
                     Text("Nothing recorded on this day.").foregroundStyle(.secondary)
@@ -117,6 +127,7 @@ struct DriverDayView: View {
                         .font(.caption).textCase(nil)
                 }
             }
+            case "events":
             Section {
                 // One list: overspeed is logged here too, so the separate overspeed box isn't repeated.
                 ForEach(dayEvents.reversed()) { e in
@@ -139,6 +150,7 @@ struct DriverDayView: View {
                         .font(.caption).textCase(nil)
                 }
             }
+            default:
             Section {
                 NavigationLink { MapScreen(day: day) } label: { Label("Map of this day", systemImage: "map") }
                 NavigationLink { DebriefView(day: day) } label: { Label("Day debrief", systemImage: "tablecells") }
@@ -146,6 +158,8 @@ struct DriverDayView: View {
                     Button("Delete everything on this day", role: .destructive) { confirmDeleteDay = true }
                 }
             }
+            }
+          }
         }
         .sheet(item: $editing) { EntryEditor(entry: $0) }
         .sheet(isPresented: $adding) {

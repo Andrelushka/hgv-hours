@@ -68,11 +68,21 @@ struct TodayView: View {
                 let tiles = store.settings.tileOrder(.today).filter { !hidden.contains($0) && (editingLayout || applies($0, data: data, now: timeline.date)) }
                 ScrollView {
                     VStack(spacing: 12) {
-                        TileGrid(page: .today, tiles: tiles, editing: editingLayout) { tile in
-                            if applies(tile, data: data, now: timeline.date) {
-                                moduleView(tile, status: status, dash: dash, data: data, now: timeline.date)
-                            } else {
-                                TilePlaceholder(tile: tile)
+                        if store.settings.todayGrouped {
+                            GroupedTiles(page: .today, tiles: tiles, editing: editingLayout) { tile in
+                                if applies(tile, data: data, now: timeline.date) {
+                                    moduleView(tile, status: status, dash: dash, data: data, now: timeline.date)
+                                } else {
+                                    TilePlaceholder(tile: tile)
+                                }
+                            }
+                        } else {
+                            TileGrid(page: .today, tiles: tiles, editing: editingLayout) { tile in
+                                if applies(tile, data: data, now: timeline.date) {
+                                    moduleView(tile, status: status, dash: dash, data: data, now: timeline.date)
+                                } else {
+                                    TilePlaceholder(tile: tile)
+                                }
                             }
                         }
                         if editingLayout { HiddenTilesTray(page: .today) }

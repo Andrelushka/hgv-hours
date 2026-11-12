@@ -7,16 +7,22 @@ struct ShiftChecksTile: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
     @Query(sort: \CheckRecord.doneAt, order: .reverse) private var records: [CheckRecord]
+    @Query(sort: \VehicleCheck.date, order: .reverse) private var vehicleChecks: [VehicleCheck]
     var shiftStart: Date?
     var company: String
     @State private var editing = false
+    @State private var openingCheck: VehicleCheck?
 
     var body: some View {
         let start = shiftStart ?? .now
         let templates = store.settings.shiftChecks
         let startDue = ShiftChecks.due(templates, phase: .start, shiftStart: start, company: company, records: records)
         let endDue = shiftStart == nil ? [] : ShiftChecks.due(templates, phase: .end, shiftStart: start, company: company, records: records)
-        let doneThisShift = records.filter { $0.doneAt >= start.addingTimeInterval(-3 * 3600) && !$0.skipped }.count
+        let todaysCheck = vehicleChecks.first { Calendar.hgv.isDateInToday($0.date) }
+        // The full vehicle check counts as a start-of-shift check when you've added it.
+        let vehicleCheckDue = store.settings.vehicleCheckInShift && todaysCheck?.isComplete != true
+        let vehicleCheckDone = store.settings.vehicleCheckInShift && todaysCheck?.isComplete == true
+        let doneThisShift = records.filter { $0.doneAt >= start.addingTimeInterval(-3 * 3600) && !$0.skipped }.count + (vehicleCheckDone ? 1 : 0)
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Label(shiftStart == nil ? "Checks for your next shift" : "Shift checks", systemImage: "checklist")
@@ -26,16 +32,17 @@ struct ShiftChecksTile: View {
                     .buttonStyle(.borderless)
                     .accessibilityLabel("Edit shift checks")
             }
-            if templates.isEmpty {
+            if templates.isEmpty && !store.settings.vehicleCheckInShift {
                 Text("Add checks you do at the start or end of a shift: agency forms, licence checks, card downloads, signing the register…")
                     .font(.caption).foregroundStyle(.secondary)
                 Button("Set up shift checks") { editing = true }.buttonStyle(.bordered).font(.caption.weight(.semibold))
-            } else if startDue.isEmpty && endDue.isEmpty {
+            } else if startDue.isEmpty && endDue.isEmpty && !vehicleCheckDue {
                 Label(doneThisShift > 0 ? "All done (\(doneThisShift) this shift)" : "Nothing due", systemImage: "checkmark.seal.fill")
                     .font(.subheadline).foregroundStyle(.green)
             } else {
-                if !startDue.isEmpty {
+                if !startDue.isEmpty || vehicleCheckDue {
                     Text("Start of shift").font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+                    if vehicleCheckDue { vehicleCheckRow(todaysCheck) }
                     ForEach(startDue) { row($0) }
                 }
                 if !endDue.isEmpty {
@@ -48,6 +55,26 @@ struct ShiftChecksTile: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
         .sheet(isPresented: $editing) { NavigationStack { ShiftChecksSettingsView() } }
+        .sheet(item: $openingCheck) { c in NavigationStack { VehicleCheckView(check: c) } }
+    }
+
+    private func vehicleCheckRow(_ check: VehicleCheck?) -> some View {
+        Button {
+            openingCheck = check ?? VehicleCheck.today(in: context, settings: store.settings)
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: check == nil ? "circle" : "circle.lefthalf.filled").font(.title3).foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Vehicle check").font(.subheadline.weight(.medium)).foregroundStyle(.primary)
+                    Text(check.map { "In progress · \($0.openCount) left" } ?? String(localized: "Full walk-round check"))
+                        .font(.caption2).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Image(systemName: "checklist.checked").foregroundStyle(Color.accentColor)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Open the vehicle check")
     }
 
     private func row(_ t: ShiftCheckTemplate) -> some View {
@@ -140,6 +167,22 @@ struct ShiftChecksSettingsView: View {
                          ? "Shown on Today when you start a shift (and before, for your next shift)."
                          : "Shown on Today during the shift, and you're reminded if any are left when you end it.")
                 }
+            }
+            Section {
+                Toggle(isOn: Binding(get: { store.settings.vehicleCheckInShift }, set: { store.settings.vehicleCheckInShift = $0 })) {
+                    Label("Add to start-of-shift checks", systemImage: "checklist")
+                }
+                Toggle(isOn: Binding(get: { store.settings.vehicleCheckAtPickup }, set: { store.settings.vehicleCheckAtPickup = $0 })) {
+                    Label("When I pick up a vehicle or trailer", systemImage: "shippingbox")
+                }
+                Toggle(isOn: Binding(get: { !store.settings.tileHidden(.today).contains(.vehicleCheck) },
+                                     set: { store.settings.setTile(.vehicleCheck, visible: $0, on: .today) })) {
+                    Label("Vehicle check tile on Today", systemImage: "square.grid.2x2")
+                }
+            } header: {
+                Text("Full vehicle check")
+            } footer: {
+                Text("Optional. Turn on where you want the walk-round check to appear. At a pick-up stop the trailer or vehicle is added to today's check and it opens when you tap Departed (if it isn't finished).")
             }
             if !records.isEmpty {
                 Section("Recently done") {

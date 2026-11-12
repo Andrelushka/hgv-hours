@@ -2202,6 +2202,34 @@
         }
       }
     },
+    "Add to start-of-shift checks": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj do kontroli na początek zmiany"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă la verificările de început de tură"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить в проверки начала смены"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати до перевірок початку зміни"
+          }
+        }
+      }
+    },
     "Add trailer": {
       "localizations": {
         "pl": {
@@ -3408,6 +3436,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Анімація (плавні повороти, причіп заносить)"
+          }
+        }
+      }
+    },
+    "Answered": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odpowiedzi"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Răspunsuri"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отвечено"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відповіді"
           }
         }
       }
@@ -4854,6 +4910,34 @@
         }
       }
     },
+    "Booked": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Awizacja"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Programat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запись"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запис"
+          }
+        }
+      }
+    },
     "Booked time": {
       "localizations": {
         "pl": {
@@ -4906,6 +4990,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запис"
+          }
+        }
+      }
+    },
+    "Booking ref": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nr awizacji"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ref. programare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер записи"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер запису"
           }
         }
       }
@@ -5756,6 +5868,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Зміни"
+          }
+        }
+      }
+    },
+    "Chart": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wykres"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grafic"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "График"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Графік"
           }
         }
       }
@@ -7580,6 +7720,34 @@
         }
       }
     },
+    "Day chart and totals": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wykres i podsumowanie dnia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Graficul și totalurile zilei"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "График и итоги дня"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Графік і підсумки дня"
+          }
+        }
+      }
+    },
     "Day debrief": {
       "localizations": {
         "pl": {
@@ -7716,6 +7884,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Денна ставка покриває"
+          }
+        }
+      }
+    },
+    "Days": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dni"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дни"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дні"
           }
         }
       }
@@ -7888,6 +8084,62 @@
         }
       }
     },
+    "Default name": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nazwa domyślna"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numele implicit"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название по умолчанию"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назва за замовчуванням"
+          }
+        }
+      }
+    },
+    "Defect book ref %@": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nr w książce usterek %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ref. registru defecte %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер в журнале неисправностей %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер у журналі несправностей %@"
+          }
+        }
+      }
+    },
     "Defect book reference": {
       "localizations": {
         "pl": {
@@ -7912,6 +8164,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Номер у журналі несправностей"
+          }
+        }
+      }
+    },
+    "Defects": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usterki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defecte"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Неисправности"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Несправності"
           }
         }
       }
@@ -9204,6 +9484,34 @@
         }
       }
     },
+    "Drag a tile onto this heading to move it here.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przeciągnij kafelek na ten nagłówek, aby go tu przenieść."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trage o placă pe acest titlu ca s-o muți aici."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перетащите плитку на этот заголовок, чтобы переместить её сюда."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перетягніть плитку на цей заголовок, щоб перемістити її сюди."
+          }
+        }
+      }
+    },
     "Drag the ≡ handles to move columns.": {
       "localizations": {
         "pl": {
@@ -9256,6 +9564,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перетягуйте ручки ≡, щоб пересувати рядки. Заголовок і закріплені рядки лишаються вгорі."
+          }
+        }
+      }
+    },
+    "Drag to reorder. Type to rename (leave empty for the default name). Switch off to hide a whole group.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przeciągnij, aby zmienić kolejność. Wpisz nazwę (puste = domyślna). Wyłącz, aby ukryć całą grupę."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trage pentru a reordona. Scrie un nume (gol = implicit). Oprește ca să ascunzi tot grupul."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перетащите, чтобы изменить порядок. Введите название (пусто — по умолчанию). Выключите, чтобы скрыть всю группу."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перетягніть, щоб змінити порядок. Введіть назву (порожньо — за замовчуванням). Вимкніть, щоб сховати всю групу."
           }
         }
       }
@@ -9664,6 +10000,34 @@
         }
       }
     },
+    "Driver log day": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dzień w dzienniku kierowcy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ziua din jurnalul șoferului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "День в журнале водителя"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "День у журналі водія"
+          }
+        }
+      }
+    },
     "Driver log for this day": {
       "localizations": {
         "pl": {
@@ -9688,6 +10052,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Журнал водія за цей день"
+          }
+        }
+      }
+    },
+    "Driver log sections": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekcje dziennika kierowcy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secțiunile jurnalului șoferului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разделы журнала водителя"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розділи журналу водія"
           }
         }
       }
@@ -10501,6 +10893,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Зароблено"
+          }
+        }
+      }
+    },
+    "Earned and estimate": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zarobione i prognoza"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Câștigat și estimare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заработано и прогноз"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зароблено й прогноз"
           }
         }
       }
@@ -11453,6 +11873,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Оцінки — до податків і утримань."
+          }
+        }
+      }
+    },
+    "Event": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdarzenie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eveniment"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Событие"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подія"
           }
         }
       }
@@ -13139,6 +13587,62 @@
         }
       }
     },
+    "Full vehicle check": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pełna kontrola pojazdu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificarea completă a vehiculului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полная проверка машины"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повна перевірка машини"
+          }
+        }
+      }
+    },
+    "Full walk-round check": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pełny obchód pojazdu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificare completă în jurul vehiculului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полный обход машины"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повний обхід машини"
+          }
+        }
+      }
+    },
     "GB": {},
     "GB domestic": {
       "localizations": {
@@ -13420,6 +13924,34 @@
         }
       }
     },
+    "GPS distance": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odległość z GPS"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distanța GPS"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Расстояние по GPS"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відстань за GPS"
+          }
+        }
+      }
+    },
     "GPS: %@%@": {
       "localizations": {
         "en": {
@@ -13679,6 +14211,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "Групувати за"
+          }
+        }
+      }
+    },
+    "Group name": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nazwa grupy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numele grupului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название группы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назва групи"
+          }
+        }
+      }
+    },
+    "Groups": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupuri"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Группы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Групи"
+          }
+        }
+      }
+    },
+    "Groups: order, names, hide": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupy: kolejność, nazwy, ukrywanie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupuri: ordine, nume, ascundere"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Группы: порядок, названия, скрытие"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Групи: порядок, назви, приховування"
           }
         }
       }
@@ -14274,6 +14890,34 @@
         }
       }
     },
+    "Hidden": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ukryta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascuns"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрыта"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прихована"
+          }
+        }
+      }
+    },
     "Hide": {
       "localizations": {
         "pl": {
@@ -14326,6 +14970,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Сховати %@"
+          }
+        }
+      }
+    },
+    "Hide group": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ukryj grupę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascunde grupul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скрыть группу"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сховати групу"
           }
         }
       }
@@ -15030,6 +15702,34 @@
         }
       }
     },
+    "In": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włożona"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introdus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставлена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вставлена"
+          }
+        }
+      }
+    },
     "In %@ · %@ rule · minimum %@": {
       "localizations": {
         "en": {
@@ -15540,6 +16240,34 @@
         }
       }
     },
+    "Item": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pozycja"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Articol"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позиция"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позиція"
+          }
+        }
+      }
+    },
     "Job": {
       "localizations": {
         "pl": {
@@ -15648,6 +16376,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Роботи й звіти за день"
+          }
+        }
+      }
+    },
+    "Jobs sections": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekcje zleceń"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secțiunile curselor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разделы работ"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розділи робіт"
           }
         }
       }
@@ -17562,6 +18318,34 @@
         }
       }
     },
+    "Map, debrief and delete": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mapa, raport dnia i usuwanie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hartă, raportul zilei și ștergere"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Карта, отчёт за день и удаление"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мапа, звіт за день і видалення"
+          }
+        }
+      }
+    },
     "Mark %@ done": {
       "localizations": {
         "pl": {
@@ -17754,6 +18538,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Метри (і фути)"
+          }
+        }
+      }
+    },
+    "Mileage": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przebieg"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilometraj"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробег"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробіг"
           }
         }
       }
@@ -18150,6 +18962,62 @@
         }
       }
     },
+    "Move %@ to another group": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przenieś „%@” do innej grupy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mută „%@” în alt grup"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переместить «%@» в другую группу"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перемістити «%@» в іншу групу"
+          }
+        }
+      }
+    },
+    "Move a tile to another group with the folder button, or in Edit layout drag it onto a tile or heading in another group.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przenieś kafelek do innej grupy przyciskiem folderu albo w trybie edycji przeciągnij go na kafelek lub nagłówek innej grupy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mută o placă în alt grup cu butonul dosar sau, în modul de editare, trage-o pe o placă ori pe titlul altui grup."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переместите плитку в другую группу кнопкой с папкой или в режиме «Изменить» перетащите её на плитку или заголовок другой группы."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перемістіть плитку в іншу групу кнопкою з текою або в режимі «Змінити» перетягніть її на плитку чи заголовок іншої групи."
+          }
+        }
+      }
+    },
     "Move down": {
       "localizations": {
         "pl": {
@@ -18174,6 +19042,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "Униз"
+          }
+        }
+      }
+    },
+    "Move group down": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupa w dół"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupul mai jos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Группу вниз"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Групу вниз"
+          }
+        }
+      }
+    },
+    "Move group up": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupa w górę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grupul mai sus"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Группу вверх"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Групу вгору"
+          }
+        }
+      }
+    },
+    "Move to group": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przenieś do grupy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mută în grup"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переместить в группу"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перемістити в групу"
           }
         }
       }
@@ -19699,6 +20651,34 @@
         }
       }
     },
+    "No mileage recorded.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak zapisanego przebiegu."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niciun kilometraj înregistrat."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробег не записан."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пробіг не записано."
+          }
+        }
+      }
+    },
     "No more than 56 hours of driving in a fixed week (Monday 00:00 to Sunday 24:00).": {
       "localizations": {
         "pl": {
@@ -21017,6 +21997,34 @@
         }
       }
     },
+    "On site": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na miejscu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La locație"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На месте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На місці"
+          }
+        }
+      }
+    },
     "On the map": {
       "localizations": {
         "pl": {
@@ -21409,6 +22417,34 @@
         }
       }
     },
+    "Open the vehicle check": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz kontrolę pojazdu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deschide verificarea vehiculului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Открыть проверку машины"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відкрити перевірку машини"
+          }
+        }
+      }
+    },
     "Operator licence disc displayed and in date": {
       "localizations": {
         "pl": {
@@ -21433,6 +22469,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Диск ліцензії оператора на місці й чинний"
+          }
+        }
+      }
+    },
+    "Optional. Turn on where you want the walk-round check to appear. At a pick-up stop the trailer or vehicle is added to today's check and it opens when you tap Departed (if it isn't finished).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opcjonalne. Włącz tam, gdzie kontrola ma się pojawiać. Na przystanku odbioru naczepa lub pojazd trafia do dzisiejszej kontroli, a ona otwiera się po stuknięciu „Wyjazd” (jeśli nie jest skończona)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opțional. Activează unde vrei să apară verificarea. La o oprire de preluare, remorca sau vehiculul se adaugă la verificarea de azi, care se deschide când atingi „Am plecat” (dacă nu e terminată)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Необязательно. Включите там, где проверка должна появляться. На остановке забора прицеп или машина добавляется в сегодняшнюю проверку, и она открывается, когда вы нажимаете «Уехал» (если не закончена)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Необов'язково. Увімкніть там, де перевірка має з'являтися. На зупинці забору причіп чи машина додається до сьогоднішньої перевірки, і вона відкривається, коли ви натискаєте «Виїхав» (якщо не завершена)."
           }
         }
       }
@@ -21489,6 +22553,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Або введіть номер"
+          }
+        }
+      }
+    },
+    "Order ref": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nr zamówienia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ref. comandă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер заказа"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер замовлення"
           }
         }
       }
@@ -21601,6 +22693,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Інша робота"
+          }
+        }
+      }
+    },
+    "Out": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyjęta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Извлечена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вилучена"
+          }
+        }
+      }
+    },
+    "Outcome": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wynik"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rezultat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Итог"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Результат"
           }
         }
       }
@@ -22971,6 +24119,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "План: зупинок %lld · %@ · близько %@ водіння"
+          }
+        }
+      }
+    },
+    "Planner": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planer"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Planificator"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Планировщик"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Планувальник"
           }
         }
       }
@@ -24599,6 +25775,34 @@
         }
       }
     },
+    "Rename group": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmień nazwę grupy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redenumește grupul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переименовать группу"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перейменувати групу"
+          }
+        }
+      }
+    },
     "Reorder": {
       "localizations": {
         "pl": {
@@ -24823,6 +26027,34 @@
         }
       }
     },
+    "Reset groups": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetuj grupy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetează grupurile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить группы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути групи"
+          }
+        }
+      }
+    },
     "Reset settings to default": {
       "localizations": {
         "pl": {
@@ -24847,6 +26079,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Скинути налаштування"
+          }
+        }
+      }
+    },
+    "Reset to default": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przywróć domyślne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revino la implicit"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить по умолчанию"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути до типових"
           }
         }
       }
@@ -27464,6 +28724,7 @@
       }
     },
     "Show %@ on map": {
+      "extractionState": "stale",
       "localizations": {
         "pl": {
           "stringUnit": {
@@ -27487,6 +28748,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показати %@ на мапі"
+          }
+        }
+      }
+    },
+    "Show Today in groups": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokazuj „Dziś” w grupach"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arată „Azi” pe grupuri"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показывать «Сегодня» по группам"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показувати «Сьогодні» за групами"
           }
         }
       }
@@ -27515,6 +28804,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Показати застереження"
+          }
+        }
+      }
+    },
+    "Show group": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokaż grupę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arată grupul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать группу"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показати групу"
           }
         }
       }
@@ -27687,6 +29004,34 @@
         }
       }
     },
+    "Signed %@": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podpisano %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semnat %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подписано %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підписано %@"
+          }
+        }
+      }
+    },
     "Signs and documents displayed (plating, FORS, cameras, blind spot, height, no smoking)": {
       "localizations": {
         "pl": {
@@ -27767,6 +29112,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "З %@ · натисніть, щоб вилучити"
+          }
+        }
+      }
+    },
+    "Site": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miejsce"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locație"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Объект"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Об'єкт"
           }
         }
       }
@@ -30668,6 +32041,34 @@
         }
       }
     },
+    "The first one shown opens when you come to the page. At least one stays on.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pierwsza widoczna otwiera się po wejściu na stronę. Co najmniej jedna zostaje włączona."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima afișată se deschide când intri pe pagină. Cel puțin una rămâne activă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Первый показанный открывается при входе на страницу. Хотя бы один остаётся включённым."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перший показаний відкривається, коли ви заходите на сторінку. Хоча б один лишається увімкненим."
+          }
+        }
+      }
+    },
     "The job finishes back at the start location.": {
       "localizations": {
         "pl": {
@@ -31650,6 +33051,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Угорі праворуч"
+          }
+        }
+      }
+    },
+    "Total distance": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Łączna odległość"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distanța totală"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Общее расстояние"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загальна відстань"
           }
         }
       }
@@ -32920,6 +34349,34 @@
         }
       }
     },
+    "Vehicle / trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pojazd / naczepa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vehicul / remorcă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Машина / прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Машина / причіп"
+          }
+        }
+      }
+    },
     "Vehicle check": {
       "localizations": {
         "pl": {
@@ -32972,6 +34429,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перевірку машини виконано"
+          }
+        }
+      }
+    },
+    "Vehicle check tile on Today": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kafelek „Kontrola pojazdu” na „Dziś”"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placa „Verificarea vehiculului” pe „Azi”"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плитка «Проверка машины» на «Сегодня»"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Плитка «Перевірка машини» на «Сьогодні»"
           }
         }
       }
@@ -33913,6 +35398,34 @@
         }
       }
     },
+    "Week details, summary and pay settings": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szczegóły tygodnia, podsumowanie i stawki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detaliile săptămânii, rezumat și setări de plată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Детали недели, сводка и настройки оплаты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Деталі тижня, зведення й налаштування оплати"
+          }
+        }
+      }
+    },
     "Week details: limits, holidays, bonuses, shifts": {
       "localizations": {
         "pl": {
@@ -34530,6 +36043,34 @@
         }
       }
     },
+    "When I pick up a vehicle or trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy odbieram pojazd lub naczepę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când preiau un vehicul sau o remorcă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда я забираю машину или прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коли я забираю машину чи причіп"
+          }
+        }
+      }
+    },
     "When I start a shift": {
       "localizations": {
         "pl": {
@@ -34834,6 +36375,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Коли ви натиснете «Виїхав» тут, ця машина перестане бути вашою поточною машиною."
+          }
+        }
+      }
+    },
+    "Where": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdzie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unde"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Где"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Де"
           }
         }
       }
@@ -36466,6 +38035,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "через %@"
+          }
+        }
+      }
+    },
+    "infringement": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "naruszenie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "încălcare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "нарушение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "порушення"
           }
         }
       }

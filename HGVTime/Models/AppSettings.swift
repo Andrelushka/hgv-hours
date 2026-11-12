@@ -161,6 +161,18 @@ struct AppSettings: Codable, Equatable {
     var hoursHidden: [String] = []
     /// Tile sizes you chose: Tile raw value → "wide" or "half" (no entry = the tile's own size).
     var tileSizes: [String: String] = [:]
+    /// Tiles you moved to another group on the Hours page: Tile raw value → TileGroup raw value.
+    var tileGroups: [String: String] = [:]
+    /// Order of the Hours page groups (TileGroup raw values; empty = default) and groups you switched off.
+    var groupOrder: [String] = []
+    var groupsHidden: [String] = []
+    /// Your own names for groups (TileGroup raw value → name).
+    var groupNames: [String: String] = [:]
+    /// Show Today's tiles in groups (like Hours) instead of one free list.
+    var todayGrouped = false
+    /// Blocks on the other pages (Driver log day, Earnings, Jobs, debrief…): page id → block order, and hidden blocks.
+    var pageOrders: [String: [String]] = [:]
+    var pageHidden: [String: [String]] = [:]
     /// How Today's date tile shows the date ("long", "week", "medium", "short", "us", "iso").
     var dateStyle = "long"
     /// "always", "shift" (only while on shift) or "never".
@@ -263,6 +275,10 @@ struct AppSettings: Codable, Equatable {
     var heightCheckedFor = ""
     /// Your start- and end-of-shift checks.
     var shiftChecks: [ShiftCheckTemplate] = []
+    /// The full vehicle check as one of the start-of-shift checks (off unless you add it).
+    var vehicleCheckInShift = false
+    /// Offer the vehicle check when you pick up a vehicle or trailer (off unless you turn it on).
+    var vehicleCheckAtPickup = false
 
     // Shift
     /// Activity recorded when you tap "Start shift" (usually other work for the walk-round check).

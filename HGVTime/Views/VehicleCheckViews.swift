@@ -43,26 +43,7 @@ struct VehicleCheckTile: View {
         .sheet(isPresented: $showingList) { NavigationStack { VehicleCheckListView() } }
     }
 
-    /// Today's check with your current vehicle and trailer as columns.
-    private func newCheck() -> VehicleCheck {
-        let c = VehicleCheck(driverName: store.settings.driverName)
-        let unit = vehicles.first { $0.id.uuidString == store.settings.currentVehicleID }
-        let trailer = vehicles.first { $0.id.uuidString == store.settings.currentTrailerID }
-        var cols = [unit?.registration.isEmpty == false ? unit!.registration : String(localized: "Vehicle")]
-        var trailers = [false]
-        var heights = [unit?.height ?? 0]
-        if let trailer {
-            cols.append(trailer.registration.isEmpty ? trailer.fleetNumber : trailer.registration)
-            trailers.append(true)
-            heights.append(trailer.height)
-        }
-        c.columns = cols
-        c.trailerColumns = trailers
-        c.heights = heights
-        context.insert(c)
-        try? context.save()
-        return c
-    }
+    private func newCheck() -> VehicleCheck { VehicleCheck.today(in: context, settings: store.settings) }
 }
 
 /// The check itself: one section per vehicle / trailer, tap each line to cycle ✓ → ✗ → N/A.
@@ -237,10 +218,7 @@ struct VehicleCheckView: View {
     }
 
     private func addColumn(_ name: String, trailer: Bool, height: Double) {
-        guard check.columns.count < 7 else { return }
-        check.columns += [name]
-        check.trailerColumns += [trailer]
-        var h = check.heights; while h.count < check.columns.count - 1 { h.append(0) }; h.append(height); check.heights = h
+        check.addColumn(name, trailer: trailer, height: height)
     }
 
     private func removeColumn(_ c: Int) {
