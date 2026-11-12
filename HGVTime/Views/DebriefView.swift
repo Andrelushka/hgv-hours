@@ -11,6 +11,8 @@ struct TodayJobCard: View {
     @State private var busy: UUID?
     @State private var reason = ""
     @State private var pendingOutcome: (id: UUID, outcome: PlanStop.Outcome)?
+    @State private var editingStop: PlanStop?
+    @State private var deletingStop: PlanStop?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -28,6 +30,20 @@ struct TodayJobCard: View {
             } else {
                 jobStops
             }
+        }
+        .sheet(item: $editingStop) { stop in
+            StopEditor(stop: stop, isNew: false, onSave: { saved in
+                updateStop(saved.id) { $0 = saved }
+            }, onDelete: {
+                removeStop(stop.id)
+            })
+        }
+        .confirmationDialog(deletingStop.map { "Delete \($0.displayName)?" } ?? "",
+                            isPresented: Binding(get: { deletingStop != nil }, set: { if !$0 { deletingStop = nil } }),
+                            titleVisibility: .visible) {
+            Button("Delete stop", role: .destructive) { if let s = deletingStop { removeStop(s.id) } }
+        } message: {
+            Text("To keep it in your records instead, mark it cancelled, failed or rejected.")
         }
         .alert(pendingOutcome.map { "Mark stop as \($0.outcome.title.lowercased())?" } ?? "",
                isPresented: Binding(get: { pendingOutcome != nil }, set: { if !$0 { pendingOutcome = nil } })) {
@@ -80,6 +96,18 @@ struct TodayJobCard: View {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                     }
                     Menu {
+                        Button("Edit stop", systemImage: "pencil") { editingStop = stop }
+                        let i = plan.stops.firstIndex { $0.id == stop.id } ?? 0
+                        if i > 0 { Button("Move up", systemImage: "arrow.up") { moveStop(from: i, to: i - 1) } }
+                        if i < plan.stops.count - 1 { Button("Move down", systemImage: "arrow.down") { moveStop(from: i, to: i + 1) } }
+                        if plan.stops.count > 1 {
+                            Menu("Swap with…", systemImage: "arrow.up.arrow.down") {
+                                ForEach(Array(plan.stops.enumerated()).filter { $0.element.id != stop.id }, id: \.element.id) { j, other in
+                                    Button("\(j + 1). \(other.displayName)") { swapStops(i, j) }
+                                }
+                            }
+                        }
+                        Divider()
                         if stop.outcome != nil {
                             Button("Back to normal", systemImage: "arrow.uturn.backward") { setOutcome(stop.id, nil) }
                         }
@@ -89,6 +117,8 @@ struct TodayJobCard: View {
                                 pendingOutcome = (stop.id, o)
                             }
                         }
+                        Divider()
+                        Button("Delete stop", systemImage: "trash", role: .destructive) { deletingStop = stop }
                     } label: {
                         Image(systemName: "ellipsis.circle").font(.title3).foregroundStyle(.secondary)
                             .frame(width: 30, height: 30)
@@ -105,6 +135,28 @@ struct TodayJobCard: View {
             }
             .buttonStyle(.bordered)
             .font(.caption.weight(.semibold))
+    }
+
+    private func moveStop(from: Int, to: Int) {
+        var stops = plan.stops
+        guard stops.indices.contains(from), stops.indices.contains(to) else { return }
+        withAnimation { stops.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to) }
+        plan.stops = stops
+        try? context.save()
+    }
+
+    private func swapStops(_ a: Int, _ b: Int) {
+        var stops = plan.stops
+        guard stops.indices.contains(a), stops.indices.contains(b) else { return }
+        withAnimation { stops.swapAt(a, b) }
+        plan.stops = stops
+        try? context.save()
+    }
+
+    private func removeStop(_ id: UUID) {
+        withAnimation { plan.stops.removeAll { $0.id == id } }
+        try? context.save()
+        deletingStop = nil
     }
 
     private func setOutcome(_ id: UUID, _ outcome: PlanStop.Outcome?) {

@@ -559,6 +559,16 @@
         }
       }
     },
+    "%lld. %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld. %2$@"
+          }
+        }
+      }
+    },
     "+%lld": {},
     "+%lld min traffic": {
       "localizations": {
@@ -7008,6 +7018,34 @@
         }
       }
     },
+    "Delete %@?": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usunąć %@?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ștergi %@?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить %@?"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видалити %@?"
+          }
+        }
+      }
+    },
     "Delete activity": {
       "localizations": {
         "pl": {
@@ -9481,6 +9519,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Змінити перевірки зміни"
+          }
+        }
+      }
+    },
+    "Edit stop": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edytuj przystanek"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editează oprirea"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить остановку"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Змінити зупинку"
           }
         }
       }
@@ -21618,6 +21684,34 @@
         }
       }
     },
+    "Reorder": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolejność"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ordine"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порядок"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порядок"
+          }
+        }
+      }
+    },
     "Repeat": {
       "localizations": {
         "pl": {
@@ -23580,6 +23674,7 @@
       }
     },
     "Set %@ to now": {
+      "extractionState": "stale",
       "localizations": {
         "pl": {
           "stringUnit": {
@@ -26139,6 +26234,34 @@
         }
       }
     },
+    "Swap with…": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamień z…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schimbă cu…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поменять местами с…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поміняти місцями з…"
+          }
+        }
+      }
+    },
     "Table": {
       "localizations": {
         "pl": {
@@ -26510,6 +26633,7 @@
       }
     },
     "Tap a stop to edit it, or use ⋯ to edit, duplicate, move or delete. Hold Add stop to pick the type (collection, delivery, depot, fuel, parking, trailer swap). A custom stop can be anything — name it yourself.": {
+      "extractionState": "stale",
       "localizations": {
         "pl": {
           "stringUnit": {
@@ -26533,6 +26657,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Натисніть зупинку, щоб змінити, або ⋯, щоб змінити, дублювати, перемістити чи видалити. Утримуйте «Додати зупинку», щоб вибрати тип (забір, доставка, база, пальне, стоянка, заміна причепа). Своя зупинка може бути будь-чим — назвіть її самі."
+          }
+        }
+      }
+    },
+    "Tap a stop to edit it, or use ⋯ to edit, duplicate, move, swap or delete. Tap Reorder to drag stops into a new order. Hold Add stop to pick the type (collection, delivery, depot, fuel, parking, trailer swap). A custom stop can be anything — name it yourself.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuknij przystanek, aby go edytować, lub ⋯, aby edytować, duplikować, przenieść, zamienić lub usunąć. Stuknij Kolejność, aby przeciągnąć przystanki w nowej kolejności. Przytrzymaj „Dodaj przystanek”, aby wybrać rodzaj (załadunek, rozładunek, baza, paliwo, parking, wymiana naczepy). Własny przystanek może być czymkolwiek — nazwij go sam."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atinge o oprire ca s-o editezi sau ⋯ ca s-o editezi, duplici, muți, schimbi sau ștergi. Atinge Ordine ca să tragi opririle în altă ordine. Ține apăsat „Adaugă oprire” ca să alegi tipul (încărcare, livrare, depou, combustibil, parcare, schimb de remorcă). O oprire proprie poate fi orice — numește-o singur."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите остановку, чтобы изменить, или ⋯, чтобы изменить, дублировать, переместить, поменять местами или удалить. Нажмите «Порядок», чтобы перетащить остановки в новом порядке. Удерживайте «Добавить остановку», чтобы выбрать тип (сбор, доставка, база, топливо, стоянка, смена прицепа). Своя остановка может быть чем угодно — назовите её сами."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Натисніть зупинку, щоб змінити, або ⋯, щоб змінити, дублювати, перемістити, поміняти місцями чи видалити. Натисніть «Порядок», щоб перетягнути зупинки в новому порядку. Утримуйте «Додати зупинку», щоб вибрати тип (забір, доставка, база, пальне, стоянка, заміна причепа). Своя зупинка може бути будь-чим — назвіть її самі."
           }
         }
       }
@@ -27687,6 +27839,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Щоб отримувати сповіщення за кермом, дозвольте HGV Hours у Параметри iPhone → Зосередження → Водіння → Програми."
+          }
+        }
+      }
+    },
+    "To keep it in your records instead, mark it cancelled, failed or rejected.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aby zachować go w zapisach, oznacz go jako anulowany, nieudany lub odrzucony."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ca s-o păstrezi în evidențe, marcheaz-o ca anulată, eșuată sau respinsă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Чтобы сохранить её в записях, отметьте её отменённой, невыполненной или отклонённой."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щоб зберегти її в записах, позначте її скасованою, невиконаною або відхиленою."
           }
         }
       }

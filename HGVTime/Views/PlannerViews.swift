@@ -41,6 +41,8 @@ struct PlanEditor: View {
     @State private var notes: String
     @State private var confirmDelete = false
     @State private var editingStop: EditableStop?
+    /// Drag handles on the stops.
+    @State private var reordering = false
 
     struct EditableStop: Identifiable {
         var stop: PlanStop
@@ -169,6 +171,13 @@ struct PlanEditor: View {
                                 }
                                 if i > 0 { Button("Move up", systemImage: "arrow.up") { stops.swapAt(i, i - 1) } }
                                 if i < stops.count - 1 { Button("Move down", systemImage: "arrow.down") { stops.swapAt(i, i + 1) } }
+                                if stops.count > 1 {
+                                    Menu("Swap with…", systemImage: "arrow.up.arrow.down") {
+                                        ForEach(Array(stops.enumerated()).filter { $0.element.id != stop.id }, id: \.element.id) { j, other in
+                                            Button("\(j + 1). \(other.displayName)") { withAnimation { stops.swapAt(i, j) } }
+                                        }
+                                    }
+                                }
                                 Button("Delete", systemImage: "trash", role: .destructive) { stops.removeAll { $0.id == stop.id } }
                             } label: {
                                 Image(systemName: "ellipsis.circle").font(.title3).frame(width: 32, height: 32)
@@ -195,9 +204,16 @@ struct PlanEditor: View {
                         editingStop = EditableStop(stop: PlanStop(kind: .other), isNew: true)
                     } label: { Label("Add custom stop", systemImage: "mappin.and.ellipse") }
                 } header: {
-                    Text("Stops")
+                    HStack {
+                        Text("Stops")
+                        Spacer()
+                        if stops.count > 1 {
+                            Button(reordering ? "Done" : "Reorder") { withAnimation { reordering.toggle() } }
+                                .font(.caption.weight(.semibold)).textCase(nil)
+                        }
+                    }
                 } footer: {
-                    Text("Tap a stop to edit it, or use ⋯ to edit, duplicate, move or delete. Hold Add stop to pick the type (collection, delivery, depot, fuel, parking, trailer swap). A custom stop can be anything — name it yourself.")
+                    Text("Tap a stop to edit it, or use ⋯ to edit, duplicate, move, swap or delete. Tap Reorder to drag stops into a new order. Hold Add stop to pick the type (collection, delivery, depot, fuel, parking, trailer swap). A custom stop can be anything — name it yourself.")
                 }
 
                 Section("Load") {
@@ -268,6 +284,7 @@ struct PlanEditor: View {
                     }
                 }
             }
+            .environment(\.editMode, .constant(reordering ? .active : .inactive))
             .navigationTitle(plan == nil ? "Plan work" : "Edit plan")
             .navigationBarTitleDisplayMode(.inline)
             .keyboardDoneButton()

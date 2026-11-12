@@ -2,6 +2,10 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.12.1 — Edit, reorder, swap and delete stops
+- Today's job: each stop's ⋯ menu now has Edit stop, Move up, Move down, Swap with… (pick any other stop) and Delete stop, as well as cancelled / failed / rejected.
+- Job editor: Swap with… on every stop, and a Reorder button that shows drag handles so you can drag stops into a new order (or delete them).
+
 ## 3.12.0 — Languages, smoother map, safety warning
 - Settings → Language: English, Polski, Română, Русский, Українська, or follow the iPhone. About 1,150 screens, buttons, settings and messages are translated; some help texts and calculated hints are still in English. The language can also be changed in iPhone Settings → Apps → HGV Hours → Language.
 - Map no longer lags or freezes: the main map loads only the day shown (not every GPS point ever recorded) and no longer redraws on every camera movement; the navigation route line is built once; the lorry marker updates 5 times a second instead of 10; at most 40 nearby traffic lights are drawn.
