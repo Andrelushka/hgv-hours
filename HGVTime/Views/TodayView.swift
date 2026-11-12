@@ -130,9 +130,18 @@ struct TodayView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Daily rest is your rest between shifts. Weekly rest is the long rest at least every 6 days.")
+                Text((pendingEndChecks.isEmpty ? "" : "Still to do: \(pendingEndChecks.joined(separator: ", ")).\n\n")
+                     + "Daily rest is your rest between shifts. Weekly rest is the long rest at least every 6 days.")
             }
         }
+    }
+
+    /// End-of-shift checks not yet done (shown when you end the shift).
+    private var pendingEndChecks: [String] {
+        guard let start = currentStatus().currentShift?.period.start else { return [] }
+        let records = (try? context.fetch(FetchDescriptor<CheckRecord>())) ?? []
+        let company = plans.first { Calendar.hgv.isDateInToday($0.plannedStart) && !$0.cancelled }?.company ?? ""
+        return ShiftChecks.due(store.settings.shiftChecks, phase: .end, shiftStart: start, company: company, records: records).map(\.title)
     }
 
     private func nightOutButton(now: Date) -> some View {
@@ -158,7 +167,7 @@ struct TodayView: View {
         case .job: return onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty
         case .vehicle: return true
         case .mileage: return onShift || VehicleLog.hasMileage(on: now, context: context)
-        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut: return true
+        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks: return true
         default: return data.applies(tile)
         }
     }
@@ -189,6 +198,9 @@ struct TodayView: View {
         case .job: todaysPlan(now: now)
         case .vehicle: CurrentVehicleCard()
         case .mileage: DayMileageCard(now: now)
+        case .checks:
+            ShiftChecksTile(shiftStart: onShift ? status.currentShift?.period.start : nil,
+                            company: plans.first { Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.cancelled }?.company ?? "")
         default: HoursTileView(tile: tile, data: data)
         }
     }

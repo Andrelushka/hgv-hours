@@ -8,5 +8,8 @@ struct HGVTimeWidgetBundle: WidgetBundle {
         HGVCountdownWidget()
         HGVDashboardWidget()
         HGVLiveActivityWidget()
+        #if canImport(AlarmKit)
+        if #available(iOS 26.0, *) { AlarmLiveActivity() }
+        #endif
     }
 }

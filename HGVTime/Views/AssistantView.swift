@@ -58,7 +58,7 @@ struct AssistantView: View {
 
     var body: some View {
         ZStack {
-            AuroraBackground(energy: mood == .idle ? 0 : 1)
+            Color(.systemBackground).ignoresSafeArea()
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 14) {
@@ -98,19 +98,16 @@ struct AssistantView: View {
             }
             .padding(.bottom, 6)
         }
-        .environment(\.colorScheme, .dark)
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) {
                 HStack(spacing: 8) {
                     AIOrb(mood: mood, size: 22)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Assistant").font(.subheadline.weight(.semibold)).foregroundStyle(.white)
+                        Text("Assistant").font(.subheadline.weight(.semibold))
                         Text(voice.isListening ? "Listening…" : thinking ? "Thinking…" : talkMode ? "Talk mode · \(modeName)" : modeName)
-                            .font(.caption2).foregroundStyle(AIStyle.cyan)
+                            .font(.caption2).foregroundStyle(.secondary)
                             .contentTransition(.opacity)
                     }
                 }
@@ -124,12 +121,10 @@ struct AssistantView: View {
                     Image(systemName: talkMode ? "person.wave.2.fill" : "person.wave.2")
                 }
                 .toggleStyle(.button)
-                .tint(AIStyle.cyan)
                 .accessibilityLabel("Talk mode")
             }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { showingSettings = true } label: { Image(systemName: "slider.horizontal.3") }
-                    .tint(.white)
             }
         }
         .onDisappear { voice.cancel(); talkMode = false }
@@ -151,16 +146,15 @@ struct AssistantView: View {
     /// Empty chat: the orb, a greeting, what it can do, and suggestion cards.
     private var hero: some View {
         VStack(spacing: 18) {
-            AIOrb(mood: mood, size: 130)
-                .padding(.top, 24)
+            AIOrb(mood: mood, size: 84)
+                .padding(.top, 16)
                 .onTapGesture { if voice.isListening { voice.finish() } else { listen() } }
             VStack(spacing: 6) {
                 Text(greeting)
-                    .font(.system(.title, design: .rounded).weight(.bold))
-                    .foregroundStyle(LinearGradient(colors: [.white, AIStyle.cyan], startPoint: .leading, endPoint: .trailing))
+                    .font(.title2.weight(.bold))
                     .multilineTextAlignment(.center)
                 Text(subtitle)
-                    .font(.subheadline).foregroundStyle(.white.opacity(0.7))
+                    .font(.subheadline).foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
             HStack(spacing: 8) {
@@ -174,8 +168,8 @@ struct AssistantView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Image(systemName: suggestionIcons[i % suggestionIcons.count])
                                 .font(.title3)
-                                .foregroundStyle(AIStyle.accent)
-                            Text(s).font(.footnote.weight(.medium)).foregroundStyle(.white)
+                                .foregroundStyle(Color.accentColor)
+                            Text(s).font(.footnote.weight(.medium)).foregroundStyle(.primary)
                                 .multilineTextAlignment(.leading)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -187,7 +181,7 @@ struct AssistantView: View {
                 }
             }
             Text("Tap the orb or 🎙 to speak · 👤 talk mode reads answers out and listens again · say \"start driving\", \"take a break\", \"end shift\"")
-                .font(.caption2).foregroundStyle(.white.opacity(0.5))
+                .font(.caption2).foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
         }
@@ -197,7 +191,7 @@ struct AssistantView: View {
     private var compactHeader: some View {
         HStack {
             Spacer()
-            Text(subtitleShort).font(.caption2).foregroundStyle(.white.opacity(0.45))
+            Text(subtitleShort).font(.caption2).foregroundStyle(.secondary)
             Spacer()
         }
     }
@@ -225,7 +219,7 @@ struct AssistantView: View {
     private func chip(_ symbol: String, _ text: String) -> some View {
         Label(text, systemImage: symbol)
             .font(.caption.weight(.semibold))
-            .foregroundStyle(.white.opacity(0.9))
+            .foregroundStyle(.secondary)
             .padding(.horizontal, 10).padding(.vertical, 5)
             .aiGlass(cornerRadius: 12)
     }
@@ -242,9 +236,7 @@ struct AssistantView: View {
                     .padding(.horizontal, 14).padding(.vertical, 10)
                     .background(
                         UnevenRoundedRectangle(topLeadingRadius: 20, bottomLeadingRadius: 20, bottomTrailingRadius: 6, topTrailingRadius: 20, style: .continuous)
-                            .fill(LinearGradient(colors: [AIStyle.violet, AIStyle.violet.opacity(0.75), AIStyle.cyan.opacity(0.8)],
-                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .shadow(color: AIStyle.violet.opacity(0.5), radius: 12, y: 4)
+                            .fill(Color.accentColor)
                     )
                     .textSelection(.enabled)
             }
@@ -258,7 +250,7 @@ struct AssistantView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(LocalizedStringKey(line.text))
                         .font(.subheadline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(.primary)
                         .textSelection(.enabled)
                     if line.role == .assistant {
                         HStack(spacing: 4) {
@@ -266,7 +258,7 @@ struct AssistantView: View {
                             Text(line.byClaude ? modeName : "From your records")
                         }
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(AIStyle.cyan.opacity(0.8))
+                        .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
@@ -281,7 +273,7 @@ struct AssistantView: View {
             HStack(spacing: 8) {
                 ForEach(OfflineAssistant.suggestions, id: \.self) { s in
                     Button { send(s) } label: {
-                        Text(s).font(.caption.weight(.medium)).foregroundStyle(.white)
+                        Text(s).font(.caption.weight(.medium)).foregroundStyle(.primary)
                             .padding(.horizontal, 12).padding(.vertical, 7)
                             .aiGlass(cornerRadius: 14)
                     }
@@ -297,19 +289,17 @@ struct AssistantView: View {
             PhotosPicker(selection: $photoItem, matching: .images) {
                 Image(systemName: readingPhoto ? "hourglass" : "camera.fill")
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(Color.accentColor)
                     .frame(width: 36, height: 36)
-                    .background(.white.opacity(0.08), in: Circle())
+                    .background(Color(.tertiarySystemFill), in: Circle())
             }
             .disabled(readingPhoto || thinking)
             .accessibilityLabel("Read a photo")
 
             TextField("", text: voice.isListening ? .constant(voice.transcript) : $input,
-                      prompt: Text(voice.isListening ? "Listening…" : "Ask or give a command…").foregroundStyle(.white.opacity(0.45)),
+                      prompt: Text(voice.isListening ? "Listening…" : "Ask or give a command…"),
                       axis: .vertical)
                 .lineLimit(1...5)
-                .foregroundStyle(.white)
-                .tint(AIStyle.cyan)
                 .submitLabel(.send)
                 .onSubmit { send(input) }
 
@@ -319,8 +309,7 @@ struct AssistantView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(voice.isListening ? AnyShapeStyle(Color.red) : AnyShapeStyle(AIStyle.accent))
-                        .shadow(color: (voice.isListening ? Color.red : AIStyle.cyan).opacity(0.6), radius: voice.isListening ? 12 : 6)
+                        .fill(voice.isListening ? Color.red : Color.accentColor)
                     Image(systemName: canSend ? "arrow.up" : voice.isListening ? "waveform" : "mic.fill")
                         .font(.body.weight(.bold))
                         .foregroundStyle(.white)

@@ -12,48 +12,43 @@ extension Dashboard {
         d.since = s.hasData ? s.currentSince : s.now
         d.autoDetect = settings.autoDetectEnabled
 
-        // Driving left = what's left of today's driving (daily, weekly, GB limits). The break clocks are shown
-        // separately ("Break due in"), so this doesn't drop to zero during a break.
-        d.driveLeft = s.drivingLeftToday
+        // The two Today circles are for the current period, not the whole day (that's on the Hours page):
+        // Driving left = what's left of the 4h30 before a driving break (or less if the daily/weekly limit is nearer).
+        // Working left = what's left of the 6h before a working-time break (or less if the 60h week / night limit is nearer).
+        // They're independent — driving isn't capped by the working clock — and don't drop to 0 during a break.
+        let gbOnly = settings.primaryRegime == .gbDomestic && s.stats.euDriving == 0
+        d.driveLeft = gbOnly ? s.drivingLeftToday : min(s.continuousDrivingRemaining, s.drivingLeftToday)
         d.breakDueIn = settings.applyWorkingTime ? min(s.continuousDrivingRemaining, s.wtdWorkBeforeBreak) : s.continuousDrivingRemaining
         if s.currentKind == .rest, let reset = s.breakResetAt, reset > s.now {
             if let split = s.breakSplitPartAt, split > s.now {
-                d.driveLeftReason = "On break: 15 min split part at \(Fmt.time(split)), full 45 min at \(Fmt.time(reset))"
+                d.driveLeftReason = "On break: 15 min split part at \(Fmt.time(split)) · full 45 min at \(Fmt.time(reset))"
             } else {
                 d.driveLeftReason = s.splitFirstPartTaken
-                    ? "On break: 30 min completes your split at \(Fmt.time(reset))"
-                    : "On break: 15 min part done — full reset at \(Fmt.time(reset))"
+                    ? "On break: 30 min completes the split at \(Fmt.time(reset))"
+                    : "15 min part done · back to 4h30 at \(Fmt.time(reset))"
             }
         } else if s.drivingLeftToday <= 0 {
             d.driveLeftReason = s.weeklyDrivingRemaining <= 0 ? "Weekly / fortnightly driving used up" : "Daily driving used up"
+        } else if s.continuousDrivingRemaining <= 0 && !gbOnly {
+            d.driveLeftReason = "Take a \(Fmt.hm(s.breakNeeded > 0 ? s.breakNeeded : Limits.fullBreak)) break"
+        } else if d.driveLeft < s.continuousDrivingRemaining - 1 {
+            d.driveLeftReason = s.weeklyDrivingRemaining < s.dailyDrivingRemaining ? "Weekly driving limit" : "Daily driving limit"
         } else {
-            let breakIn = s.continuousDrivingRemaining
-            var reason = breakIn <= 0
-                ? "Take a \(Fmt.hm(s.breakNeeded > 0 ? s.breakNeeded : Limits.fullBreak)) break before driving more"
-                : "Break due after \(Fmt.hm(breakIn)) more driving"
-            if settings.applyWorkingTime && s.wtdWorkBeforeBreak < breakIn {
-                reason = s.wtdWorkBeforeBreak <= 0 ? "Working-time break due now (6h rule)" : "Working-time break due in \(Fmt.hm(s.wtdWorkBeforeBreak)) (6h rule)"
-            }
-            d.driveLeftReason = reason
+            d.driveLeftReason = s.splitFirstPartTaken
+                ? "of 4h30 · 15 min taken, next break 30 min"
+                : "of 4h30 · then 45 min break (or 15 + 30)"
         }
 
-        // Working left = working time left in this shift: until daily rest must start, capped by the 60h week,
-        // the night-work limit and GB duty. The 6h-without-a-break clock is the "Break due" tile, not this.
         var work: [(TimeInterval, String)] = []
-        if d.onShift, let latest = s.restStartByLatest {
-            work.append((max(0, latest.timeIntervalSince(s.now)), "until daily rest by \(Fmt.time(latest))"))
-        }
         if settings.applyWorkingTime {
+            work.append((s.wtdWorkBeforeBreak, s.wtdWorkBeforeBreak <= 0 ? "Take a 15 min+ break" : "of 6h · then a working-time break"))
             work.append((max(0, Limits.wtdWeeklyMaximum - s.weeklyWorkingTime), "60h weekly limit"))
-            if let night = s.nightWorkRemaining { work.append((night, "night-shift limit")) }
+            if let night = s.nightWorkRemaining { work.append((night, "Night-shift limit")) }
         }
         if s.gbApplies { work.append((s.gbDutyRemaining, "GB 11h duty limit")) }
         if let tightest = work.min(by: { $0.0 < $1.0 }) {
             d.workLeft = tightest.0
             d.workLeftReason = tightest.1
-            if settings.applyWorkingTime && d.onShift && s.wtdWorkBeforeBreak < tightest.0 {
-                d.workLeftReason += " · break in \(Fmt.hm(s.wtdWorkBeforeBreak))"
-            }
         } else {
             d.workLeft = max(0, Limits.wtdWeeklyMaximum - s.weeklyWorkingTime)
             d.workLeftReason = "Working time rules off"

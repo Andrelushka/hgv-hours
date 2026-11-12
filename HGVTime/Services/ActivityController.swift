@@ -342,6 +342,7 @@ enum ActivityController {
             EventRecorder.logInfringements(status, context: context, settings: settings)
         }
         VoiceService.shared.update(settings: settings)
+        VoiceService.shared.quiet = settings.quietDuringRest && (shiftEnded || status.isOnDailyRest)
         let state = LiveActivityService.contentState(status: status, settings: settings, shiftEnded: shiftEnded)
         let name = settings.driverName
         Task { await LiveActivityService.shared.sync(state: state, driverName: name) }

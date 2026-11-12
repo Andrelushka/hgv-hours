@@ -27,6 +27,10 @@ struct WakeLeaveSettingsView: View {
                     Stepper(value: $store.settings.wakeGetReadyMinutes, in: 5...240, step: 5) {
                         LabeledContent("Time to get ready", value: Fmt.hm(Double(store.settings.wakeGetReadyMinutes * 60)))
                     }
+                    Picker("Snooze", selection: $store.settings.wakeSnoozeMinutes) {
+                        Text("No snooze button").tag(0)
+                        ForEach([5, 9, 10, 15, 20, 30], id: \.self) { Text("\($0) min").tag($0) }
+                    }
                     Picker("Second alarm", selection: $store.settings.wakeBackupMinutes) {
                         Text("Off").tag(0)
                         ForEach([5, 10, 15, 20, 30], id: \.self) { Text("\($0) min later").tag($0) }
@@ -50,6 +54,10 @@ struct WakeLeaveSettingsView: View {
             Section {
                 Toggle("Tell me when to leave home", isOn: $store.settings.leaveReminderEnabled)
                 if store.settings.leaveReminderEnabled {
+                    Toggle("Ring as an alarm", isOn: Binding(get: { store.settings.leaveAsAlarm }, set: { on in
+                        store.settings.leaveAsAlarm = on
+                        if on { Task { await service.requestAlarmPermission(); refresh() } }
+                    }))
                     Stepper(value: $store.settings.leaveBufferMinutes, in: 0...90, step: 5) {
                         LabeledContent("Arrive early by", value: "\(store.settings.leaveBufferMinutes) min")
                     }
@@ -61,7 +69,7 @@ struct WakeLeaveSettingsView: View {
             } header: {
                 Text("Leave home")
             } footer: {
-                Text("Leave time = job start − journey time − arrive-early margin.")
+                Text("Leave time = job start − journey time (with traffic) − arrive-early margin. As an alarm it rings even on silent, with the same snooze as your wake-up alarm.")
             }
 
             Section {

@@ -63,6 +63,10 @@ struct SettingsView: View {
                         SettingsRow(title: "Notifications & Lock Screen", symbol: "bell.badge.fill", color: .red,
                                     value: s.notificationsEnabled ? "\(s.warningLeadMinutes) min before" : "Off")
                     }
+                    NavigationLink { ShiftChecksSettingsView() } label: {
+                        SettingsRow(title: "Shift checks", symbol: "checklist", color: .green,
+                                    value: s.shiftChecks.isEmpty ? "None" : "\(s.shiftChecks.filter(\.enabled).count)")
+                    }
                     NavigationLink { WakeLeaveSettingsView() } label: {
                         SettingsRow(title: "Wake-up & leave home", symbol: "alarm.waves.left.and.right.fill", color: .orange,
                                     value: s.wakeAlarmEnabled || s.leaveReminderEnabled ? "On" : "Off")
@@ -354,6 +358,11 @@ struct AlertSettingsView: View {
                 Toggle("Lock Screen countdown", isOn: $store.settings.liveActivityEnabled)
             } footer: {
                 Text("Shows a Live Activity on the Lock Screen (and Dynamic Island on newer iPhones) counting down to your next break or limit.")
+            }
+            Section {
+                Toggle("Quiet during daily & weekly rest", isOn: $store.settings.quietDuringRest)
+            } footer: {
+                Text("While you're on your daily or weekly rest: no limit alerts, repeating reminders, expiry reminders or spoken alerts. Breaks during a shift still get their alerts, and your wake-up and leave-home alarms still ring.")
             }
         }
         .navigationTitle("Alerts")

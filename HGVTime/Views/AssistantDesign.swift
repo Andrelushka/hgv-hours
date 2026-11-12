@@ -114,13 +114,11 @@ struct TypingDots: View {
 }
 
 extension View {
-    /// Frosted glass with a thin gradient edge.
-    func aiGlass(cornerRadius: CGFloat = 20, tint: Color = .clear) -> some View {
+    /// Card look used across the app (Today tiles): plain secondary background, rounded corners.
+    func aiGlass(cornerRadius: CGFloat = 14, tint: Color = .clear) -> some View {
         background {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(tint.opacity(0.15)))
-                .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).strokeBorder(AIStyle.border, lineWidth: 0.8))
+                .fill(tint == .clear ? Color(.secondarySystemBackground) : tint.opacity(0.12))
         }
     }
 }

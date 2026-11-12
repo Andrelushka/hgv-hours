@@ -254,6 +254,10 @@ struct AppSettings: Codable, Equatable {
     // Vehicle in use (Vehicle.id as text, "" = none)
     var currentVehicleID = ""
     var currentTrailerID = ""
+    /// Running loaded or empty: "loaded", "empty" or "" (not recorded).
+    var currentLoadState = ""
+    /// Your start- and end-of-shift checks.
+    var shiftChecks: [ShiftCheckTemplate] = []
 
     // Shift
     /// Activity recorded when you tap "Start shift" (usually other work for the walk-round check).
@@ -290,6 +294,12 @@ struct AppSettings: Codable, Equatable {
     var wakeGetReadyMinutes = 60
     /// A second alarm this many minutes after the first (0 = off).
     var wakeBackupMinutes = 0
+    /// Snooze button on alarms: minutes (0 = no snooze button).
+    var wakeSnoozeMinutes = 9
+    /// Leave-home as a real alarm (rings on silent) instead of a notification.
+    var leaveAsAlarm = false
+    /// No limit/reminder notifications or spoken alerts while on daily or weekly rest (alarms still ring).
+    var quietDuringRest = false
     var leaveReminderEnabled = false
     /// Arrive at the job this many minutes before the start time.
     var leaveBufferMinutes = 10

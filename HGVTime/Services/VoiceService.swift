@@ -65,8 +65,12 @@ final class VoiceService: NSObject, AVSpeechSynthesizerDelegate {
     /// What was said recently, so the same alert isn't repeated (e.g. by both a notification and the timer).
     private var recent: [String: Date] = [:]
 
+    /// On daily / weekly rest with "quiet during rest" on: spoken alerts stay silent (navigation and the assistant still speak).
+    var quiet = false
+
     func say(_ text: String, force: Bool = false) {
         guard settings.voiceEnabled || force else { return }
+        guard force || !quiet else { return }
         speak(text, dedupe: true)
     }
 

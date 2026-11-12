@@ -810,6 +810,8 @@ final class VehicleUse {
     var id: UUID = UUID()
     var vehicleID: String = ""
     var trailerID: String = ""
+    /// "loaded", "empty" or "" for the time this record covers.
+    var loadStateRaw: String = ""
     var start: Date = Date()
     var end: Date?
     /// Odometer readings in km (0 = not entered).

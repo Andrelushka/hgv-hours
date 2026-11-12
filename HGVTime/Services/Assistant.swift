@@ -155,7 +155,7 @@ enum OfflineAssistant {
         }
         if has("drive", "driving") {
             guard d.onShift else { return d.hasData ? "You're off duty. Start a shift and I'll count down your driving." : "Start a shift and I'll count down your driving." }
-            return "You have \(Fmt.hm(d.driveLeft)) driving left today. \(d.driveLeftReason)."
+            return "You can drive \(Fmt.hm(d.driveLeft)) before your next break (\(d.driveLeftReason)). Driving left today: \(Fmt.hm(f.status.drivingLeftToday))."
         }
         if has("work", "working time") {
             return d.onShift ? "Working time left: \(Fmt.hm(d.workLeft)) (\(d.workLeftReason))." : "You're not on a shift."

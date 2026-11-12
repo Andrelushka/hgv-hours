@@ -15,6 +15,8 @@ final class NotificationService {
         // Only replace the limit alerts; custom reminders are scheduled separately.
         center.removePendingNotificationRequests(withIdentifiers: (0..<40).map { "hgv.alert.\($0)" })
         guard settings.notificationsEnabled, status.hasData else { return }
+        // Quiet during daily / weekly rest (short breaks on shift still get their alerts).
+        if settings.quietDuringRest && (shiftEnded || status.isOnDailyRest) { return }
 
         let lead = TimeInterval(settings.warningLeadMinutes * 60)
         let leadText = "\(settings.warningLeadMinutes) min"

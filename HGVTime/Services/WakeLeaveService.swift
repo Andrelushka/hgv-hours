@@ -34,11 +34,6 @@ struct WakeLeavePlan: Equatable {
     }
 }
 
-#if canImport(AlarmKit)
-@available(iOS 26.0, *)
-struct WakeAlarmMetadata: AlarmMetadata {}
-#endif
-
 /// Plans a wake-up alarm and "time to leave home" notifications for the next planned job.
 /// Uses real alarms (ring on silent, full screen) on iOS 26, and notifications on older iOS.
 @MainActor
@@ -104,7 +99,7 @@ final class WakeLeaveService {
     /// Rings in a minute, to check the sound and volume.
     func testAlarm(settings: AppSettings) async {
         let at = Date.now.addingTimeInterval(60)
-        if await scheduleRealAlarm(at: at, title: "\(settings.wakeAlarmTitle) (test)") == nil {
+        if await scheduleRealAlarm(at: at, title: "\(settings.wakeAlarmTitle) (test)", snoozeMinutes: settings.wakeSnoozeMinutes) == nil {
             let c = UNMutableNotificationContent()
             c.title = "\(settings.wakeAlarmTitle) (test)"
             c.body = "This is how your wake-up alarm will look."
@@ -158,7 +153,7 @@ final class WakeLeaveService {
     private func signature(job: WorkPlan?, settings s: AppSettings) -> String {
         let j = job.map { "\($0.id)|\($0.plannedStart.timeIntervalSince1970)|\($0.startLatitude ?? 0)|\($0.startPostcode)|\($0.startLocation)|\($0.wakeOverride?.timeIntervalSince1970 ?? 0)|\($0.leaveOverride?.timeIntervalSince1970 ?? 0)|\($0.alarmsOff)" } ?? "-"
         return [j, "\(s.wakeAlarmEnabled)\(s.wakeAlarmTitle)\(s.wakeGetReadyMinutes)\(s.wakeBackupMinutes)",
-                "\(s.leaveReminderEnabled)\(s.leaveBufferMinutes)\(s.leaveHeadsUpMinutes)\(s.commuteMinutes)\(s.commuteUseTraffic)",
+                "\(s.leaveReminderEnabled)\(s.leaveAsAlarm)\(s.wakeSnoozeMinutes)\(s.leaveBufferMinutes)\(s.leaveHeadsUpMinutes)\(s.commuteMinutes)\(s.commuteUseTraffic)",
                 "\(s.homeLatitude ?? 0)\(s.homeLongitude ?? 0)\(s.homePostcode)\(s.manualAlarmAt)"].joined(separator: "#")
     }
 
@@ -213,6 +208,10 @@ final class WakeLeaveService {
 
     private func wantedAlarms(plan: WakeLeavePlan?, settings s: AppSettings) -> [(Date, String)] {
         var out: [(Date, String)] = []
+        // Leave home as a real alarm (when allowed), e.g. "Time to leave · 42 min to Tesco Daventry".
+        if s.leaveReminderEnabled, s.leaveAsAlarm, alarmsAllowed, let p = plan, !p.alarmsOff, p.leaveAt > Date.now.addingTimeInterval(30) {
+            out.append((p.leaveAt, "Time to leave · \(Fmt.hm(p.travel)) to \(p.destination)"))
+        }
         let soon = Date.now.addingTimeInterval(30)
         if s.wakeAlarmEnabled, let p = plan, !p.alarmsOff, p.wakeAt > soon {
             let title = "\(s.wakeAlarmTitle) · \(p.jobTitle) at \(Fmt.time(p.start))"
@@ -230,7 +229,7 @@ final class WakeLeaveService {
 
     private func scheduleAlarms(plan: WakeLeavePlan?, settings s: AppSettings) async {
         let wanted = wantedAlarms(plan: plan, settings: s)
-        let wantedKey = wanted.map { "\(Int($0.0.timeIntervalSince1970))|\($0.1)" }
+        let wantedKey = wanted.map { "\(Int($0.0.timeIntervalSince1970))|\($0.1)|\(s.wakeSnoozeMinutes)" }
         let stored = defaults.dictionary(forKey: scheduledKey) as? [String: String] ?? [:]
         // Nothing changed: leave the alarms alone.
         if Set(stored.values) == Set(wantedKey), stored.values.count == wantedKey.count { return }
@@ -240,7 +239,8 @@ final class WakeLeaveService {
 
         var saved: [String: String] = [:]
         for (i, (date, title)) in wanted.enumerated() {
-            if let id = await scheduleRealAlarm(at: date, title: title) {
+            if let id = await scheduleRealAlarm(at: date, title: title, snoozeMinutes: s.wakeSnoozeMinutes,
+                                                 kind: title.hasPrefix("Time to leave") ? "leave" : "wake") {
                 saved[id] = wantedKey[i]
             } else if i < wakeNoteIDs.count {
                 let c = UNMutableNotificationContent()
@@ -267,16 +267,23 @@ final class WakeLeaveService {
     }
 
     /// A real alarm (iOS 26). Returns its id, or nil if alarms can't be used.
-    private func scheduleRealAlarm(at date: Date, title: String) async -> String? {
+    private func scheduleRealAlarm(at date: Date, title: String, snoozeMinutes: Int = 0, kind: String = "wake") async -> String? {
         #if canImport(AlarmKit)
         if #available(iOS 26.0, *) {
             guard AlarmManager.shared.authorizationState == .authorized else { return nil }
             let stop = AlarmButton(text: "Stop", textColor: .white, systemImageName: "stop.circle")
-            let alert = AlarmPresentation.Alert(title: "\(title)", stopButton: stop)
-            let attributes = AlarmAttributes<WakeAlarmMetadata>(presentation: AlarmPresentation(alert: alert), tintColor: .orange)
+            let snooze = snoozeMinutes > 0
+                ? AlarmButton(text: "Snooze \(snoozeMinutes) min", textColor: .white, systemImageName: "zzz") : nil
+            let alert = AlarmPresentation.Alert(title: "\(title)", stopButton: stop, secondaryButton: snooze,
+                                                secondaryButtonBehavior: snooze == nil ? nil : .countdown)
+            let presentation = AlarmPresentation(alert: alert, countdown: snooze == nil ? nil : .init(title: "Snoozing"))
+            let attributes = AlarmAttributes<WakeAlarmMetadata>(presentation: presentation, metadata: WakeAlarmMetadata(kind: kind),
+                                                                tintColor: kind == "leave" ? .blue : .orange)
+            let countdown = snooze == nil ? nil : Alarm.CountdownDuration(preAlert: nil, postAlert: Double(snoozeMinutes * 60))
             let id = UUID()
             do {
-                _ = try await AlarmManager.shared.schedule(id: id, configuration: .alarm(schedule: .fixed(date), attributes: attributes))
+                _ = try await AlarmManager.shared.schedule(id: id, configuration: .init(countdownDuration: countdown, schedule: .fixed(date),
+                                                                                        attributes: attributes))
                 return id.uuidString
             } catch {
                 return nil
@@ -307,8 +314,11 @@ final class WakeLeaveService {
             center.add(UNNotificationRequest(identifier: id, content: c,
                                              trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)))
         }
-        add(leaveIDs[0], at: p.leaveAt, title: "Time to leave for work",
-            body: "Leave now to reach \(p.destination) by \(Fmt.time(arrive)) for your \(Fmt.time(p.start)) start · \(journey).")
+        // When leave-home is a real alarm, the alarm replaces this notification.
+        if !(s.leaveAsAlarm && alarmsAllowed) {
+            add(leaveIDs[0], at: p.leaveAt, title: "Time to leave for work",
+                body: "Leave now to reach \(p.destination) by \(Fmt.time(arrive)) for your \(Fmt.time(p.start)) start · \(journey).")
+        }
         if s.leaveHeadsUpMinutes > 0 {
             add(leaveIDs[1], at: p.leaveAt.addingTimeInterval(-Double(s.leaveHeadsUpMinutes * 60)),
                 title: "Leave in \(s.leaveHeadsUpMinutes) minutes",

@@ -27,7 +27,9 @@ final class ReminderService: NSObject {
     func schedule(context: ModelContext, status s: ComplianceStatus, settings: AppSettings, shiftEnded: Bool) {
         let all = ((try? context.fetch(FetchDescriptor<Reminder>())) ?? []).filter(\.enabled)
         var pending: [UNNotificationRequest] = []
-        scheduleExpiries(settings: settings, into: &pending)
+        // Quiet during rest: only reminders you set for a specific date and time still go off.
+        let quiet = settings.quietDuringRest && shiftEnded
+        if !quiet { scheduleExpiries(settings: settings, into: &pending) }
         let now = s.now
         let onShift = s.currentShift != nil && !shiftEnded
         for r in all {
@@ -37,7 +39,7 @@ final class ReminderService: NSObject {
             var fireIn: TimeInterval?
             switch r.trigger {
             case .time:
-                scheduleTime(r, content: content, id: id, into: &pending)
+                if !quiet || r.repeatRule == .once { scheduleTime(r, content: content, id: id, into: &pending) }
             case .beforeDrivingBreak where onShift && s.currentKind == .drive:
                 fireIn = s.continuousDrivingRemaining - offset
             case .beforeWorkingBreak where onShift && (s.currentKind == .drive || s.currentKind == .otherWork) && settings.applyWorkingTime:

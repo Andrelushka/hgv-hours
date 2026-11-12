@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 /// Every block that can appear on the Today and Hours pages.
 enum Tile: String, CaseIterable, Identifiable {
     // Today
-    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage
+    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage, checks
     // Right now
     case driveLeft, workLeft, restBy, shiftLeft, breakDue, drivenToday, workedToday, restNow
     // Breaks and deadlines
@@ -27,7 +27,7 @@ enum Tile: String, CaseIterable, Identifiable {
 
     var group: TileGroup {
         switch self {
-        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage: .today
+        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks: .today
         case .driveLeft, .workLeft, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .restNow: .now
         case .nextBreak, .comingUp: .breaks
         case .tenHourDays, .fifteenHourDays, .shiftLength, .restRules: .extensions
@@ -42,7 +42,7 @@ enum Tile: String, CaseIterable, Identifiable {
     /// Full width (otherwise half width, two to a row).
     var isWide: Bool {
         switch self {
-        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage,
+        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks,
              .restNow, .nextBreak, .comingUp, .shiftLength, .restRules, .allWarnings, .infringements:
             true
         default: false
@@ -61,6 +61,7 @@ enum Tile: String, CaseIterable, Identifiable {
         case .earnings: "Earnings"
         case .nightOut: "Night out"
         case .job: "Today's job"
+        case .checks: "Shift checks"
         case .vehicle: "Vehicle & height"
         case .mileage: "Mileage & fuel"
         case .driveLeft: "Driving left"
@@ -108,6 +109,7 @@ enum Tile: String, CaseIterable, Identifiable {
         case .earnings: "sterlingsign.circle.fill"
         case .nightOut: "bed.double.fill"
         case .job: "shippingbox.fill"
+        case .checks: "checklist"
         case .vehicle: "arrow.up.and.down"
         case .mileage: "road.lanes"
         case .driveLeft: "steeringwheel"
@@ -169,7 +171,7 @@ enum TilePage: String {
     var allowed: [Tile] {
         switch self {
         case .today:
-            [.date, .status, .buttons, .driveLeft, .workLeft, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
+            [.date, .status, .buttons, .driveLeft, .workLeft, .checks, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
              .job, .vehicle, .mileage, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .nextBreak,
              .tenHourDays, .fifteenHourDays, .shiftLength]
         case .hours:
@@ -180,7 +182,7 @@ enum TilePage: String {
     /// Shown until the driver changes the layout.
     var defaultVisible: Set<Tile> {
         switch self {
-        case .today: [.date, .card, .expiry, .status, .buttons, .driveLeft, .workLeft, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
+        case .today: [.date, .card, .expiry, .status, .buttons, .driveLeft, .workLeft, .checks, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
         case .hours: Set(allowed)
         }
     }
@@ -203,6 +205,11 @@ extension AppSettings {
                 order.remove(at: night)
                 order.insert(.nightOut, at: min(order.firstIndex(of: .card).map { $0 + 1 } ?? card + 1, order.count))
             }
+        }
+        // Shift checks (3.9) go just under the buttons in layouts saved before they existed.
+        if page == .today, !order.isEmpty, !raw.contains(Tile.checks.rawValue),
+           let b = order.firstIndex(of: .workLeft) ?? order.firstIndex(of: .buttons) {
+            order.insert(.checks, at: b + 1)
         }
         for t in page.allowed where !order.contains(t) { order.append(t) }
         return order

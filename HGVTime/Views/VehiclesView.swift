@@ -445,11 +445,23 @@ struct CurrentVehicleCard: View {
             }
             .buttonStyle(.bordered)
             .font(.caption.weight(.semibold))
+            Picker("Load", selection: Binding(get: { store.settings.currentLoadState },
+                                              set: { VehicleLog.setLoad($0, context: context, store: store) })) {
+                Label("Loaded", systemImage: "shippingbox.fill").tag("loaded")
+                Label("Empty", systemImage: "shippingbox").tag("empty")
+            }
+            .pickerStyle(.segmented)
+            .accessibilityLabel("Running loaded or empty")
+            if shiftUses.contains(where: { !$0.loadStateRaw.isEmpty }) {
+                let split = VehicleLog.loadSplit(shiftUses)
+                Text("This shift: \(Fmt.distance(split.loaded, miles: store.settings.useMiles)) loaded · \(Fmt.distance(split.empty, miles: store.settings.useMiles)) empty")
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
             if shiftUses.count > 1 {
                 Text("This shift: " + shiftUses.map { u in
                     let unitReg = vehicles.first { $0.id.uuidString == u.vehicleID }?.registration ?? "Vehicle"
                     let trailerReg = vehicles.first { $0.id.uuidString == u.trailerID }?.registration
-                    return unitReg + (trailerReg.map { " + \($0)" } ?? "") + " " + Fmt.time(u.start)
+                    return unitReg + (trailerReg.map { " + \($0)" } ?? "") + (u.loadStateRaw.isEmpty ? "" : " (\(u.loadStateRaw))") + " " + Fmt.time(u.start)
                 }.joined(separator: " → "))
                 .font(.caption2).foregroundStyle(.secondary)
             }

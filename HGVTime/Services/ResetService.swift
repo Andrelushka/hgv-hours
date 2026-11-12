@@ -19,7 +19,7 @@ enum DataGroup: String, CaseIterable, Identifiable, Hashable {
         case .earnings: "Earnings extras & nights out"
         case .vehicles: "Vehicles, mileage & fuel"
         case .notes: "Notes"
-        case .reminders: "Reminders"
+        case .reminders: "Reminders & shift checks done"
         case .events: "Event log, speed & routes"
         case .assistant: "Assistant keys & AI models"
         }
@@ -129,6 +129,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.leaveReminderEnabled = d.leaveReminderEnabled; s.leaveBufferMinutes = d.leaveBufferMinutes
             s.leaveHeadsUpMinutes = d.leaveHeadsUpMinutes; s.commuteMinutes = d.commuteMinutes
             s.commuteUseTraffic = d.commuteUseTraffic; s.manualAlarmAt = d.manualAlarmAt
+            s.wakeSnoozeMinutes = d.wakeSnoozeMinutes; s.leaveAsAlarm = d.leaveAsAlarm; s.quietDuringRest = d.quietDuringRest
         case .inCab:
             s.autoDetectEnabled = d.autoDetectEnabled; s.autoMovingSpeedKmh = d.autoMovingSpeedKmh
             s.autoStopDelaySeconds = d.autoStopDelaySeconds; s.autoStoppedKind = d.autoStoppedKind
@@ -136,6 +137,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.recordOverspeed = d.recordOverspeed; s.recordHarshBraking = d.recordHarshBraking
             s.harshBrakeMS2 = d.harshBrakeMS2; s.onlineSpeedLimits = d.onlineSpeedLimits
             s.recordEventLocations = d.recordEventLocations; s.recordRoute = d.recordRoute
+            s.navVoiceOn = d.navVoiceOn
             s.keepScreenOn = d.keepScreenOn
         case .layout:
             s.todayOrder = d.todayOrder; s.todayHidden = d.todayHidden
@@ -199,7 +201,7 @@ enum ResetService {
             case .earnings: wipe(PayItem.self); wipe(NightOut.self)
             case .vehicles: wipe(Vehicle.self); wipe(VehicleUse.self); wipe(ResourceLog.self)
             case .notes: wipe(NoteItem.self)
-            case .reminders: wipe(Reminder.self)
+            case .reminders: wipe(Reminder.self); wipe(CheckRecord.self)
             case .events: wipe(EventLog.self); wipe(SpeedEvent.self); wipe(TrackPoint.self)
             case .assistant:
                 KeychainKey.delete()

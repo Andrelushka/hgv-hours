@@ -41,7 +41,9 @@ enum VehicleLog {
                 if open.vehicleID == vehicleID { applyRules(vehicleID, context: context, store: store); return }
                 close(open, at: time, context: context)
             }
-            if !vehicleID.isEmpty { open(vehicleID, trailerID: store.settings.currentTrailerID, at: time, context: context) }
+            if !vehicleID.isEmpty {
+                open(vehicleID, trailerID: store.settings.currentTrailerID, at: time, context: context).loadStateRaw = store.settings.currentLoadState
+            }
         }
         let previous = store.settings.currentVehicleID
         store.settings.currentVehicleID = vehicleID
@@ -65,12 +67,36 @@ enum VehicleLog {
                 close(open, at: time, context: context)
                 let next = self.open(vehicleID, trailerID: trailerID, at: time, context: context)
                 if open.endOdometerKm > 0 { next.startOdometerKm = open.endOdometerKm }
+                next.loadStateRaw = store.settings.currentLoadState
             }
             let name = vehicle(trailerID, context: context)?.displayName
             EventRecorder.log(.note, title: trailerID.isEmpty ? "Trailer dropped" : "Trailer changed",
                               detail: name ?? "", context: context, settings: store.settings)
         }
         try? context.save()
+    }
+
+    /// Loaded or empty from now on: closes the current record and opens a new one, so distance is split
+    /// between loaded and empty running.
+    static func setLoad(_ state: String, context: ModelContext, store: SettingsStore, at time: Date = .now) {
+        guard store.settings.currentLoadState != state else { return }
+        store.settings.currentLoadState = state
+        if ActivityController.isOnShift(context: context), let current = openUse(context: context) {
+            close(current, at: time, context: context)
+            let next = open(current.vehicleID, trailerID: current.trailerID, at: time, context: context)
+            if current.endOdometerKm > 0 { next.startOdometerKm = current.endOdometerKm }
+            next.loadStateRaw = state
+        }
+        EventRecorder.log(.note, title: state == "loaded" ? "Running loaded" : state == "empty" ? "Running empty" : "Load not recorded",
+                          context: context, settings: store.settings)
+        try? context.save()
+    }
+
+    /// Loaded and empty distance (km) in these records.
+    static func loadSplit(_ uses: [VehicleUse]) -> (loaded: Double, empty: Double) {
+        uses.reduce((0, 0)) { acc, u in
+            u.loadStateRaw == "loaded" ? (acc.0 + u.distanceKm, acc.1) : u.loadStateRaw == "empty" ? (acc.0, acc.1 + u.distanceKm) : acc
+        }
     }
 
     /// The selected vehicle's rules, or your usual rules.
@@ -98,7 +124,7 @@ enum VehicleLog {
     /// Shift started: start recording the vehicle in use.
     static func shiftStarted(settings: AppSettings, context: ModelContext, at time: Date = .now) {
         guard openUse(context: context) == nil, !settings.currentVehicleID.isEmpty else { return }
-        open(settings.currentVehicleID, trailerID: settings.currentTrailerID, at: time, context: context)
+        open(settings.currentVehicleID, trailerID: settings.currentTrailerID, at: time, context: context).loadStateRaw = settings.currentLoadState
     }
 
     /// Shift ended: close the vehicle's use.

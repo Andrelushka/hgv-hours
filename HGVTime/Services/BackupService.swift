@@ -28,6 +28,7 @@ enum BackupService {
     struct Use: Codable {
         var vehicleID, trailerID: String; var start: Date; var end: Date?
         var startKm, endKm, gpsKm: Double; var endEdited: Bool
+        var load: String?
     }
 
     struct Entry: Codable { var id: UUID; var kind, regime: String; var start: Date; var end: Date?; var multi: Bool; var note: String; var endsShift: Bool; var plannedRest: String; var subtype: String? }
@@ -114,7 +115,7 @@ enum BackupService {
         }
         b.uses = all(VehicleUse.self, context).map {
             Use(vehicleID: $0.vehicleID, trailerID: $0.trailerID, start: $0.start, end: $0.end,
-                startKm: $0.startOdometerKm, endKm: $0.endOdometerKm, gpsKm: $0.gpsKm, endEdited: $0.endEdited)
+                startKm: $0.startOdometerKm, endKm: $0.endOdometerKm, gpsKm: $0.gpsKm, endEdited: $0.endEdited, load: $0.loadStateRaw)
         }
         b.track = all(TrackPoint.self, context).map { Track(time: $0.time, lat: $0.latitude, lon: $0.longitude, speed: $0.speedKmh) }
 
@@ -217,7 +218,7 @@ enum BackupService {
         }
         for u in b.uses ?? [] {
             let x = VehicleUse(vehicleID: u.vehicleID, trailerID: u.trailerID, start: u.start, startOdometerKm: u.startKm)
-            x.end = u.end; x.endOdometerKm = u.endKm; x.gpsKm = u.gpsKm; x.endEdited = u.endEdited
+            x.end = u.end; x.endOdometerKm = u.endKm; x.gpsKm = u.gpsKm; x.endEdited = u.endEdited; x.loadStateRaw = u.load ?? ""
             context.insert(x)
         }
         b.track.forEach { context.insert(TrackPoint(time: $0.time, latitude: $0.lat, longitude: $0.lon, speedKmh: $0.speed)) }

@@ -2,6 +2,16 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.9.0 — Shift checks, reports by company/vehicle, loaded/empty, alarm snooze
+- Today's two circles now show the current period, as on a tacho: Driving left = what's left of the 4h30 before a break (or less if the daily/weekly limit is nearer); Working left = what's left of the 6h before a working-time break. They're independent (driving is no longer capped by the 6h clock), don't drop to 0 during a break, and refill when the break counts. Daily, weekly and fortnight totals stay on the Hours page.
+- Shift checks: your own start- and end-of-shift checks — agency forms, licence checks, card and tacho downloads, signing the register — every shift, on chosen days, weekly, every 2 weeks or monthly, optionally only for one company, with a link to open (e.g. an online form). Tick them off on Today; ending a shift lists any end checks not done. Settings → Shift checks.
+- Loaded / Empty switch on the vehicle card: records loaded and empty distance per shift (shown on the card and in reports).
+- Reports (Summary): group by day, company, vehicle, trailer, start place, weekday or month, and filter by company and vehicle — days, hours, distance (loaded/empty), fuel, nights out, pay, average pay per day and infringements. CSV export follows the view.
+- Assistant screen now matches the rest of the app (light/dark system look, app colours and cards).
+- Alarms: snooze button (5–30 min, set in Wake-up & leave home) with a snooze countdown on the Lock Screen; the leave-home reminder can ring as a real alarm.
+- Quiet during daily & weekly rest (Settings → Notifications): no limit alerts, repeating reminders or spoken alerts while you rest; breaks on shift and your alarms still work.
+- 3 new tests (91 in total).
+
 ## 3.8.0 — Hours fixes, navigation voice fixes, stop outcomes
 - Fixed: "Driving left" showed 0 during a break. It now shows the driving you have left today (9h/10h, weekly and GB limits); when the next break is due is shown underneath and on the "Break due" tile.
 - Fixed: "Driving left" and "Working left" were often identical, because both were capped by the 6h working-time clock. "Working left" now means working time left in the shift (until your daily rest must start, the 60h week, night and GB duty limits), with the 6h break shown underneath.
