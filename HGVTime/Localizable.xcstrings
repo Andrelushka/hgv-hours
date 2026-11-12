@@ -2600,6 +2600,62 @@
         }
       }
     },
+    "All off": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszystko wył."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toate oprite"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё выкл."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усе вимк."
+          }
+        }
+      }
+    },
+    "All on": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszystko wł."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toate pornite"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё вкл."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усе увімк."
+          }
+        }
+      }
+    },
     "All prompts": {
       "localizations": {
         "pl": {
@@ -7103,6 +7159,34 @@
         }
       }
     },
+    "Default": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domyślne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Implicit"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "По умолчанию"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За замовчуванням"
+          }
+        }
+      }
+    },
     "Default (British English)": {
       "localizations": {
         "pl": {
@@ -10449,6 +10533,7 @@
       }
     },
     "Events are shown on the driver log's day map.": {
+      "extractionState": "stale",
       "localizations": {
         "pl": {
           "stringUnit": {
@@ -31500,6 +31585,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Коли ви вибираєте цю машину, нові активності йдуть за її правилами. Звільнені машини (напр. фургони до 3,5 т або звільнене використання) не враховуються в лімітах водіння — час однаково вважається робочим."
+          }
+        }
+      }
+    },
+    "Where each activity started: driving, other work, POA, breaks.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdzie zaczynała się każda czynność: jazda, inna praca, POA, przerwy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unde a început fiecare activitate: condus, altă muncă, POA, pauze."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Где начиналась каждая активность: вождение, другая работа, POA, перерывы."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Де починалася кожна активність: водіння, інша робота, POA, перерви."
           }
         }
       }

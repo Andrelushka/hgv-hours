@@ -55,7 +55,7 @@ struct EventLogView: View {
                     HStack {
                         Text(d.formatted(.dateTime.weekday(.wide).day().month(.wide)))
                         Spacer()
-                        NavigationLink { MapScreen(day: d) } label: { Label("Map", systemImage: "map").labelStyle(.titleAndIcon) }
+                        NavigationLink { MapScreen(day: d, context: .events) } label: { Label("Map", systemImage: "map").labelStyle(.titleAndIcon) }
                             .font(.caption)
                     }
                 }

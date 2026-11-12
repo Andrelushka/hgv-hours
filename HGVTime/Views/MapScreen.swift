@@ -2,20 +2,52 @@ import SwiftUI
 import SwiftData
 import MapKit
 
+/// Where a map was opened from — decides what it shows until you change its filter.
+enum MapContext: String {
+    /// Main map from Today; the general day map.
+    case main, day
+    /// From the driver log's Events section: events on.
+    case events
+    /// From the driver log's Activities section: activity changes on.
+    case activities
+
+    /// Event types hidden until you change the filter.
+    var defaultHidden: Set<EventKind> {
+        switch self {
+        case .main, .day: Set(EventKind.allCases)
+        case .events: [.activity]
+        case .activities: Set(EventKind.allCases).subtracting([.activity])
+        }
+    }
+}
+
+extension AppSettings {
+    func hiddenEvents(on map: MapContext) -> Set<EventKind> {
+        guard let saved = mapHiddenByContext[map.rawValue] else { return map.defaultHidden }
+        return Set(saved.compactMap(EventKind.init(rawValue:)))
+    }
+
+    mutating func setHiddenEvents(_ hidden: Set<EventKind>, on map: MapContext) {
+        mapHiddenByContext[map.rawValue] = hidden.map(\.rawValue).sorted()
+    }
+}
+
 /// Map of a day: the route driven, every event with where it happened, job stops, and navigation to the next stop.
 /// Holds the day; the map below reloads only that day's route and events when the day changes.
 struct MapScreen: View {
     typealias NavTarget = MapDayView.NavTarget
     @State private var day: Date
     var isLive: Bool
+    var context: MapContext
 
-    init(day: Date = .now, isLive: Bool = false) {
+    init(day: Date = .now, isLive: Bool = false, context: MapContext? = nil) {
         _day = State(initialValue: Calendar.hgv.startOfDay(for: day))
         self.isLive = isLive
+        self.context = context ?? (isLive ? .main : .day)
     }
 
     var body: some View {
-        MapDayView(day: $day, isLive: isLive).id(day)
+        MapDayView(day: $day, isLive: isLive, context: context).id(day)
     }
 }
 
@@ -53,15 +85,17 @@ struct MapDayView: View {
     @State private var nav = NavigationEngine.shared
     @State private var resumingNav = false
 
-    init(day: Binding<Date>, isLive: Bool = false) {
+    var context: MapContext = .day
+
+    init(day: Binding<Date>, isLive: Bool = false, context: MapContext = .day) {
+        self.context = context
         let start = Calendar.hgv.startOfDay(for: day.wrappedValue)
         let end = start.addingTimeInterval(86_400)
         _day = day
         self.isLive = isLive
         _track = Query(filter: #Predicate<TrackPoint> { $0.time >= start && $0.time < end }, sort: \TrackPoint.time)
         // The main map shows no events at all (they're on the driver log's day map) — less to draw, no lag.
-        let none = isLive
-        _events = Query(filter: #Predicate<EventLog> { !none && $0.time >= start && $0.time < end }, sort: \EventLog.time)
+        _events = Query(filter: #Predicate<EventLog> { $0.time >= start && $0.time < end }, sort: \EventLog.time)
     }
 
     var body: some View {
@@ -70,8 +104,7 @@ struct MapDayView: View {
         let route = track.filter { $0.time >= day && $0.time < end }
         let dayEvents = events.filter { $0.time >= day && $0.time < end && $0.hasLocation }
             .filter { !store.settings.mapProblemsOnly || $0.kind.isProblem }
-            .filter { !store.settings.mapHiddenEvents.contains($0.kind.rawValue) }
-            .filter { !isLive || !$0.kind.isProblem }
+            .filter { !store.settings.hiddenEvents(on: context).contains($0.kind) }
         let plan = plans.first { cal.isDate($0.plannedStart, inSameDayAs: day) }
         let planStops: [(stop: PlanStop, index: Int, coordinate: CLLocationCoordinate2D)] = (plan?.stops ?? []).enumerated().compactMap { i, st in
             if let lat = st.latitude, let lon = st.longitude { return (st, i, CLLocationCoordinate2D(latitude: lat, longitude: lon)) }
@@ -143,7 +176,7 @@ struct MapDayView: View {
         }
         .sheet(isPresented: $showingFilters) {
             NavigationStack {
-                MapFilterView(isLive: isLive, counts: Dictionary(grouping: events.filter(\.hasLocation), by: \.kind).mapValues(\.count))
+                MapFilterView(context: context, counts: Dictionary(grouping: events.filter(\.hasLocation), by: \.kind).mapValues(\.count))
             }
             .presentationDetents([.medium, .large])
         }
@@ -190,7 +223,7 @@ struct MapDayView: View {
 
     private var filtersActive: Bool {
         let st = store.settings
-        return !st.mapShowRoute || !st.mapShowPlanned || !st.mapShowStops || (!isLive && (st.mapProblemsOnly || !st.mapHiddenEvents.isEmpty))
+        return !st.mapShowRoute || !st.mapShowPlanned || !st.mapShowStops || st.mapProblemsOnly || st.hiddenEvents(on: context) != context.defaultHidden
     }
 
     // MARK: Panel
@@ -210,7 +243,7 @@ struct MapDayView: View {
                 Spacer()
                 VStack(spacing: 1) {
                     Text(day.formatted(.dateTime.weekday(.wide).day().month(.wide))).font(.subheadline.weight(.semibold))
-                    Text(isLive ? "\(Fmt.distance(km, miles: store.settings.useMiles)) route"
+                    Text(store.settings.hiddenEvents(on: context).count == EventKind.allCases.count ? "\(Fmt.distance(km, miles: store.settings.useMiles)) route"
                          : "\(Fmt.distance(km, miles: store.settings.useMiles)) route · \(events.count) event\(events.count == 1 ? "" : "s")\(problems > 0 ? " · \(problems) problem\(problems == 1 ? "" : "s")" : "")")
                         .font(.caption).foregroundStyle(problems > 0 ? .red : .secondary)
                 }
@@ -219,7 +252,7 @@ struct MapDayView: View {
                     .disabled(Calendar.hgv.isDateInToday(day))
             }
             HStack(spacing: 8) {
-                if !isLive { Button { showingList = true } label: { Label("Event log", systemImage: "list.bullet") } }
+                Button { showingList = true } label: { Label("Event log", systemImage: "list.bullet") }
                 if let next {
                     let target = NavTarget(name: next.displayName,
                                            coordinate: next.latitude.map { CLLocationCoordinate2D(latitude: $0, longitude: next.longitude ?? 0) } ?? geocoded[next.id],
@@ -388,61 +421,92 @@ struct EventDetailSheet: View {
 }
 
 
-/// Map filters: what to show on the map (remembered).
+/// Map filters: what to show on this map (remembered for each kind of map).
 struct MapFilterView: View {
     @Environment(SettingsStore.self) private var store
     @Environment(\.dismiss) private var dismiss
-    var isLive: Bool
+    var context: MapContext
     /// Events of each type on this day.
     var counts: [EventKind: Int]
+
+    private var hidden: Set<EventKind> { store.settings.hiddenEvents(on: context) }
+
+    private func set(_ kinds: Set<EventKind>, visible: Bool) {
+        var h = hidden
+        if visible { h.subtract(kinds) } else { h.formUnion(kinds) }
+        store.settings.setHiddenEvents(h, on: context)
+    }
+
+    private var otherEvents: [EventKind] { EventKind.allCases.filter { $0 != .activity } }
 
     var body: some View {
         @Bindable var store = store
         Form {
+            Section {
+                HStack {
+                    Button("All on") {
+                        store.settings.mapShowRoute = true; store.settings.mapShowPlanned = true; store.settings.mapShowStops = true
+                        store.settings.mapProblemsOnly = false
+                        store.settings.setHiddenEvents([], on: context)
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                    Button("All off") {
+                        store.settings.mapShowRoute = false; store.settings.mapShowPlanned = false; store.settings.mapShowStops = false
+                        store.settings.setHiddenEvents(Set(EventKind.allCases), on: context)
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                    Button("Default") {
+                        store.settings.mapHiddenByContext[context.rawValue] = nil
+                        store.settings.mapProblemsOnly = false
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .font(.subheadline.weight(.semibold))
+            }
             Section("On the map") {
                 Toggle(isOn: $store.settings.mapShowRoute) { Label("Route driven", systemImage: "point.topleft.down.to.point.bottomright.curvepath") }
                 Toggle(isOn: $store.settings.mapShowPlanned) { Label("Planned route", systemImage: "arrow.triangle.turn.up.right.diamond") }
                 Toggle(isOn: $store.settings.mapShowStops) { Label("Job start and stops", systemImage: "mappin.and.ellipse") }
             }
-            if !isLive {
-                Section {
-                    Toggle(isOn: $store.settings.mapProblemsOnly) { Label("Problems only", systemImage: "exclamationmark.triangle.fill") }
-                    ForEach(EventKind.allCases) { kind in
-                        Toggle(isOn: Binding(
-                            get: { !store.settings.mapHiddenEvents.contains(kind.rawValue) },
-                            set: { on in
-                                store.settings.mapHiddenEvents.removeAll { $0 == kind.rawValue }
-                                if !on { store.settings.mapHiddenEvents.append(kind.rawValue) }
-                            })) {
-                            HStack {
-                                Label(LocalizedStringKey(kind.title), systemImage: kind.symbol)
-                                    .foregroundStyle(kind.isProblem ? .red : .primary)
-                                Spacer()
-                                if let n = counts[kind], n > 0 {
-                                    Text("\(n)").font(.caption.weight(.bold)).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
-                        .disabled(store.settings.mapProblemsOnly && !kind.isProblem)
-                    }
-                } header: {
-                    HStack {
-                        Text("Events")
-                        Spacer()
-                        Button("All") { store.settings.mapHiddenEvents = []; store.settings.mapProblemsOnly = false }
-                            .font(.caption.weight(.semibold)).textCase(nil)
-                        Button("None") { store.settings.mapHiddenEvents = EventKind.allCases.map(\.rawValue) }
-                            .font(.caption.weight(.semibold)).textCase(nil)
-                    }
-                }
-            } else {
-                Section {
-                    Text("Events are shown on the driver log's day map.").foregroundStyle(.secondary)
+            Section {
+                toggle(.activity)
+            } header: {
+                Text("Activities")
+            } footer: {
+                Text("Where each activity started: driving, other work, POA, breaks.")
+            }
+            Section {
+                Toggle(isOn: $store.settings.mapProblemsOnly) { Label("Problems only", systemImage: "exclamationmark.triangle.fill") }
+                ForEach(otherEvents) { toggle($0) }
+            } header: {
+                HStack {
+                    Text("Events")
+                    Spacer()
+                    Button("All on") { set(Set(otherEvents), visible: true); store.settings.mapProblemsOnly = false }
+                        .font(.caption.weight(.semibold)).textCase(nil)
+                    Button("All off") { set(Set(otherEvents), visible: false) }
+                        .font(.caption.weight(.semibold)).textCase(nil)
                 }
             }
         }
         .navigationTitle("Map filters")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+    }
+
+    private func toggle(_ kind: EventKind) -> some View {
+        Toggle(isOn: Binding(get: { !hidden.contains(kind) }, set: { set([kind], visible: $0) })) {
+            HStack {
+                Label(LocalizedStringKey(kind.title), systemImage: kind.symbol)
+                    .foregroundStyle(kind.isProblem ? .red : .primary)
+                Spacer()
+                if let n = counts[kind], n > 0 {
+                    Text("\(n)").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                }
+            }
+        }
+        .disabled(store.settings.mapProblemsOnly && !kind.isProblem)
     }
 }

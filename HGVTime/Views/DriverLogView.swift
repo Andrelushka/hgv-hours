@@ -110,7 +110,12 @@ struct DriverDayView: View {
                 }
                 Button { adding = true } label: { Label("Add activity", systemImage: "plus.circle.fill") }
             } header: {
-                Text("Activities")
+                HStack {
+                    Text("Activities")
+                    Spacer()
+                    NavigationLink { MapScreen(day: day, context: .activities) } label: { Label("Map", systemImage: "map") }
+                        .font(.caption).textCase(nil)
+                }
             }
             Section {
                 // One list: overspeed is logged here too, so the separate overspeed box isn't repeated.
@@ -127,7 +132,12 @@ struct DriverDayView: View {
                 }
                 if dayEvents.isEmpty { Text("No events.").foregroundStyle(.secondary) }
             } header: {
-                Text("Events")
+                HStack {
+                    Text("Events")
+                    Spacer()
+                    NavigationLink { MapScreen(day: day, context: .events) } label: { Label("Map", systemImage: "map") }
+                        .font(.caption).textCase(nil)
+                }
             }
             Section {
                 NavigationLink { MapScreen(day: day) } label: { Label("Map of this day", systemImage: "map") }

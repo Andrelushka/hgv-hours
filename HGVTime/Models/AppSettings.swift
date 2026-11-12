@@ -322,8 +322,10 @@ struct AppSettings: Codable, Equatable {
     var mapShowPlanned = true
     var mapShowStops = true
     var mapProblemsOnly = false
-    /// Event types hidden on the day map (EventKind raw values).
+    /// Event types hidden on the day map (EventKind raw values). Replaced by `mapHiddenByContext` (kept so old settings load).
     var mapHiddenEvents: [String] = []
+    /// Event types hidden on each kind of map (MapContext raw value → EventKind raw values). No entry = that map's default.
+    var mapHiddenByContext: [String: [String]] = [:]
 
     // Wake-up alarm and "time to leave" (worked out from the next planned job)
     var wakeAlarmEnabled = false

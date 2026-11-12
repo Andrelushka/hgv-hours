@@ -2,6 +2,15 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.13.2 — Map filters per map, with sensible defaults
+- Activities and events are back on every map, controlled by the filter. Each map remembers its own choice and starts from a default that fits where you opened it:
+  - Main map (Today) and the general day map: activities and events off.
+  - Map from the driver log's Events section (and the event log): events on, activities off.
+  - Map from the driver log's Activities section: activity changes on, events off.
+- New Map buttons next to the Activities and Events headings in the driver log day.
+- Filter buttons: All on, All off and Default for the whole map, plus All on / All off for events.
+- 1 new test (102 in total).
+
 ## 3.13.1 — Info (ⓘ) texts checked
 - Every ⓘ explanation now matches the tile it's on. Driving left explains the 4h30 period (and that it doesn't drop to zero on a break); Working left the 6-hour working-time period (any 15-minute break resets it).
 - New explanations for Driven today, Worked today, Shift working time, Shift time left, Next shift can start, Break due in and Resting for.

@@ -28,3 +28,20 @@ final class InfoTextTests: XCTestCase {
         XCTAssertNil(RuleInfo.text(for: "Driving before 30-min break"))
     }
 }
+
+/// Map filters start from the right defaults for where the map was opened.
+@MainActor
+final class MapFilterDefaultsTests: XCTestCase {
+    func testDefaultsPerMap() {
+        var s = AppSettings()
+        XCTAssertEqual(s.hiddenEvents(on: .main), Set(EventKind.allCases), "main map: everything off")
+        XCTAssertEqual(s.hiddenEvents(on: .day), Set(EventKind.allCases))
+        XCTAssertEqual(s.hiddenEvents(on: .events), [.activity], "events map: only events on")
+        XCTAssertFalse(s.hiddenEvents(on: .activities).contains(.activity), "activities map: activities on")
+        XCTAssertTrue(s.hiddenEvents(on: .activities).contains(.overspeed))
+        // A change on one map doesn't affect another.
+        s.setHiddenEvents([], on: .main)
+        XCTAssertTrue(s.hiddenEvents(on: .main).isEmpty)
+        XCTAssertEqual(s.hiddenEvents(on: .day), Set(EventKind.allCases))
+    }
+}
