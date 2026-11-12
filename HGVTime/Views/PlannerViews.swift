@@ -137,24 +137,6 @@ struct PlanEditor: View {
                 }
 
                 Section {
-                    Picker("Finish", selection: $endMode) {
-                        ForEach(WorkPlan.EndMode.allCases) { Text($0.title).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    if endMode == .different {
-                        AddressLookupFields(address: $endLocation, postcode: $endPostcode,
-                                            latitude: $endLatitude, longitude: $endLongitude,
-                                            name: $endName, addressLabel: "End location")
-                    }
-                } header: {
-                    Text("End location")
-                } footer: {
-                    Text(endMode == .unknown
-                         ? "For trunking and tramping when you don't know yet where you'll finish. You can set it later."
-                         : endMode == .same ? "The job finishes back at the start location." : "Where the job finishes (e.g. a different depot or the parking for the night).")
-                }
-
-                Section {
                     ForEach(Array(stops.enumerated()), id: \.element.id) { i, stop in
                         HStack(spacing: 6) {
                             Button { editingStop = EditableStop(stop: stop, isNew: false) } label: { StopRow(stop: stop, number: i + 1) }
@@ -214,6 +196,24 @@ struct PlanEditor: View {
                     }
                 } footer: {
                     Text("Tap a stop to edit it, or use ⋯ to edit, duplicate, move, swap or delete. Tap Reorder to drag stops into a new order. Hold Add stop to pick the type (collection, delivery, depot, fuel, parking, trailer swap). A custom stop can be anything — name it yourself.")
+                }
+
+                Section {
+                    Picker("Finish", selection: $endMode) {
+                        ForEach(WorkPlan.EndMode.allCases) { Text($0.title).tag($0) }
+                    }
+                    .pickerStyle(.segmented)
+                    if endMode == .different {
+                        AddressLookupFields(address: $endLocation, postcode: $endPostcode,
+                                            latitude: $endLatitude, longitude: $endLongitude,
+                                            name: $endName, addressLabel: "End location")
+                    }
+                } header: {
+                    Text("End location")
+                } footer: {
+                    Text(endMode == .unknown
+                         ? "For trunking and tramping when you don't know yet where you'll finish. You can set it later."
+                         : endMode == .same ? "The job finishes back at the start location." : "Where the job finishes (e.g. a different depot or the parking for the night).")
                 }
 
                 Section("Load") {
@@ -488,10 +488,6 @@ struct PlanCard: View {
             let startText = [plan.startName, AddressParts.join(flat: plan.startFlat, houseName: plan.startHouseName, houseNumber: plan.startHouseNumber,
                                                                 street: plan.startLocation, postcode: plan.startPostcode)].filter { !$0.isEmpty }.joined(separator: ", ")
             if !startText.isEmpty { Label("Start: \(startText)", systemImage: "flag.fill").font(.caption) }
-            if plan.endMode != .same || !startText.isEmpty {
-                Label("Finish: \(plan.endText)", systemImage: plan.endMode == .unknown ? "questionmark.circle" : "flag.checkered")
-                    .font(.caption).foregroundStyle(plan.endMode == .unknown ? .orange : .primary)
-            }
             ForEach(showStops ? plan.stops : []) { stop in
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
@@ -505,6 +501,10 @@ struct PlanCard: View {
                         if !extra.isEmpty { Text(extra).font(.caption2).foregroundStyle(.secondary) }
                     }
                 }
+            }
+            if plan.endMode != .same || !startText.isEmpty {
+                Label("Finish: \(plan.endText)", systemImage: plan.endMode == .unknown ? "questionmark.circle" : "flag.checkered")
+                    .font(.caption).foregroundStyle(plan.endMode == .unknown ? .orange : .primary)
             }
             let loadLine = [plan.load, plan.pallets.isEmpty ? "" : "\(plan.pallets) pallets", plan.reference.isEmpty ? "" : "Ref \(plan.reference)"]
                 .filter { !$0.isEmpty }.joined(separator: " · ")

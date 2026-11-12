@@ -2,6 +2,16 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.16.0 — Vehicle check, trailer swaps, resizable tiles
+- Full vehicle check (walk-round / pre-use), like a paper operator check sheet: a column for your vehicle and one for each trailer you take today (up to 6). Tap a line to mark ✓ OK, ✗ needs action (with a note) or N/A; Yes/No lines for questions like "coupling tug test done". "All ✓" per column, height when leaving site, defect book reference, declaration and a share button. History keeps every check.
+- The check is optional: it's a Today tile ("Vehicle check") you can show or hide in Edit layout. Not mandatory.
+- Trailer swap at any stop: on a delivery or collection you can drop your trailer and/or pick up another (from your list or by typing its number) — or drop it and carry on solo. Tapping Departed updates your current trailer.
+- Jobs: the Finish location is now shown at the end of the job, after the stops.
+- Edit layout: tiles can be half or full width — tap the resize button on a tile, or use the Half/Full switch in the list.
+- Redesigned activity card on Today: the activity icon sits in a progress ring (driving to 4h30, work to the 6h break, or how much of the break is done), a big timer, a colour wash for the activity and the next tip in a tinted box.
+- All new texts translated into Polish, Romanian, Russian and Ukrainian.
+- 3 new tests (107 in total).
+
 ## 3.15.0 — Smoother navigation, lorry pin, clearer panel
 - The map glides with the lorry: position and heading are eased 5 times a second and the camera follows the smoothed position, so turns and movement are smooth instead of jumpy.
 - The map always follows you: if you pan around, it goes back to following after 6 seconds; it re-centres when you reopen navigation or come back to the app. No more looking for the pin.

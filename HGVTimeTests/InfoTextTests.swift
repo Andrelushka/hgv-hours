@@ -84,3 +84,46 @@ final class TrailerSwingTests: XCTestCase {
         XCTAssertEqual(h, 0, accuracy: 0.001, "eases across north the short way")
     }
 }
+
+/// 3.16: trailer swap at an ordinary stop, the vehicle check counts and tile sizes.
+@MainActor
+final class VehicleCheckAndTileTests: XCTestCase {
+    func testTrailerSwapText() {
+        var stop = PlanStop(kind: .delivery)
+        XCTAssertEqual(stop.trailerChangeText(in: []), "")
+        stop.dropTrailerID = "current"
+        stop.pickTrailerRef = "T42"
+        let text = stop.trailerChangeText(in: [])
+        XCTAssertTrue(text.contains("T42"))
+        XCTAssertTrue(text.contains("·"))
+    }
+
+    func testVehicleCheckCounts() {
+        let check = VehicleCheck()
+        check.columns = ["AB12 CDE", "T42"]
+        check.trailerColumns = [false, true]
+        let vehicleLines = CheckItem.all.filter { $0.applies(toTrailer: false) }.count
+        let trailerLines = CheckItem.all.filter { $0.applies(toTrailer: true) }.count
+        XCTAssertEqual(check.openCount, vehicleLines + trailerLines)
+        var a = check.answers
+        a[VehicleCheck.key("tyres", 0)] = "ok"
+        a[VehicleCheck.key("lights", 1)] = "defect"
+        a[VehicleCheck.key("coupling", 1)] = "no"
+        check.answers = a
+        XCTAssertEqual(check.defectCount, 2)
+        XCTAssertEqual(check.openCount, vehicleLines + trailerLines - 3)
+        XCTAssertEqual(Set(CheckItem.all.map(\.id)).count, CheckItem.all.count, "item ids are unique")
+    }
+
+    func testTileSizes() {
+        var s = AppSettings()
+        let tile = Tile.vehicle
+        let original = s.isWide(tile)
+        s.setWide(tile, !original)
+        XCTAssertEqual(s.isWide(tile), !original)
+        s.setWide(tile, original)
+        XCTAssertTrue(s.tileSizes.isEmpty, "default size is not stored")
+        s.setWide(.buttons, !s.isWide(.buttons))
+        XCTAssertEqual(s.isWide(.buttons), Tile.buttons.isWide, "buttons can't be resized")
+    }
+}

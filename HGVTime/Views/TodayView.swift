@@ -168,7 +168,7 @@ struct TodayView: View {
         case .job: return onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty
         case .vehicle: return true
         case .mileage: return onShift || VehicleLog.hasMileage(on: now, context: context)
-        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks, .heightCheck: return true
+        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks, .heightCheck, .vehicleCheck: return true
         case .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice: return NavigationEngine.shared.isRunning
         default: return data.applies(tile)
         }
@@ -179,6 +179,7 @@ struct TodayView: View {
         switch tile {
         case .date: DateTile(now: now)
         case .card: CardTile(inserted: cardIn, since: cardSince) { toggleCard() }
+        case .vehicleCheck: VehicleCheckTile()
         case .heightCheck: HeightCheckTile(height: currentHeight, checkedAt: heightCheckedAt(shiftStart: status.currentShift?.period.start)) {
             toggleHeightCheck(shiftStart: status.currentShift?.period.start)
         }
@@ -247,12 +248,33 @@ struct TodayView: View {
         let helpText = help.map { $0.lines.joined(separator: "\n\n") }
             ?? TodayHelp.next(status: status, openEntry: openEntry)
             ?? "Tap Start shift when you begin work, then the activity buttons as you change activity."
+        // Ring around the icon: how far through the current limit you are (4h30 driving, 6h work, the break).
+        let ring: Double? = {
+            guard onShift, status.hasData else { return nil }
+            switch status.currentKind {
+            case .drive: return status.stats.continuousDriving / Limits.continuousDriving
+            case .otherWork: return 1 - status.wtdWorkBeforeBreak / Limits.wtdMaxWorkWithoutBreak
+            case .rest: return status.breakNeeded > 0 ? status.currentRestLength / status.breakNeeded : nil
+            case .availability: return nil
+            }
+        }()
         return HStack(alignment: .top, spacing: 14) {
-            Image(systemName: symbol)
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 60, height: 60)
-                .background(color.gradient, in: RoundedRectangle(cornerRadius: 16))
+            ZStack {
+                Circle().fill(color.gradient).frame(width: 58, height: 58)
+                    .shadow(color: color.opacity(0.45), radius: 8, y: 3)
+                Image(systemName: symbol)
+                    .font(.system(size: 26, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .symbolEffect(.pulse, isActive: onShift && status.currentKind == .drive)
+                if let ring {
+                    Circle().stroke(color.opacity(0.2), lineWidth: 5).frame(width: 70, height: 70)
+                    Circle().trim(from: 0, to: min(max(ring, 0), 1))
+                        .stroke(ring >= 0.9 ? Color.red : color, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                        .rotationEffect(.degrees(-90)).frame(width: 70, height: 70)
+                        .animation(.easeInOut, value: ring)
+                }
+            }
+            .frame(width: 72, height: 72)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(LocalizedStringKey(title)).font(.headline)
@@ -279,14 +301,18 @@ struct TodayView: View {
                         Text("Resting since \(Fmt.dayTime(status.currentSince))").font(.subheadline).foregroundStyle(.secondary)
                     }
                     if let next = TodayHelp.next(status: status, openEntry: openEntry) {
-                        Text(next)
+                        Label(next, systemImage: "lightbulb.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.tint)
                             .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                            .padding(.top, 4)
                     }
                 } else if status.hasData {
                     Text(status.currentSince, style: .timer)
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold).monospacedDigit())
+                        .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(color.gradient)
                     HStack(spacing: 4) {
                         Text("since").font(.caption).foregroundStyle(.secondary)
                         if let open = openEntry {
@@ -308,10 +334,13 @@ struct TodayView: View {
                             .font(.caption).foregroundStyle(.secondary)
                     }
                     if let next = TodayHelp.next(status: status, openEntry: openEntry) {
-                        Text(next)
+                        Label(next, systemImage: "lightbulb.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.tint)
                             .fixedSize(horizontal: false, vertical: true)
+                            .padding(.horizontal, 10).padding(.vertical, 6)
+                            .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                            .padding(.top, 4)
                     }
                 } else {
                     Text("Tap Start shift when you begin work").font(.subheadline).foregroundStyle(.secondary)
@@ -329,9 +358,15 @@ struct TodayView: View {
                 }
             }
         }
-        .padding()
+        .padding(16)
         .frame(maxWidth: .infinity)
-        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+        .background {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(LinearGradient(colors: [color.opacity(0.20), color.opacity(0.05), Color(.secondarySystemBackground)],
+                                     startPoint: .topLeading, endPoint: .bottomTrailing))
+        }
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(color.opacity(0.25), lineWidth: 1))
+        .animation(.easeInOut(duration: 0.4), value: title)
     }
 
     // MARK: Buttons

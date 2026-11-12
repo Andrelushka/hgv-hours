@@ -463,6 +463,34 @@
       }
     },
     "%lld": {},
+    "%lld defect(s)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "usterki: %lld"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "defecte: %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "неисправностей: %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "несправностей: %lld"
+          }
+        }
+      }
+    },
     "%lld infringement%@ in the last 28 days": {
       "localizations": {
         "en": {
@@ -479,6 +507,34 @@
           "stringUnit": {
             "state": "new",
             "value": "%1$lld issue%2$@"
+          }
+        }
+      }
+    },
+    "%lld line(s) not answered yet.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiersze bez odpowiedzi: %lld."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rânduri fără răspuns: %lld."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без ответа строк: %lld."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без відповіді рядків: %lld."
           }
         }
       }
@@ -910,6 +966,34 @@
         }
       }
     },
+    "3D (tilts with the map)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D (pochyla się z mapą)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D (se înclină cu harta)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D (наклоняется с картой)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3D (нахиляється з мапою)"
+          }
+        }
+      }
+    },
     "3D from behind": {
       "localizations": {
         "pl": {
@@ -1191,6 +1275,34 @@
         }
       }
     },
+    "ABS warning sequence correct": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekwencja ABS prawidłowa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Secvența ABS corectă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Последовательность ABS правильная"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Послідовність ABS правильна"
+          }
+        }
+      }
+    },
     "AETR countries": {
       "localizations": {
         "pl": {
@@ -1356,6 +1468,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "ДТП"
+          }
+        }
+      }
+    },
+    "Accident / bump cards in the cab": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Karty wypadkowe w kabinie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formulare de accident în cabină"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Карточки ДТП в кабине"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Картки ДТП у кабіні"
           }
         }
       }
@@ -1530,6 +1670,34 @@
       }
     },
     "AdBlue": {},
+    "Add": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати"
+          }
+        }
+      }
+    },
     "Add %@": {
       "localizations": {
         "pl": {
@@ -1638,6 +1806,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Додати готовий шаблон"
+          }
+        }
+      }
+    },
+    "Add a trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj naczepę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă o remorcă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати причіп"
           }
         }
       }
@@ -1806,6 +2002,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Додати свою зупинку"
+          }
+        }
+      }
+    },
+    "Add every trailer you use today (up to 6), like the paper sheet.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj każdą naczepę z dzisiaj (do 6), jak na papierowym arkuszu."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă fiecare remorcă de azi (până la 6), ca pe foaia de hârtie."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавьте каждый прицеп за сегодня (до 6), как в бумажном листе."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додайте кожен причіп за сьогодні (до 6), як у паперовому листі."
           }
         }
       }
@@ -2198,6 +2422,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Після зупинки на"
+          }
+        }
+      }
+    },
+    "Air pressure correct, working, no leaks": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciśnienie powietrza prawidłowe, działa, bez wycieków"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Presiunea aerului corectă, funcționează, fără scurgeri"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Давление воздуха в норме, работает, без утечек"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тиск повітря в нормі, працює, без витоків"
+          }
+        }
+      }
+    },
+    "Air, electrical and ABS lines secure and undamaged": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przewody powietrzne, elektryczne i ABS zabezpieczone i nieuszkodzone"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conductele de aer, electrice și ABS fixate și nedeteriorate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Воздушные, электрические и ABS-магистрали закреплены и целы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повітряні, електричні й ABS-магістралі закріплені й цілі"
           }
         }
       }
@@ -2796,6 +3076,34 @@
         }
       }
     },
+    "All ✓": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszystko ✓"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toate ✓"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё ✓"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Усе ✓"
+          }
+        }
+      }
+    },
     "Allow alarms": {
       "localizations": {
         "pl": {
@@ -3048,6 +3356,62 @@
         }
       }
     },
+    "Ancillary / specialist equipment": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyposażenie dodatkowe / specjalistyczne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echipament auxiliar / specializat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дополнительное / специальное оборудование"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додаткове / спеціальне обладнання"
+          }
+        }
+      }
+    },
+    "Animation (smooth turns, trailer swings)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animacja (płynne skręty, naczepa zarzuca)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animație (viraje line, remorca derapează)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Анимация (плавные повороты, прицеп заносит)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Анімація (плавні повороти, причіп заносить)"
+          }
+        }
+      }
+    },
     "Anything else: seal number, gate code, contact, booking-in number… Tap a line or use ⋯ to edit, move or delete it.": {
       "localizations": {
         "pl": {
@@ -3217,7 +3581,36 @@
         }
       }
     },
+    "Arrive": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przyjazd"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sosire"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прибытие"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прибуття"
+          }
+        }
+      }
+    },
     "Arrive %@": {
+      "extractionState": "stale",
       "localizations": {
         "pl": {
           "stringUnit": {
@@ -3353,6 +3746,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прозорість стрілки: %lld%%"
+          }
+        }
+      }
+    },
+    "Artic (cab + trailer)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciągnik z naczepą"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cap tractor cu remorcă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тягач с прицепом"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тягач із причепом"
           }
         }
       }
@@ -4377,6 +4798,34 @@
         }
       }
     },
+    "Bodywork, steps, curtains, doors, locks, side guards secure": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadwozie, stopnie, plandeki, drzwi, zamki, osłony boczne zabezpieczone"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Caroserie, trepte, prelate, uși, încuietori, protecții laterale fixate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кузов, ступени, шторы, двери, замки, боковые защиты закреплены"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кузов, сходинки, штори, двері, замки, бокові захисти закріплені"
+          }
+        }
+      }
+    },
     "Bonuses, deductions, holidays and nights out (pay is worked out from the driver log)": {
       "localizations": {
         "pl": {
@@ -4457,6 +4906,118 @@
           "stringUnit": {
             "state": "translated",
             "value": "Запис"
+          }
+        }
+      }
+    },
+    "Bottom left": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na dole po lewej"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jos stânga"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внизу слева"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внизу ліворуч"
+          }
+        }
+      }
+    },
+    "Bottom right": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na dole po prawej"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jos dreapta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внизу справа"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внизу праворуч"
+          }
+        }
+      }
+    },
+    "Brake-off / door-open warning fitted and working": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostrzeżenie o zwolnionym hamulcu / otwartych drzwiach zamontowane i działa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertizare frână eliberată / ușă deschisă montată și funcțională"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сигнал «стояночный тормоз выкл. / дверь открыта» установлен и работает"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сигнал «стоянкове гальмо вимк. / двері відчинені» встановлено й працює"
+          }
+        }
+      }
+    },
+    "Brakes, reverse alarm and warning lights work correctly": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hamulce, sygnał cofania i kontrolki działają prawidłowo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frânele, alarma de mers înapoi și martorii funcționează corect"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тормоза, сигнал заднего хода и контрольные лампы работают"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гальма, сигнал заднього ходу й контрольні лампи працюють"
           }
         }
       }
@@ -5675,6 +6236,34 @@
         }
       }
     },
+    "Colour": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kolor"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Culoare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цвет"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Колір"
+          }
+        }
+      }
+    },
     "Column %@": {
       "localizations": {
         "pl": {
@@ -6147,6 +6736,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Країна, правила тахографа/GB, робочий час, екіпаж із двох"
+          }
+        }
+      }
+    },
+    "Coupling secure, locking devices engaged — tug test done": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprzęg zabezpieczony, blokady założone — test szarpnięcia wykonany"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuplajul fixat, siguranțele puse — testul de tragere făcut"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сцепка закреплена, фиксаторы на месте — проверка рывком выполнена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зчіпка закріплена, фіксатори на місці — перевірку ривком виконано"
           }
         }
       }
@@ -7187,6 +7804,34 @@
         }
       }
     },
+    "Declaration": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oświadczenie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Declarație"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подтверждение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підтвердження"
+          }
+        }
+      }
+    },
     "Default": {
       "localizations": {
         "pl": {
@@ -7239,6 +7884,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "За замовчуванням (британська англійська)"
+          }
+        }
+      }
+    },
+    "Defect book reference": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numer w książce usterek"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referință registru defecte"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер в журнале неисправностей"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер у журналі несправностей"
+          }
+        }
+      }
+    },
+    "Defects reported": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoszone usterki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defecte raportate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отмеченные неисправности"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позначені несправності"
           }
         }
       }
@@ -7915,6 +8616,34 @@
         }
       }
     },
+    "Describe it (optional)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opisz (opcjonalnie)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descrie (opțional)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Опишите (необязательно)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Опишіть (необов'язково)"
+          }
+        }
+      }
+    },
     "Describe your idea": {
       "localizations": {
         "pl": {
@@ -8111,6 +8840,34 @@
         }
       }
     },
+    "Distance": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odległość"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Distanță"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Расстояние"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відстань"
+          }
+        }
+      }
+    },
     "Distances": {
       "localizations": {
         "pl": {
@@ -8219,6 +8976,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "Готово"
+          }
+        }
+      }
+    },
+    "Done · %lld defect(s) reported": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zrobione · usterki: %lld"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gata · defecte: %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выполнено · неисправностей: %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виконано · несправностей: %lld"
+          }
+        }
+      }
+    },
+    "Done · no defects": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zrobione · bez usterek"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gata · fără defecte"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выполнено · без неисправностей"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виконано · без несправностей"
+          }
+        }
+      }
+    },
+    "Dot": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kropka"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Punct"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Точка"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Крапка"
           }
         }
       }
@@ -8851,6 +9692,34 @@
         }
       }
     },
+    "Driver name": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imię kierowcy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numele șoferului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имя водителя"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ім'я водія"
+          }
+        }
+      }
+    },
     "Driver profile": {
       "localizations": {
         "pl": {
@@ -9103,6 +9972,34 @@
         }
       }
     },
+    "Driving controls — condition, wear and operation": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elementy sterujące — stan, zużycie i działanie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comenzile — stare, uzură și funcționare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Органы управления — состояние, износ и работа"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Органи керування — стан, знос і робота"
+          }
+        }
+      }
+    },
     "Driving left": {
       "localizations": {
         "pl": {
@@ -9299,6 +10196,34 @@
         }
       }
     },
+    "Drop %@": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaw %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasă %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставить %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишити %@"
+          }
+        }
+      }
+    },
     "Drop off trailer": {
       "localizations": {
         "pl": {
@@ -9351,6 +10276,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Залишити машину"
+          }
+        }
+      }
+    },
+    "Drop trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaw naczepę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasă remorca"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставить прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишити причіп"
           }
         }
       }
@@ -10308,6 +11261,34 @@
         }
       }
     },
+    "Equipment warning lights and devices work, signs in place": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lampki ostrzegawcze i urządzenia sprzętu działają, oznakowanie na miejscu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Martorii și dispozitivele echipamentului funcționează, semnele la locul lor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сигнальные огни и устройства оборудования работают, знаки на месте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сигнальні вогні й пристрої обладнання працюють, знаки на місці"
+          }
+        }
+      }
+    },
     "Erase": {
       "localizations": {
         "pl": {
@@ -10701,6 +11682,34 @@
         }
       }
     },
+    "Every line answered.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wszystkie wiersze mają odpowiedź."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toate rândurile au răspuns."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На все строки есть ответ."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На всі рядки є відповідь."
+          }
+        }
+      }
+    },
     "Every shift": {
       "localizations": {
         "pl": {
@@ -10977,6 +11986,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Винятки, відступи, правила відпочинку на поромі/поїзді та угоди з працівниками враховано не повністю. Якщо сумніваєтеся, перевірте GOV.UK: «Drivers' hours and tachographs: goods vehicles»."
+          }
+        }
+      }
+    },
+    "Exhaust — condition and excessive smoke": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wydech — stan i nadmierny dym"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eșapament — stare și fum excesiv"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выхлоп — состояние и сильный дым"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихлоп — стан і сильний дим"
           }
         }
       }
@@ -11598,6 +12635,34 @@
         }
       }
     },
+    "Fluid levels — oil, coolant, fuel, screenwash, AdBlue": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poziomy płynów — olej, chłodziwo, paliwo, spryskiwacz, AdBlue"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niveluri de lichide — ulei, antigel, combustibil, spălător, AdBlue"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уровни жидкостей — масло, охлаждающая, топливо, омыватель, AdBlue"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Рівні рідин — олива, охолоджувальна, пальне, омивач, AdBlue"
+          }
+        }
+      }
+    },
     "For days with no job in the planner yet.": {
       "localizations": {
         "pl": {
@@ -11734,6 +12799,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Два тижні"
+          }
+        }
+      }
+    },
+    "Forward-facing camera powers up and is secure": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kamera przednia włącza się i jest dobrze zamocowana"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camera frontală pornește și e bine fixată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Передняя камера включается и надёжно закреплена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Передня камера вмикається й надійно закріплена"
+          }
+        }
+      }
+    },
+    "Free from leaks — air, fluid, gas": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak wycieków — powietrze, płyny, gaz"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fără scurgeri — aer, lichide, gaz"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет утечек — воздух, жидкости, газ"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Немає витоків — повітря, рідини, газ"
           }
         }
       }
@@ -11878,6 +12999,34 @@
         }
       }
     },
+    "Fuel and AdBlue tanks secure, caps on, no leaks": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zbiorniki paliwa i AdBlue zabezpieczone, korki założone, bez wycieków"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rezervoarele de combustibil și AdBlue fixate, capace puse, fără scurgeri"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Баки топлива и AdBlue закреплены, крышки на месте, без утечек"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Баки пального й AdBlue закріплені, кришки на місці, без витоків"
+          }
+        }
+      }
+    },
     "Fuel log": {
       "localizations": {
         "pl": {
@@ -11930,6 +13079,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Заправка"
+          }
+        }
+      }
+    },
+    "Full": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pełna"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Широкая"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Широка"
           }
         }
       }
@@ -12365,6 +13542,34 @@
         }
       }
     },
+    "General items": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pozycje ogólne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elemente generale"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Общие пункты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загальні пункти"
+          }
+        }
+      }
+    },
     "Get an API key at console.anthropic.com": {
       "localizations": {
         "pl": {
@@ -12705,6 +13910,34 @@
     },
     "HGV Hours: %@": {},
     "HVO": {},
+    "Half": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połowa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jumătate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Половина"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Половина"
+          }
+        }
+      }
+    },
     "Harsh braking": {
       "localizations": {
         "pl": {
@@ -12925,6 +14158,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перевірку висоти скасовано"
+          }
+        }
+      }
+    },
+    "Height indicator set to the correct height": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wskaźnik wysokości ustawiony prawidłowo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicatorul de înălțime setat corect"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Указатель высоты выставлен правильно"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Покажчик висоти виставлено правильно"
+          }
+        }
+      }
+    },
+    "Height when leaving": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysokość przy wyjeździe"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Înălțimea la plecare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высота при выезде"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Висота при виїзді"
           }
         }
       }
@@ -13573,6 +14862,34 @@
         }
       }
     },
+    "I understand how this vehicle's safety features work (e.g. park brake warning)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiem, jak działają systemy bezpieczeństwa tego pojazdu (np. ostrzeżenie hamulca postojowego)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Știu cum funcționează sistemele de siguranță ale acestui vehicul (de ex. avertizarea frânei de parcare)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Я знаю, как работают системы безопасности этой машины (напр. сигнал стояночного тормоза)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Я знаю, як працюють системи безпеки цієї машини (напр. сигнал стоянкового гальма)"
+          }
+        }
+      }
+    },
     "I'm parked": {
       "localizations": {
         "pl": {
@@ -13597,6 +14914,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Я на стоянці"
+          }
+        }
+      }
+    },
+    "I've followed the check procedure and reported all defects": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wykonałem kontrolę zgodnie z procedurą i zgłosiłem wszystkie usterki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am urmat procedura de verificare și am raportat toate defectele"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Я выполнил проверку по процедуре и сообщил обо всех неисправностях"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Я виконав перевірку за процедурою й повідомив про всі несправності"
           }
         }
       }
@@ -13771,6 +15116,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "У кабіні — записувати водіння автоматично"
+          }
+        }
+      }
+    },
+    "In progress · %lld left": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W toku · zostało %lld"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În curs · au rămas %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В процессе · осталось %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У процесі · залишилось %lld"
           }
         }
       }
@@ -14559,6 +15932,34 @@
         }
       }
     },
+    "Landing legs undamaged, handle stowed": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podpory naczepy nieuszkodzone, korba schowana"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Picioarele remorcii nedeteriorate, manivela pusă la loc"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Опоры прицепа целы, ручка убрана"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Опори причепа цілі, ручку прибрано"
+          }
+        }
+      }
+    },
     "Lane guidance": {
       "localizations": {
         "pl": {
@@ -14923,6 +16324,34 @@
         }
       }
     },
+    "Lights, indicators and brake lights working, clean": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Światła, kierunkowskazy i światła stop działają, czyste"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luminile, semnalizatoarele și stopurile funcționează, curate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фары, поворотники и стоп-сигналы работают, чистые"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фари, покажчики повороту й стоп-сигнали працюють, чисті"
+          }
+        }
+      }
+    },
     "Like the tachograph: more than 60 seconds in a row above this speed is an overspeed infringement. Shorter ones are recorded but not counted as infringements. Each event is saved with its time, top speed and location. Automatic uses the vehicle you're driving and your country: lorries over 3.5 t 90 km/h (56 mph) in the UK/EU, 100 km/h in Australia, 105 km/h in North America; vans use the road limit. A speed set on a vehicle always wins.": {
       "localizations": {
         "pl": {
@@ -15149,6 +16578,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вантаж / товар"
+          }
+        }
+      }
+    },
+    "Load secured": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ładunek zabezpieczony"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Marfa asigurată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Груз закреплён"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вантаж закріплено"
           }
         }
       }
@@ -15601,6 +17058,62 @@
         }
       }
     },
+    "Loose items stowed securely in the cab": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luźne przedmioty w kabinie zabezpieczone"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obiectele libere din cabină sunt fixate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Незакреплённые вещи в кабине убраны"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Незакріплені речі в кабіні прибрано"
+          }
+        }
+      }
+    },
+    "Lorry pin": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ikona ciężarówki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinul camionului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значок грузовика"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Значок вантажівки"
+          }
+        }
+      }
+    },
     "Lorry route (OpenStreetMap)": {
       "localizations": {
         "pl": {
@@ -15713,6 +17226,34 @@
         }
       }
     },
+    "Lower shows more road ahead; higher keeps the pin clear of the bottom panel.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niżej — więcej drogi przed Tobą; wyżej — ikona nie jest zasłonięta przez dolny panel."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mai jos arată mai mult drum în față; mai sus ține pinul deasupra panoului de jos."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ниже — больше дороги впереди; выше — значок не закрыт нижней панелью."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нижче — більше дороги попереду; вище — значок не закритий нижньою панеллю."
+          }
+        }
+      }
+    },
     "Main rules": {
       "localizations": {
         "pl": {
@@ -15765,6 +17306,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Спершу зробити резервну копію"
+          }
+        }
+      }
+    },
+    "Make full width": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na pełną szerokość"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe toată lățimea"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На всю ширину"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На всю ширину"
+          }
+        }
+      }
+    },
+    "Make half width": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na pół szerokości"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe jumătate de lățime"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На половину ширины"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На половину ширини"
           }
         }
       }
@@ -16353,6 +17950,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Хвилин до"
+          }
+        }
+      }
+    },
+    "Mirrors secure, undamaged and aligned": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lusterka zamocowane, nieuszkodzone i ustawione"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oglinzile fixate, nedeteriorate și reglate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зеркала закреплены, целы и настроены"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Дзеркала закріплені, цілі й налаштовані"
           }
         }
       }
@@ -16970,6 +18595,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Навігація"
+          }
+        }
+      }
+    },
+    "Navigation arrow": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strzałka nawigacji"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Săgeată de navigație"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стрелка навигации"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стрілка навігації"
           }
         }
       }
@@ -17710,6 +19363,34 @@
         }
       }
     },
+    "No / not in my list": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie / nie ma na liście"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu / nu e în listă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет / нет в списке"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ні / немає в списку"
+          }
+        }
+      }
+    },
     "No 15h days left": {
       "localizations": {
         "pl": {
@@ -17790,6 +19471,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Немає картки"
+          }
+        }
+      }
+    },
+    "No checks yet": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak kontroli"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încă nicio verificare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверок пока нет"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірок поки немає"
+          }
+        }
+      }
+    },
+    "No defects": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bez usterek"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fără defecte"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без неисправностей"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без несправностей"
           }
         }
       }
@@ -18466,6 +20203,34 @@
         }
       }
     },
+    "Not done today": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dziś nie zrobiono"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nefăcută azi"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сегодня не выполнена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сьогодні не виконано"
+          }
+        }
+      }
+    },
     "Not enough driving time to arrive": {
       "localizations": {
         "pl": {
@@ -18630,6 +20395,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не задано"
+          }
+        }
+      }
+    },
+    "Not signed": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niepodpisane"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nesemnat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не подписано"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не підписано"
           }
         }
       }
@@ -19023,6 +20816,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Зараз"
+          }
+        }
+      }
+    },
+    "Number plates secure and legible": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tablice rejestracyjne zamocowane i czytelne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerele de înmatriculare fixate și lizibile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номерные знаки закреплены и читаемы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номерні знаки закріплені й читабельні"
           }
         }
       }
@@ -19584,6 +21405,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Відкрити навігацію"
+          }
+        }
+      }
+    },
+    "Operator licence disc displayed and in date": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licencja przewoźnika wywieszona i ważna"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licența operatorului afișată și valabilă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диск лицензии оператора на месте и действителен"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диск ліцензії оператора на місці й чинний"
           }
         }
       }
@@ -20728,6 +22577,34 @@
         }
       }
     },
+    "Pick up %@": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odbierz %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ia %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрать %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрати %@"
+          }
+        }
+      }
+    },
     "Pick up trailer": {
       "localizations": {
         "pl": {
@@ -21210,6 +23087,34 @@
         }
       }
     },
+    "Position on screen: %lld%% from the bottom": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pozycja na ekranie: %lld%% od dołu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poziția pe ecran: %lld%% de jos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Положение на экране: %lld%% от низа"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Положення на екрані: %lld%% від низу"
+          }
+        }
+      }
+    },
     "Postcode": {
       "localizations": {
         "pl": {
@@ -21290,6 +23195,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Пошук за індексом і адресою працює через Apple Maps під час введення — ключ не потрібен. Виберіть результат або введіть адресу самі."
+          }
+        }
+      }
+    },
+    "Power supplies, leads and sockets in good condition": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zasilanie, przewody i gniazda w dobrym stanie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alimentarea, cablurile și prizele în stare bună"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Питание, провода и разъёмы в хорошем состоянии"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Живлення, дроти й роз'єми в доброму стані"
           }
         }
       }
@@ -21682,6 +23615,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Читаю фото…"
+          }
+        }
+      }
+    },
+    "Rear proximity sensors working": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tylne czujniki zbliżeniowe działają"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senzorii de proximitate spate funcționează"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Задние датчики приближения работают"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Задні датчики наближення працюють"
           }
         }
       }
@@ -22158,6 +24119,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Розрахунковий період"
+          }
+        }
+      }
+    },
+    "Reflectors and markings clean and visible": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odblaski i oznakowanie czyste i widoczne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catadioptrii și marcajele curate și vizibile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отражатели и маркировка чистые и видны"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відбивачі й маркування чисті й видимі"
           }
         }
       }
@@ -23311,6 +25300,34 @@
         }
       }
     },
+    "Rigid lorry": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solówka"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camion rigid"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одиночка"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одиночка"
+          }
+        }
+      }
+    },
     "Ring as an alarm": {
       "localizations": {
         "pl": {
@@ -23927,6 +25944,34 @@
         }
       }
     },
+    "Safety devices, locks and stands in place and working": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urządzenia zabezpieczające, zamki i podpory na miejscu i działają"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitivele de siguranță, încuietorile și suporturile la locul lor și funcționale"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защитные устройства, замки и опоры на месте и работают"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Захисні пристрої, замки й опори на місці й працюють"
+          }
+        }
+      }
+    },
     "Salary": {
       "localizations": {
         "pl": {
@@ -24427,6 +26472,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Знайдіть індекс бази й виберіть адресу, введіть її або позначте на мапі. Маршрут на мапі починається звідси."
+          }
+        }
+      }
+    },
+    "Seat belts undamaged and working (belts must be worn)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasy nieuszkodzone i działają (trzeba je zapinać)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Centurile nedeteriorate și funcționale (trebuie purtate)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ремни безопасности целы и работают (пристёгиваться обязательно)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Паски безпеки цілі й працюють (пристібатися обов'язково)"
           }
         }
       }
@@ -25586,6 +27659,62 @@
         }
       }
     },
+    "Side / front proximity sensors working": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boczne / przednie czujniki zbliżeniowe działają"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senzorii de proximitate laterali / față funcționează"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Боковые / передние датчики приближения работают"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бокові / передні датчики наближення працюють"
+          }
+        }
+      }
+    },
+    "Signs and documents displayed (plating, FORS, cameras, blind spot, height, no smoking)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oznakowanie i dokumenty na miejscu (tabliczka, FORS, kamery, martwe pole, wysokość, zakaz palenia)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semnele și documentele afișate (plăcuță, FORS, camere, unghi mort, înălțime, fumatul interzis)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знаки и документы на месте (табличка, FORS, камеры, мёртвые зоны, высота, не курить)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знаки й документи на місці (табличка, FORS, камери, сліпі зони, висота, не палити)"
+          }
+        }
+      }
+    },
     "Since %@": {
       "localizations": {
         "pl": {
@@ -25638,6 +27767,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "З %@ · натисніть, щоб вилучити"
+          }
+        }
+      }
+    },
+    "Size": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozmiar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mărime"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Размер"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розмір"
           }
         }
       }
@@ -26174,6 +28331,34 @@
         }
       }
     },
+    "Speed limit sign": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Znak ograniczenia prędkości"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indicatorul de limită de viteză"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знак ограничения скорости"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Знак обмеження швидкості"
+          }
+        }
+      }
+    },
     "Speed limiter": {
       "localizations": {
         "pl": {
@@ -26400,6 +28585,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вимовляється, коли застосунок відкрито або працює режим «у кабіні». Увімкніть голосові сповіщення в Налаштування → Голосові сповіщення."
+          }
+        }
+      }
+    },
+    "Spray suppression — wings and flaps fitted": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osłony przeciwbryzgowe — błotniki i chlapacze"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apărători — aripi și apărătoare de noroi montate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Брызговики и крылья на месте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бризковики й крила на місці"
           }
         }
       }
@@ -26768,6 +28981,34 @@
         }
       }
     },
+    "Start today's check from the Vehicle check tile on Today.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zacznij dzisiejszą kontrolę z kafelka „Kontrola pojazdu” na ekranie „Dziś”."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Începe verificarea de azi din placa „Verificarea vehiculului” de pe ecranul „Azi”."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начните сегодняшнюю проверку с плитки «Проверка машины» на экране «Сегодня»."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Почніть сьогоднішню перевірку з плитки «Перевірка машини» на екрані «Сьогодні»."
+          }
+        }
+      }
+    },
     "Start: %@": {
       "localizations": {
         "pl": {
@@ -27132,6 +29373,34 @@
         }
       }
     },
+    "Style": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Styl"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stil"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стиль"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стиль"
+          }
+        }
+      }
+    },
     "Suggest a feature": {
       "localizations": {
         "pl": {
@@ -27268,6 +29537,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Підтримати розробку"
+          }
+        }
+      }
+    },
+    "Suspension works, set to normal ride height": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zawieszenie działa, normalna wysokość jazdy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suspensia funcționează, înălțime normală"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подвеска работает, нормальная высота"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підвіска працює, нормальна висота"
+          }
+        }
+      }
+    },
+    "Swap trailers here: drop the one you have and/or pick up another (or leave both on No to run solo). When you tap Departed, your current trailer is updated.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wymiana naczepy tutaj: zostaw swoją i/lub odbierz inną (albo zostaw oba na „Nie”, by jechać solo). Gdy stukniesz „Wyjazd”, bieżąca naczepa się zaktualizuje."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schimb de remorcă aici: lasă-o pe a ta și/sau ia alta (sau lasă ambele pe „Nu” ca să mergi solo). Când atingi „Am plecat”, remorca curentă se actualizează."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Смена прицепа здесь: оставьте свой и/или заберите другой (или оставьте оба на «Нет», чтобы ехать без прицепа). Когда нажмёте «Уехал», текущий прицеп обновится."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заміна причепа тут: залиште свій і/або заберіть інший (або залиште обидва на «Ні», щоб їхати без причепа). Коли натиснете «Виїхав», поточний причіп оновиться."
           }
         }
       }
@@ -27440,6 +29765,62 @@
         }
       }
     },
+    "Tachograph works, spare print rolls available": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tachograf działa, zapasowe rolki są"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tahograful funcționează, role de rezervă disponibile"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тахограф работает, запасные рулоны есть"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Тахограф працює, запасні рулони є"
+          }
+        }
+      }
+    },
+    "Tail lift, crane or moving floor operates correctly": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Winda, dźwig lub ruchoma podłoga działają prawidłowo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liftul, macaraua sau podeaua mobilă funcționează corect"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гидроборт, кран или подвижный пол работают правильно"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гідроборт, кран чи рухома підлога працюють правильно"
+          }
+        }
+      }
+    },
     "Take": {
       "localizations": {
         "pl": {
@@ -27582,6 +29963,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Натисніть «Почати зміну», коли беретеся до роботи"
+          }
+        }
+      }
+    },
+    "Tap a line: ✓ satisfactory → ✗ action required → N/A. Yes/No lines: Yes → No → N/A.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stuknij wiersz: ✓ w porządku → ✗ wymaga działania → N/A. Wiersze Tak/Nie: Tak → Nie → N/A."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atinge un rând: ✓ în regulă → ✗ necesită acțiune → N/A. Rânduri Da/Nu: Da → Nu → N/A."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите строку: ✓ в порядке → ✗ нужно действие → N/A. Строки Да/Нет: Да → Нет → N/A."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Натисніть рядок: ✓ гаразд → ✗ потрібна дія → N/A. Рядки Так/Ні: Так → Ні → N/A."
           }
         }
       }
@@ -28455,6 +30864,34 @@
         }
       }
     },
+    "The trailer I have": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moja obecna naczepa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remorca pe care o am"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мой текущий прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мій поточний причіп"
+          }
+        }
+      }
+    },
     "Thinking": {
       "localizations": {
         "pl": {
@@ -28737,6 +31174,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ставка ×1,25"
+          }
+        }
+      }
+    },
+    "Time left": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pozostało"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timp rămas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Осталось"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишилось"
           }
         }
       }
@@ -29133,6 +31598,62 @@
         }
       }
     },
+    "Top left": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na górze po lewej"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus stânga"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вверху слева"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Угорі ліворуч"
+          }
+        }
+      }
+    },
+    "Top right": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na górze po prawej"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus dreapta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вверху справа"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Угорі праворуч"
+          }
+        }
+      }
+    },
     "Tractor unit (artic)": {
       "localizations": {
         "pl": {
@@ -29269,6 +31790,90 @@
           "stringUnit": {
             "state": "translated",
             "value": "Причіп"
+          }
+        }
+      }
+    },
+    "Trailer MOT disc / plating certificate in date": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Badanie MOT / świadectwo naczepy ważne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Discul MOT / certificatul remorcii valabil"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диск MOT / сертификат прицепа действителен"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Диск MOT / сертифікат причепа чинний"
+          }
+        }
+      }
+    },
+    "Trailer at this stop": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naczepa na tym przystanku"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remorca la această oprire"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прицеп на этой остановке"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Причіп на цій зупинці"
+          }
+        }
+      }
+    },
+    "Trailer number": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numer naczepy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numărul remorcii"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер прицепа"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер причепа"
           }
         }
       }
@@ -29553,6 +32158,34 @@
         }
       }
     },
+    "Type a trailer number…": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpisz numer naczepy…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scrie numărul remorcii…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ввести номер прицепа…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ввести номер причепа…"
+          }
+        }
+      }
+    },
     "Type of rest": {
       "localizations": {
         "pl": {
@@ -29605,6 +32238,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Введіть номер нижче."
+          }
+        }
+      }
+    },
+    "Tyres — inflation, tread, cuts and bulges": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opony — ciśnienie, bieżnik, przecięcia i wybrzuszenia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anvelope — presiune, profil, tăieturi și umflături"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шины — давление, протектор, порезы и вздутия"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шини — тиск, протектор, порізи й здуття"
           }
         }
       }
@@ -30283,6 +32944,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Огляд машини"
+          }
+        }
+      }
+    },
+    "Vehicle check done": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontrola pojazdu zrobiona"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificarea vehiculului făcută"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка машины выполнена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірку машини виконано"
+          }
+        }
+      }
+    },
+    "Vehicle checks": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontrole pojazdu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificări ale vehiculului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверки машины"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірки машини"
           }
         }
       }
@@ -31673,6 +34390,62 @@
         }
       }
     },
+    "What's the defect?": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jaka usterka?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Care e defectul?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Какая неисправность?"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Яка несправність?"
+          }
+        }
+      }
+    },
+    "Wheels and nuts secure, nut indicators in place": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koła i nakrętki dokręcone, wskaźniki nakrętek na miejscu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Roțile și piulițele strânse, indicatoarele piulițelor la locul lor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Колёса и гайки затянуты, индикаторы гаек на месте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Колеса й гайки затягнуті, індикатори гайок на місці"
+          }
+        }
+      }
+    },
     "When": {
       "localizations": {
         "pl": {
@@ -32121,6 +34894,34 @@
         }
       }
     },
+    "Where the pin sits": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdzie jest ikona"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unde stă pinul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Где находится значок"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Де розташований значок"
+          }
+        }
+      }
+    },
     "Which trailer": {
       "localizations": {
         "pl": {
@@ -32313,6 +35114,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ширина"
+          }
+        }
+      }
+    },
+    "Windscreen area free from obstructions (sat-nav, phone…)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obszar szyby wolny od przeszkód (nawigacja, telefon…)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zona parbrizului liberă (navigație, telefon…)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зона лобового стекла свободна (навигатор, телефон…)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зона лобового скла вільна (навігатор, телефон…)"
+          }
+        }
+      }
+    },
+    "Windscreen undamaged, wipers and washers working": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szyba nieuszkodzona, wycieraczki i spryskiwacze działają"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parbrizul nedeteriorat, ștergătoarele și spălătoarele funcționează"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лобовое стекло цело, дворники и омыватели работают"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Лобове скло ціле, двірники й омивачі працюють"
           }
         }
       }
@@ -32789,6 +35646,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перевірка у дворі"
+          }
+        }
+      }
+    },
+    "Yes": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tak"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Да"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Так"
           }
         }
       }
@@ -33331,6 +36216,34 @@
         }
       }
     },
+    "current trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "obecna naczepa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "remorca curentă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "текущий прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "поточний причіп"
+          }
+        }
+      }
+    },
     "e.g. Flat 2": {
       "localizations": {
         "pl": {
@@ -33387,6 +36300,7 @@
         }
       }
     },
+    "e.g. T1234": {},
     "e.g. Tesco Daventry DC": {
       "localizations": {
         "pl": {
@@ -33600,6 +36514,7 @@
         }
       }
     },
+    "m": {},
     "mi": {
       "localizations": {
         "pl": {
@@ -33970,7 +36885,6 @@
       }
     },
     "×": {},
-    "—": {},
     "“Start shift” records this first — usually other work for your walk-round check. “End shift” asks whether you're starting a daily rest (between shifts, 9h or 11h) or a weekly rest (24h or 45h).": {
       "localizations": {
         "pl": {

@@ -84,6 +84,31 @@ struct StopEditor: View {
                     Text("Stop type")
                 }
 
+                if !stop.isEquipmentStop {
+                    let trailers = vehicles.filter { $0.kind == .trailer }
+                    Section {
+                        Picker("Drop trailer", selection: Binding(get: { stop.dropTrailerID ?? "" },
+                                                                  set: { stop.dropTrailerID = $0.isEmpty ? nil : $0 })) {
+                            Text("No").tag("")
+                            Text("The trailer I have").tag("current")
+                            ForEach(trailers) { Text($0.displayName).tag($0.id.uuidString) }
+                        }
+                        Picker("Pick up trailer", selection: Binding(get: { stop.pickTrailerID ?? "" },
+                                                                     set: { stop.pickTrailerID = $0.isEmpty ? nil : $0 })) {
+                            Text("No / not in my list").tag("")
+                            ForEach(trailers) { Text($0.displayName).tag($0.id.uuidString) }
+                        }
+                        if (stop.pickTrailerID ?? "").isEmpty {
+                            row("Trailer to pick up (number)", text: Binding(get: { stop.pickTrailerRef ?? "" }, set: { stop.pickTrailerRef = $0 }),
+                                prompt: "e.g. T1234")
+                        }
+                    } header: {
+                        Text("Trailer at this stop")
+                    } footer: {
+                        Text("Swap trailers here: drop the one you have and/or pick up another (or leave both on No to run solo). When you tap Departed, your current trailer is updated.")
+                    }
+                }
+
                 if stop.isEquipmentStop {
                     let trailer = stop.isTrailerStop
                     let list = vehicles.filter { trailer ? $0.kind == .trailer : $0.kind != .trailer }
@@ -202,7 +227,7 @@ struct StopRow: View {
                     if !stop.bookingText.isEmpty { Text(stop.bookingText).font(.caption.weight(.semibold).monospacedDigit()) }
                 }
                 let equipment = stop.equipmentName(in: vehicles)
-                Text([stop.kindTitle, equipment, stop.fullAddress].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                Text([stop.kindTitle, equipment, stop.trailerChangeText(in: vehicles), stop.fullAddress].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
                 let refs = [stop.reference.isEmpty ? "" : "Booking \(stop.reference)", (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                             stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.weight ?? ""].filter { !$0.isEmpty }
                 if !refs.isEmpty { Text(refs.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary) }

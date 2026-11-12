@@ -77,7 +77,7 @@ struct TodayJobCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text([stop.kind == .other ? stop.kindTitle : "", stop.displayName].filter { !$0.isEmpty }.joined(separator: " · "))
                             .font(.caption.weight(.semibold)).lineLimit(1)
-                        let details = [stop.equipmentName(in: vehicles), stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
+                        let details = [stop.equipmentName(in: vehicles), stop.trailerChangeText(in: vehicles), stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
                                        (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                                        stop.pallets.isEmpty ? "" : "\(stop.pallets) plt"].filter { !$0.isEmpty }.joined(separator: " · ")
                         if !details.isEmpty { Text(details).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
@@ -153,6 +153,14 @@ struct TodayJobCard: View {
             VehicleLog.select("", context: context, store: store, at: time)
         default:
             break
+        }
+        // Trailer swap at an ordinary stop: drop first, then pick up.
+        if let drop = stop.dropTrailerID, drop == "current" || drop == store.settings.currentTrailerID,
+           !store.settings.currentTrailerID.isEmpty {
+            VehicleLog.selectTrailer("", context: context, store: store, at: time)
+        }
+        if let pick = stop.pickTrailerID, !pick.isEmpty {
+            VehicleLog.selectTrailer(pick, context: context, store: store, at: time)
         }
     }
 

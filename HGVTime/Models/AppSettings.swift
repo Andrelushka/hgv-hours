@@ -159,6 +159,8 @@ struct AppSettings: Codable, Equatable {
     /// Order and hidden tiles of the Hours page.
     var hoursOrder: [String] = []
     var hoursHidden: [String] = []
+    /// Tile sizes you chose: Tile raw value → "wide" or "half" (no entry = the tile's own size).
+    var tileSizes: [String: String] = [:]
     /// How Today's date tile shows the date ("long", "week", "medium", "short", "us", "iso").
     var dateStyle = "long"
     /// "always", "shift" (only while on shift) or "never".

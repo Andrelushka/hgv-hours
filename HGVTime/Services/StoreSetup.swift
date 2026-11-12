@@ -9,7 +9,7 @@ import SwiftData
 /// renamed to `default.store.migrated` as a backup.
 enum StoreSetup {
     static let schema = Schema([ActivityEntry.self, NightOut.self, PayItem.self, Vehicle.self,
-                                WorkPlan.self, NoteItem.self, CardEvent.self, SpeedEvent.self, DayRecord.self, ResourceLog.self, Reminder.self, EventLog.self, TrackPoint.self, VehicleUse.self, CheckRecord.self, RoadReport.self])
+                                WorkPlan.self, NoteItem.self, CardEvent.self, SpeedEvent.self, DayRecord.self, ResourceLog.self, Reminder.self, EventLog.self, TrackPoint.self, VehicleUse.self, CheckRecord.self, RoadReport.self, VehicleCheck.self])
 
     /// One container for the whole app (also used when iOS relaunches the app in the background).
     @MainActor static let shared: ModelContainer = makeContainer()

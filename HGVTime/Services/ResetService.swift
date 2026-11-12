@@ -150,7 +150,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.keepScreenOn = d.keepScreenOn
         case .layout:
             s.todayOrder = d.todayOrder; s.todayHidden = d.todayHidden
-            s.hoursOrder = d.hoursOrder; s.hoursHidden = d.hoursHidden
+            s.hoursOrder = d.hoursOrder; s.hoursHidden = d.hoursHidden; s.tileSizes = d.tileSizes
             s.dateStyle = d.dateStyle; s.useMiles = d.useMiles; s.showFeet = d.showFeet
             s.distanceBoth = d.distanceBoth; s.heightUnit = d.heightUnit
         case .assistant:
@@ -208,7 +208,7 @@ enum ResetService {
             case .driverLog: wipe(ActivityEntry.self); wipe(CardEvent.self)
             case .jobs: wipe(WorkPlan.self); wipe(DayRecord.self)
             case .earnings: wipe(PayItem.self); wipe(NightOut.self)
-            case .vehicles: wipe(Vehicle.self); wipe(VehicleUse.self); wipe(ResourceLog.self)
+            case .vehicles: wipe(Vehicle.self); wipe(VehicleUse.self); wipe(ResourceLog.self); wipe(VehicleCheck.self)
             case .notes: wipe(NoteItem.self)
             case .reminders: wipe(Reminder.self); wipe(CheckRecord.self)
             case .events: wipe(EventLog.self); wipe(SpeedEvent.self); wipe(TrackPoint.self); wipe(RoadReport.self)

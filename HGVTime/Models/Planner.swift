@@ -135,6 +135,21 @@ struct PlanStop: Codable, Equatable, Identifiable {
         return equipmentRef ?? ""
     }
 
+    /// "Drop T1 · Pick up T2" for trailer changes at an ordinary stop ("" if none).
+    func trailerChangeText(in vehicles: [Vehicle]) -> String {
+        func name(_ id: String?) -> String? {
+            guard let id, !id.isEmpty else { return nil }
+            if id == "current" { return String(localized: "current trailer") }
+            return vehicles.first { $0.id.uuidString == id }?.displayName
+        }
+        var parts: [String] = []
+        if let d = name(dropTrailerID) { parts.append(String(localized: "Drop \(d)")) }
+        if let p = name(pickTrailerID) ?? ((pickTrailerRef ?? "").isEmpty ? nil : pickTrailerRef) {
+            parts.append(String(localized: "Pick up \(p)"))
+        }
+        return parts.joined(separator: " · ")
+    }
+
     /// Picking up or dropping off a trailer or vehicle.
     var isEquipmentStop: Bool { [.trailerPickup, .trailerDrop, .vehiclePickup, .vehicleDrop].contains(kind) }
     var isTrailerStop: Bool { kind == .trailerPickup || kind == .trailerDrop }
@@ -231,6 +246,11 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var equipmentID: String?
     /// …or its number / registration typed in.
     var equipmentRef: String?
+    /// Any stop: drop a trailer here and/or pick one up (e.g. deliver, drop the loaded trailer, take an empty one).
+    /// Drop: "current" = whatever trailer you have, or a trailer id. Pick: a trailer id.
+    var dropTrailerID: String?
+    var pickTrailerID: String?
+    var pickTrailerRef: String?
     /// What happened at this stop when it didn't go to plan (nil = normal).
     var outcomeRaw: String?
     var outcomeReason: String?

@@ -59,6 +59,12 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.16 (3.16.0) — Vehicle check, trailer swaps, tile sizes
+- ✅ Optional full walk-round vehicle check (vehicle + up to 6 trailers, defects, height, declaration, history, share)
+- ✅ Drop and pick up trailers at any stop; Finish shown at the end of the job
+- ✅ Resizable Today tiles (half / full width); redesigned activity card
+- ✅ Smoother navigation, 3D lorry pin with swinging trailer, speed-limit sign corner, pin position (3.15.0); trailer/vehicle stops and height check (3.14.0)
+
 ## V3.10 (3.10.0) — Lorry routing and navigation
 - ✅ Valhalla lorry routing, lanes, voice prompts, new navigation screen, cameras and reports
 - ✅ Background navigation with Lock Screen directions; Today navigation tiles; navigation settings

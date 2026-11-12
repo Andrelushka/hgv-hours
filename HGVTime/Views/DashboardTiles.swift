@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 /// Every block that can appear on the Today and Hours pages.
 enum Tile: String, CaseIterable, Identifiable {
     // Today
-    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage, checks, heightCheck
+    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage, checks, heightCheck, vehicleCheck
     // Navigation (shown while navigating)
     case navMap, navTurn, navRoad, navSpeedLimit, navArrival, navVoice
     // Right now
@@ -29,7 +29,7 @@ enum Tile: String, CaseIterable, Identifiable {
 
     var group: TileGroup {
         switch self {
-        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck,
+        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .vehicleCheck,
              .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice: .today
         case .driveLeft, .workLeft, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .restNow: .now
         case .nextBreak, .comingUp: .breaks
@@ -45,7 +45,7 @@ enum Tile: String, CaseIterable, Identifiable {
     /// Full width (otherwise half width, two to a row).
     var isWide: Bool {
         switch self {
-        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .navMap, .navTurn,
+        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .vehicleCheck, .navMap, .navTurn,
              .restNow, .nextBreak, .comingUp, .shiftLength, .restRules, .allWarnings, .infringements:
             true
         default: false
@@ -66,6 +66,7 @@ enum Tile: String, CaseIterable, Identifiable {
         case .job: String(localized: "Today's job")
         case .checks: String(localized: "Shift checks")
         case .heightCheck: String(localized: "Vehicle height checked")
+        case .vehicleCheck: String(localized: "Vehicle check")
         case .navMap: String(localized: "Navigation map")
         case .navTurn: String(localized: "Next turn")
         case .navRoad: String(localized: "Road you're on")
@@ -121,6 +122,7 @@ enum Tile: String, CaseIterable, Identifiable {
         case .job: "shippingbox.fill"
         case .checks: "checklist"
         case .heightCheck: "arrow.up.and.down.square.fill"
+        case .vehicleCheck: "checklist.checked"
         case .navMap: "map.fill"
         case .navTurn: "arrow.turn.up.right"
         case .navRoad: "road.lanes"
@@ -188,7 +190,7 @@ enum TilePage: String {
     var allowed: [Tile] {
         switch self {
         case .today:
-            [.date, .heightCheck, .status, .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .buttons, .driveLeft, .workLeft, .checks, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
+            [.date, .heightCheck, .status, .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .buttons, .driveLeft, .workLeft, .checks, .vehicleCheck, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
              .job, .vehicle, .mileage, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .nextBreak,
              .tenHourDays, .fifteenHourDays, .shiftLength]
         case .hours:
@@ -199,7 +201,7 @@ enum TilePage: String {
     /// Shown until the driver changes the layout.
     var defaultVisible: Set<Tile> {
         switch self {
-        case .today: [.date, .card, .heightCheck, .expiry, .status, .buttons, .navTurn, .navMap, .navArrival, .driveLeft, .workLeft, .checks, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
+        case .today: [.date, .card, .heightCheck, .expiry, .status, .buttons, .navTurn, .navMap, .navArrival, .driveLeft, .workLeft, .checks, .vehicleCheck, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
         case .hours: Set(allowed)
         }
     }
@@ -208,7 +210,22 @@ enum TilePage: String {
     var grouped: Bool { self == .hours }
 }
 
+extension Tile {
+    /// Tiles that only make sense full width (buttons, the current activity…).
+    var canResize: Bool { ![.buttons, .status, .navMap, .navTurn].contains(self) }
+}
+
 extension AppSettings {
+    /// Full width or half width, as you set it in Edit layout.
+    func isWide(_ tile: Tile) -> Bool {
+        guard tile.canResize, let size = tileSizes[tile.rawValue] else { return tile.isWide }
+        return size == "wide"
+    }
+
+    mutating func setWide(_ tile: Tile, _ wide: Bool) {
+        tileSizes[tile.rawValue] = wide == tile.isWide ? nil : (wide ? "wide" : "half")
+    }
+
     func tileOrder(_ page: TilePage) -> [Tile] {
         let raw = page == .today ? todayOrder : hoursOrder
         var order = raw.compactMap(Tile.init(rawValue:)).filter { page.allowed.contains($0) }
@@ -222,6 +239,11 @@ extension AppSettings {
                 order.remove(at: night)
                 order.insert(.nightOut, at: min(order.firstIndex(of: .card).map { $0 + 1 } ?? card + 1, order.count))
             }
+        }
+        // Vehicle check (3.16) goes after the shift checks in layouts saved before it existed.
+        if page == .today, !order.isEmpty, !raw.contains(Tile.vehicleCheck.rawValue),
+           let i = order.firstIndex(of: .checks) ?? order.firstIndex(of: .workLeft) {
+            order.insert(.vehicleCheck, at: i + 1)
         }
         // Height check (3.14) goes under the driver card / night out row in layouts saved before it existed.
         if page == .today, !order.isEmpty, !raw.contains(Tile.heightCheck.rawValue) {
@@ -307,7 +329,7 @@ struct TileGrid<Content: View>: View {
             ForEach(rows(), id: \.self) { row in
                 HStack(alignment: .top, spacing: 10) {
                     ForEach(row, id: \.self) { tile in cell(tile) }
-                    if row.count == 1 && !row[0].isWide {
+                    if row.count == 1 && !store.settings.isWide(row[0]) {
                         Color.clear.frame(maxWidth: .infinity)
                     }
                 }
@@ -320,7 +342,7 @@ struct TileGrid<Content: View>: View {
         var out: [[Tile]] = []
         var pending: Tile?
         for t in tiles {
-            if t.isWide {
+            if store.settings.isWide(t) {
                 if let p = pending { out.append([p]); pending = nil }
                 out.append([t])
             } else if let p = pending {
@@ -352,8 +374,22 @@ struct TileGrid<Content: View>: View {
                     .accessibilityLabel("Hide \(tile.title)")
                 }
                 .overlay(alignment: .topTrailing) {
-                    Image(systemName: "line.3.horizontal").font(.caption.weight(.bold)).padding(6)
-                        .background(.thinMaterial, in: Circle()).padding(4)
+                    HStack(spacing: 4) {
+                        if tile.canResize {
+                            // Wide ↔ half width.
+                            Button {
+                                withAnimation(.snappy) { store.settings.setWide(tile, !store.settings.isWide(tile)) }
+                            } label: {
+                                Image(systemName: store.settings.isWide(tile) ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                                    .font(.caption.weight(.bold)).padding(6)
+                                    .background(Color.accentColor, in: Circle()).foregroundStyle(.white)
+                            }
+                            .accessibilityLabel(store.settings.isWide(tile) ? "Make half width" : "Make full width")
+                        }
+                        Image(systemName: "line.3.horizontal").font(.caption.weight(.bold)).padding(6)
+                            .background(.thinMaterial, in: Circle())
+                    }
+                    .padding(4)
                 }
                 .contentShape(Rectangle())
                 .draggable(tile.rawValue) {
@@ -470,8 +506,19 @@ struct TileCustomiseView: View {
                 Section {
                     let items = order.filter { group == nil || $0.group == group }
                     ForEach(items) { t in
-                        Toggle(isOn: Binding(get: { !hidden.contains(t) }, set: { store.settings.setTile(t, visible: $0, on: page) })) {
-                            Label(t.title, systemImage: t.symbol)
+                        HStack {
+                            Toggle(isOn: Binding(get: { !hidden.contains(t) }, set: { store.settings.setTile(t, visible: $0, on: page) })) {
+                                Label(t.title, systemImage: t.symbol)
+                            }
+                            if t.canResize {
+                                Picker("Size", selection: Binding(get: { store.settings.isWide(t) }, set: { store.settings.setWide(t, $0) })) {
+                                    Text("Half").tag(false)
+                                    Text("Full").tag(true)
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 110)
+                                .labelsHidden()
+                            }
                         }
                     }
                     .onMove { from, to in
