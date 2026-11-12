@@ -65,6 +65,57 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     @ObservationIgnored private var filter = GPSFilter()
     private(set) var progress: CLLocationDistance = 0
 
+    // MARK: Where you've driven
+
+    /// One point of the trail you've driven (kept on the iPhone, cleared at the end of the shift).
+    struct TrailPoint: Codable { var lat: Double; var lon: Double; var t: Double }
+    /// Bumped when the trail grows, so the map redraws it (the points themselves aren't observed).
+    private(set) var trailVersion = 0
+    @ObservationIgnored private(set) var trail: [TrailPoint] = NavigationEngine.loadTrail()
+    @ObservationIgnored private var trailUnsaved = 0
+
+    private static var trailURL: URL {
+        FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("driven-trail.json")
+    }
+
+    private static func loadTrail() -> [TrailPoint] {
+        guard let data = try? Data(contentsOf: trailURL) else { return [] }
+        return (try? JSONDecoder().decode([TrailPoint].self, from: data)) ?? []
+    }
+
+    private func saveTrail() {
+        trailUnsaved = 0
+        let url = Self.trailURL
+        let data = try? JSONEncoder().encode(trail)
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data?.write(to: url, options: .atomic)
+    }
+
+    /// Adds a point every ~25 m while moving.
+    private func recordTrail(_ loc: CLLocation) {
+        guard loc.speed > 1.5, loc.horizontalAccuracy >= 0, loc.horizontalAccuracy < 40 else { return }
+        if let last = trail.last,
+           CLLocation(latitude: last.lat, longitude: last.lon).distance(from: loc) < 25 { return }
+        trail.append(TrailPoint(lat: loc.coordinate.latitude, lon: loc.coordinate.longitude, t: loc.timestamp.timeIntervalSince1970))
+        if trail.count > 20_000 { trail.removeFirst(trail.count - 20_000) }
+        trailVersion += 1
+        trailUnsaved += 1
+        if trailUnsaved >= 10 { saveTrail() }
+    }
+
+    /// The trail since a time (e.g. the start of the shift).
+    func trail(since start: Date) -> [CLLocationCoordinate2D] {
+        let t = start.timeIntervalSince1970
+        return trail.filter { $0.t >= t }.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+    }
+
+    /// End of shift: the trail starts again next shift.
+    func clearTrail() {
+        trail = []
+        trailVersion += 1
+        saveTrail()
+    }
+
     // MARK: What's next
 
     var nextStep: NavStep? {
@@ -341,6 +392,7 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     private func update(with loc: CLLocation) {
         guard filter.accept(loc) else { return }
         location = loc
+        recordTrail(loc)
         if loc.course >= 0 && loc.speed > 1.5 { heading = loc.course }
         guard isRunning else { return }
         onUpdate?(loc)
@@ -424,18 +476,32 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         let dt = min(2.5, Date.now.timeIntervalSince(fix.location.timestamp))
         let speed = max(0, fix.location.speed)
         var target = heading
+        let next: CLLocationCoordinate2D
         if fix.onRoute, route != nil {
             let along = fix.along + speed * dt
-            displayCoordinate = coordinate(atAlong: along)
+            next = coordinate(atAlong: along)
             if speed > 1.5 { target = bearing(atAlong: along) }
         } else if speed > 1.5, fix.location.course >= 0 {
-            displayCoordinate = NavigationEngine.offset(fix.location.coordinate, metres: speed * dt, bearing: fix.location.course)
+            next = NavigationEngine.offset(fix.location.coordinate, metres: speed * dt, bearing: fix.location.course)
             target = fix.location.course
         } else {
-            displayCoordinate = fix.location.coordinate
+            next = fix.location.coordinate
         }
-        Self.ease(&displayHeading, to: target, factor: 0.35)
-        Self.followTrailer(&trailerHeading, cab: displayHeading, speed: speed, dt: 0.2)
+        // Only publish real changes: standing still, nothing on screen needs redrawing.
+        if displayCoordinate.map({ NavigationEngine.metres($0, next) > 0.3 }) ?? true { displayCoordinate = next }
+        var h = displayHeading
+        Self.ease(&h, to: target, factor: 0.3)
+        if abs(Self.signedDiff(h, displayHeading)) > 0.2 { displayHeading = h }
+        var tr = trailerHeading
+        Self.followTrailer(&tr, cab: displayHeading, speed: speed, dt: 0.2)
+        if abs(Self.signedDiff(tr, trailerHeading)) > 0.2 { trailerHeading = tr }
+    }
+
+    static func signedDiff(_ a: Double, _ b: Double) -> Double {
+        var d = (a - b).truncatingRemainder(dividingBy: 360)
+        if d > 180 { d -= 360 }
+        if d < -180 { d += 360 }
+        return d
     }
 
     /// Moves an angle part of the way towards a target along the shorter arc.

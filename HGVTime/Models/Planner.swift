@@ -40,6 +40,15 @@ enum VehicleKind: String, Codable, CaseIterable, Identifiable {
         case .trailer: "shippingbox.fill"
         }
     }
+
+    /// Icon that tells a tractor unit (cab + fifth wheel) from a rigid (cab + box body).
+    var icon: Image {
+        switch self {
+        case .tractor: Image("VehicleUnit")
+        case .rigid: Image("VehicleRigid")
+        default: Image(systemName: symbol)
+        }
+    }
 }
 
 /// A saved lorry, van or trailer with its specifications.
@@ -133,6 +142,12 @@ struct PlanStop: Codable, Equatable, Identifiable {
         guard isEquipmentStop else { return "" }
         if let id = equipmentID, let v = vehicles.first(where: { $0.id.uuidString == id }) { return v.displayName }
         return equipmentRef ?? ""
+    }
+
+    /// "Swap to AB12 CDE" for a vehicle swap at an ordinary stop ("" if none).
+    func vehicleSwapText(in vehicles: [Vehicle]) -> String {
+        let name = vehicles.first { $0.id.uuidString == (pickVehicleID ?? "") }?.displayName ?? (pickVehicleRef ?? "")
+        return name.isEmpty ? "" : String(localized: "Swap to \(name)")
     }
 
     /// "Drop T1 · Pick up T2" for trailer changes at an ordinary stop ("" if none).
@@ -251,6 +266,9 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var dropTrailerID: String?
     var pickTrailerID: String?
     var pickTrailerRef: String?
+    /// Swap to another vehicle here (Vehicle id, or a typed registration).
+    var pickVehicleID: String?
+    var pickVehicleRef: String?
     /// The trailer after this stop: "loaded", "empty" or nil (not set).
     var loadAfter: String?
     /// What happened at this stop when it didn't go to plan (nil = normal).
@@ -380,7 +398,7 @@ final class WorkPlan {
     }
 
     enum EndAction: String, CaseIterable, Identifiable {
-        case none = "", coupled, dropTrailer, leaveVehicle
+        case none = "", coupled, dropTrailer, leaveVehicle, passenger
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -388,6 +406,7 @@ final class WorkPlan {
             case .coupled: String(localized: "Leave the trailer coupled")
             case .dropTrailer: String(localized: "Drop the trailer")
             case .leaveVehicle: String(localized: "Leave the vehicle")
+            case .passenger: String(localized: "Leave the vehicle, back as a passenger")
             }
         }
         var symbol: String {
@@ -396,6 +415,7 @@ final class WorkPlan {
             case .coupled: "link"
             case .dropTrailer: "shippingbox.and.arrow.backward"
             case .leaveVehicle: "parkingsign.circle"
+            case .passenger: "person.2.fill"
             }
         }
     }
@@ -959,5 +979,48 @@ enum LoadState {
         case "empty": String(localized: "Empty")
         default: ""
         }
+    }
+}
+
+/// A trailer: an id from your list, or a typed number.
+struct TrailerRef: Equatable {
+    var id: String = ""
+    var ref: String = ""
+
+    init?(id: String?, ref: String?) {
+        let i = id ?? "", r = (ref ?? "").trimmingCharacters(in: .whitespaces)
+        guard !(i.isEmpty || i == "current") || !r.isEmpty else { return nil }
+        self.id = i == "current" ? "" : i
+        self.ref = r
+    }
+
+    func name(in vehicles: [Vehicle]) -> String {
+        vehicles.first { $0.id.uuidString == id }?.displayName ?? ref
+    }
+}
+
+extension Array where Element == PlanStop {
+    /// The trailer you'll have when you arrive at stop `index`, following the plan from `start`
+    /// (the start pick-up, or the trailer you have now): each earlier stop's drops and pick-ups.
+    func trailerOnArrival(at index: Int, start: TrailerRef?) -> TrailerRef? {
+        var onBoard = start
+        for s in prefix(Swift.max(0, Swift.min(index, count))) where s.outcome == nil {
+            switch s.kind {
+            case .trailerPickup: onBoard = TrailerRef(id: s.equipmentID, ref: s.equipmentRef) ?? onBoard
+            case .trailerDrop: onBoard = nil
+            case .vehiclePickup, .vehicleDrop: break
+            default:
+                if s.dropTrailerID != nil { onBoard = nil }
+                if let picked = TrailerRef(id: s.pickTrailerID, ref: s.pickTrailerRef) { onBoard = picked }
+            }
+        }
+        return onBoard
+    }
+}
+
+extension WorkPlan {
+    /// What you start the job with: the trailer picked up at the start, else `current` (your trailer now).
+    func startTrailer(current: String) -> TrailerRef? {
+        TrailerRef(id: startTrailerID, ref: startTrailerRef) ?? TrailerRef(id: current, ref: nil)
     }
 }

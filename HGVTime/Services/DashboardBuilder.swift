@@ -47,6 +47,13 @@ extension Dashboard {
             if let night = s.nightWorkRemaining { work.append((night, "Night-shift limit")) }
         }
         if s.gbApplies { work.append((s.gbDutyRemaining, "GB 11h duty limit")) }
+        // However often the 6h clock resets, the shift itself ends when daily rest must start (13h, or 15h with a reduced rest).
+        if d.onShift, let restBy = s.restStartByLatest {
+            work.append((max(0, restBy.timeIntervalSince(s.now)), "Shift length (13h / 15h) — rest by \(Fmt.time(restBy))"))
+        }
+        if d.onShift, !settings.applyWorkingTime, !s.gbApplies, let restBy = s.restStartByLatest {
+            work.append((max(0, restBy.timeIntervalSince(s.now)), "Shift length (13h / 15h) — rest by \(Fmt.time(restBy))"))
+        }
         if let tightest = work.min(by: { $0.0 < $1.0 }) {
             d.workLeft = tightest.0
             d.workLeftReason = tightest.1

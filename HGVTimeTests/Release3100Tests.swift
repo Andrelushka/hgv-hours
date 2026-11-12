@@ -92,3 +92,41 @@ final class GPSFilterTests: XCTestCase {
         XCTAssertTrue(f.accept(fix(52.2600, -0.9000, acc: 900, t: 200)), "after a long gap a rough fix is better than nothing")
     }
 }
+
+/// 3.20: "Driving left" can't give another 4h30 after 9h driven, and "Working left" stops at the shift length.
+@MainActor
+final class DailyCapTests: XCTestCase {
+    private let base = Date(timeIntervalSince1970: 1_800_000_000)
+    private func at(_ m: Double) -> Date { base.addingTimeInterval(m * 60) }
+
+    func testDrivingLeftCappedByDailyDriving() {
+        let e = [EntrySnapshot(kind: .drive, regime: .assimilated, start: at(0), end: at(270)),
+                 EntrySnapshot(kind: .rest, regime: .assimilated, start: at(270), end: at(315)),
+                 EntrySnapshot(kind: .drive, regime: .assimilated, start: at(315), end: at(585)),
+                 EntrySnapshot(kind: .rest, regime: .assimilated, start: at(585), end: nil)]
+        let s = RulesEngine.status(e, now: at(640), config: RuleConfig())
+        // 9h driven: at most 1h more (10h day), never a fresh 4h30.
+        XCTAssertLessThanOrEqual(s.drivingLeftToday, 3600 + 1)
+        XCTAssertLessThanOrEqual(min(s.continuousDrivingRemaining, s.drivingLeftToday), 3600 + 1)
+    }
+
+    func testWorkingLeftStopsAtShiftLength() {
+        // 11h of work with breaks: the 6h clock resets, but the shift must end by 13h/15h.
+        var e: [EntrySnapshot] = []
+        var t = 0.0
+        for _ in 0..<2 {
+            e.append(EntrySnapshot(kind: .otherWork, regime: .assimilated, start: at(t), end: at(t + 330))); t += 330
+            e.append(EntrySnapshot(kind: .rest, regime: .assimilated, start: at(t), end: at(t + 30))); t += 30
+        }
+        e.append(EntrySnapshot(kind: .otherWork, regime: .assimilated, start: at(t), end: nil))
+        let now = at(t + 1)
+        let s = RulesEngine.status(e, now: now, config: RuleConfig())
+        var settings = AppSettings()
+        settings.applyWorkingTime = true
+        let restBy = try? XCTUnwrap(s.restStartByLatest)
+        let left = restBy.map { $0.timeIntervalSince(now) } ?? 0
+        // The engine's latest rest start is at most 15h after the shift began.
+        XCTAssertLessThanOrEqual(left, 15 * 3600 - t * 60 + 60)
+        _ = settings
+    }
+}

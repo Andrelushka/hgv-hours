@@ -53,8 +53,12 @@ enum PayCalculator {
             let weekKey = cal.startOfFixedWeek(for: shift.period.start)
             var shiftPaid = 0.0
 
-            for segment in shift.period.segments {
-                let weight = paidWeight(for: segment, settings: p)
+            let segments = shift.period.segments
+            for (index, segment) in segments.enumerated() {
+                // A rest at the very end of the shift (after End shift, or not followed by work yet)
+                // isn't a paid break: pay stops when you stop working.
+                let trailingRest = segment.kind == .rest && index == segments.count - 1
+                let weight = trailingRest ? 0 : paidWeight(for: segment, settings: p)
                 guard weight > 0 else { continue }
                 var minute = segment.start
                 while minute < segment.end {

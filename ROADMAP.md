@@ -59,6 +59,13 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.20 (3.20.0) — Smoother navigation, driven route, new vehicle check
+- ✅ Navigation redraws less (smoother, calmer); 3D buildings optional; driven route per shift
+- ✅ Walk-round vehicle check with icons, skip / delete
+- ✅ Pay stops at End shift; rest counter back; working left capped by shift length
+- ✅ Drop choices follow the plan; passenger finish; vehicle swap at stops; mileage per vehicle summed
+- ✅ Separate rigid / unit icons
+
 ## V3.19 (3.19.0) — Numbered stops, start/finish trailer, loaded/empty
 - ✅ Numbered stops on Today and in Jobs
 - ✅ Pick up a trailer at the start; drop / keep coupled / leave the vehicle at the finish

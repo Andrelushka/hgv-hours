@@ -15,6 +15,7 @@ struct TodayJobCard: View {
     @State private var editingStop: PlanStop?
     @State private var deletingStop: PlanStop?
     @State private var pickupCheck: VehicleCheck?
+    @State private var askTravel = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -34,8 +35,18 @@ struct TodayJobCard: View {
             }
         }
         .sheet(item: $pickupCheck) { c in NavigationStack { VehicleCheckView(check: c) } }
+        .confirmationDialog("Travelling back as a passenger", isPresented: $askTravel, titleVisibility: .visible) {
+            Button("Record as POA") { ActivityController.switchTo(.availability, context: context, settings: store.settings) }
+            Button("Record as other work") { ActivityController.switchTo(.otherWork, context: context, settings: store.settings) }
+            Button("Don't change my activity", role: .cancel) {}
+        } message: {
+            Text("Travel to or from a vehicle that isn't at your home or base usually counts as POA or other work — check with your company.")
+        }
         .sheet(item: $editingStop) { stop in
-            StopEditor(stop: stop, isNew: false, onSave: { saved in
+            StopEditor(stop: stop, isNew: false,
+                       onBoard: plan.stops.trailerOnArrival(at: plan.stops.firstIndex { $0.id == stop.id } ?? 0,
+                                                            start: plan.startTrailer(current: store.settings.currentTrailerID)),
+                       onSave: { saved in
                 updateStop(saved.id) { $0 = saved }
             }, onDelete: {
                 removeStop(stop.id)
@@ -83,7 +94,7 @@ struct TodayJobCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text([stop.kind == .other ? stop.kindTitle : "", stop.displayName].filter { !$0.isEmpty }.joined(separator: " · "))
                             .font(.caption.weight(.semibold)).lineLimit(1)
-                        let details = [stop.kind == .other ? "" : stop.kindTitle, stop.equipmentName(in: vehicles), stop.trailerChangeText(in: vehicles),
+                        let details = [stop.kind == .other ? "" : stop.kindTitle, stop.equipmentName(in: vehicles), stop.trailerChangeText(in: vehicles), stop.vehicleSwapText(in: vehicles),
                                        stop.loadAfter == nil ? "" : "→ " + LoadState.title(stop.loadAfter), stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
                                        (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                                        stop.pallets.isEmpty ? "" : "\(stop.pallets) plt"].filter { !$0.isEmpty }.joined(separator: " · ")
@@ -243,9 +254,10 @@ struct TodayJobCard: View {
         switch plan.endAction {
         case .dropTrailer:
             VehicleLog.selectTrailer("", context: context, store: store, at: now)
-        case .leaveVehicle:
+        case .leaveVehicle, .passenger:
             if !store.settings.currentTrailerID.isEmpty { VehicleLog.selectTrailer("", context: context, store: store, at: now) }
             VehicleLog.select("", context: context, store: store, at: now)
+            if plan.endAction == .passenger { askTravel = true }
         case .coupled, .none:
             break
         }
@@ -304,6 +316,11 @@ struct TodayJobCard: View {
         }
         if let pick = stop.pickTrailerID, !pick.isEmpty {
             VehicleLog.selectTrailer(pick, context: context, store: store, at: time)
+        }
+        // Vehicle swap at an ordinary stop.
+        if let v = stop.pickVehicleID, !v.isEmpty, v != store.settings.currentVehicleID {
+            VehicleLog.select(v, context: context, store: store, at: time)
+            AutoDriveDetector.shared.update(settings: store.settings)
         }
     }
 

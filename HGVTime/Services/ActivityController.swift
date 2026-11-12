@@ -53,6 +53,18 @@ enum ActivityController {
                  context: context, settings: settings)
         EventRecorder.log(.shiftEnd, detail: restType == .weekly ? "Weekly rest" : "Daily rest", context: context, settings: settings)
         ReminderService.shared.fire(.shiftEnd, context: context)
+        // The "where you've driven" trail on the navigation map starts again next shift.
+        Task { @MainActor in NavigationEngine.shared.clearTrail() }
+    }
+
+    /// When the current shift started (nil when you're not on a shift).
+    static func currentShiftStart(context: ModelContext) -> Date? {
+        let all = (try? context.fetch(FetchDescriptor<ActivityEntry>(sortBy: [SortDescriptor(\.start)]))) ?? []
+        guard let last = all.last, last.end == nil, !last.endsShift else { return nil }
+        if let restIndex = all.lastIndex(where: { $0.endsShift }) {
+            return restIndex + 1 < all.count ? all[restIndex + 1].start : nil
+        }
+        return all.first?.start
     }
 
     /// After a shift ends: clear the vehicle/trailer in use and mark the day's job done,

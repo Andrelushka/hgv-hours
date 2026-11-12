@@ -1,12 +1,60 @@
 import Foundation
 import SwiftData
+import SwiftUI
+
+/// Where you are on the walk round: lines are shown in the order you meet them walking round the vehicle.
+enum CheckArea: String, CaseIterable, Identifiable {
+    case cab, front, fluids, nearside, coupling, rear, offside, equipment
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .cab: String(localized: "In the cab")
+        case .front: String(localized: "Front")
+        case .fluids: String(localized: "Engine & fluids")
+        case .nearside: String(localized: "Nearside (passenger side)")
+        case .coupling: String(localized: "Coupling & lines")
+        case .rear: String(localized: "Rear")
+        case .offside: String(localized: "Offside (driver's side)")
+        case .equipment: String(localized: "Equipment & load")
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .cab: "steeringwheel"
+        case .front: "headlight.high.beam.fill"
+        case .fluids: "drop.fill"
+        case .nearside: "arrow.turn.down.left"
+        case .coupling: "link"
+        case .rear: "light.beacon.max.fill"
+        case .offside: "arrow.turn.down.right"
+        case .equipment: "shippingbox.fill"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .cab: .indigo
+        case .front: .blue
+        case .fluids: .teal
+        case .nearside: .green
+        case .coupling: .orange
+        case .rear: .red
+        case .offside: .mint
+        case .equipment: .brown
+        }
+    }
+}
 
 /// One line of the walk-round (pre-use) check.
 struct CheckItem: Identifiable, Hashable {
     enum Applies { case vehicle, trailer, both }
     enum Answer { case tick, yesNo }
     var id: String
-    var section: String
+    var area: CheckArea
+    /// Where it's checked on a trailer, if different.
+    var trailerArea: CheckArea? = nil
     var title: String
     var applies: Applies
     var answer: Answer = .tick
@@ -19,53 +67,70 @@ struct CheckItem: Identifiable, Hashable {
         }
     }
 
-    /// Heavy-vehicle daily walk-round, like a typical UK operator pre-use check sheet.
-    static let all: [CheckItem] = {
-        let general = String(localized: "General items")
-        let extra = String(localized: "Ancillary / specialist equipment")
-        return [
-            .init(id: "safetyFeatures", section: general, title: String(localized: "I understand how this vehicle's safety features work (e.g. park brake warning)"), applies: .both, answer: .yesNo),
-            .init(id: "controls", section: general, title: String(localized: "Driving controls — condition, wear and operation"), applies: .vehicle),
-            .init(id: "brakeOffWarning", section: general, title: String(localized: "Brake-off / door-open warning fitted and working"), applies: .vehicle),
-            .init(id: "brakes", section: general, title: String(localized: "Brakes, reverse alarm and warning lights work correctly"), applies: .vehicle),
-            .init(id: "belts", section: general, title: String(localized: "Seat belts undamaged and working (belts must be worn)"), applies: .vehicle),
-            .init(id: "signs", section: general, title: String(localized: "Signs and documents displayed (plating, FORS, cameras, blind spot, height, no smoking)"), applies: .both),
-            .init(id: "loose", section: general, title: String(localized: "Loose items stowed securely in the cab"), applies: .vehicle),
-            .init(id: "tacho", section: general, title: String(localized: "Tachograph works, spare print rolls available"), applies: .vehicle),
-            .init(id: "licenceDisc", section: general, title: String(localized: "Operator licence disc displayed and in date"), applies: .vehicle),
-            .init(id: "exhaust", section: general, title: String(localized: "Exhaust — condition and excessive smoke"), applies: .vehicle),
-            .init(id: "suspension", section: general, title: String(localized: "Suspension works, set to normal ride height"), applies: .both),
-            .init(id: "heightIndicator", section: general, title: String(localized: "Height indicator set to the correct height"), applies: .both),
-            .init(id: "bumpCards", section: general, title: String(localized: "Accident / bump cards in the cab"), applies: .vehicle, answer: .yesNo),
-            .init(id: "camera", section: general, title: String(localized: "Forward-facing camera powers up and is secure"), applies: .vehicle),
-            .init(id: "mirrors", section: general, title: String(localized: "Mirrors secure, undamaged and aligned"), applies: .vehicle),
-            .init(id: "abs", section: general, title: String(localized: "ABS warning sequence correct"), applies: .both),
-            .init(id: "air", section: general, title: String(localized: "Air pressure correct, working, no leaks"), applies: .both),
-            .init(id: "lines", section: general, title: String(localized: "Air, electrical and ABS lines secure and undamaged"), applies: .both),
-            .init(id: "coupling", section: general, title: String(localized: "Coupling secure, locking devices engaged — tug test done"), applies: .both, answer: .yesNo),
-            .init(id: "proximity", section: general, title: String(localized: "Side / front proximity sensors working"), applies: .vehicle),
-            .init(id: "rearProximity", section: general, title: String(localized: "Rear proximity sensors working"), applies: .trailer),
-            .init(id: "tanks", section: general, title: String(localized: "Fuel and AdBlue tanks secure, caps on, no leaks"), applies: .vehicle),
-            .init(id: "legs", section: general, title: String(localized: "Landing legs undamaged, handle stowed"), applies: .trailer),
-            .init(id: "lights", section: general, title: String(localized: "Lights, indicators and brake lights working, clean"), applies: .both),
-            .init(id: "reflectors", section: general, title: String(localized: "Reflectors and markings clean and visible"), applies: .both),
-            .init(id: "plates", section: general, title: String(localized: "Number plates secure and legible"), applies: .both),
-            .init(id: "trailerMOT", section: general, title: String(localized: "Trailer MOT disc / plating certificate in date"), applies: .trailer),
-            .init(id: "tyres", section: general, title: String(localized: "Tyres — inflation, tread, cuts and bulges"), applies: .both),
-            .init(id: "wheels", section: general, title: String(localized: "Wheels and nuts secure, nut indicators in place"), applies: .both),
-            .init(id: "spray", section: general, title: String(localized: "Spray suppression — wings and flaps fitted"), applies: .both),
-            .init(id: "body", section: general, title: String(localized: "Bodywork, steps, curtains, doors, locks, side guards secure"), applies: .both),
-            .init(id: "load", section: general, title: String(localized: "Load secured"), applies: .both),
-            .init(id: "windscreenArea", section: general, title: String(localized: "Windscreen area free from obstructions (sat-nav, phone…)"), applies: .vehicle, answer: .yesNo),
-            .init(id: "windscreen", section: general, title: String(localized: "Windscreen undamaged, wipers and washers working"), applies: .vehicle),
-            .init(id: "fluids", section: general, title: String(localized: "Fluid levels — oil, coolant, fuel, screenwash, AdBlue"), applies: .vehicle),
-            .init(id: "equipOperates", section: extra, title: String(localized: "Tail lift, crane or moving floor operates correctly"), applies: .both),
-            .init(id: "equipWarnings", section: extra, title: String(localized: "Equipment warning lights and devices work, signs in place"), applies: .both),
-            .init(id: "equipSafety", section: extra, title: String(localized: "Safety devices, locks and stands in place and working"), applies: .both),
-            .init(id: "equipLeaks", section: extra, title: String(localized: "Free from leaks — air, fluid, gas"), applies: .both),
-            .init(id: "equipPower", section: extra, title: String(localized: "Power supplies, leads and sockets in good condition"), applies: .both),
-        ]
-    }()
+    func area(trailer: Bool) -> CheckArea { trailer ? (trailerArea ?? area) : area }
+
+    /// The lines for a vehicle or a trailer column, in walk-round order.
+    static func walkRound(trailer: Bool) -> [(area: CheckArea, items: [CheckItem])] {
+        let lines = all.filter { $0.applies(toTrailer: trailer) }
+        // Round a trailer you start at the coupling (front of the trailer), then down the side to the rear.
+        let order: [CheckArea] = trailer ? [.coupling, .cab, .front, .fluids, .nearside, .rear, .offside, .equipment] : CheckArea.allCases
+        return order.compactMap { a in
+            let items = lines.filter { $0.area(trailer: trailer) == a }
+            return items.isEmpty ? nil : (a, items)
+        }
+    }
+
+    /// Heavy-vehicle daily walk-round, like a typical UK operator pre-use check sheet,
+    /// in the order you meet things: cab, front, under the cab, nearside, coupling, rear, offside, equipment.
+    static let all: [CheckItem] = [
+        // In the cab
+        .init(id: "safetyFeatures", area: .cab, trailerArea: .coupling, title: String(localized: "I understand how this vehicle's safety features work (e.g. park brake warning)"), applies: .both, answer: .yesNo),
+        .init(id: "controls", area: .cab, title: String(localized: "Driving controls — condition, wear and operation"), applies: .vehicle),
+        .init(id: "belts", area: .cab, title: String(localized: "Seat belts undamaged and working (belts must be worn)"), applies: .vehicle),
+        .init(id: "brakes", area: .cab, title: String(localized: "Brakes, reverse alarm and warning lights work correctly"), applies: .vehicle),
+        .init(id: "abs", area: .cab, trailerArea: .coupling, title: String(localized: "ABS warning sequence correct"), applies: .both),
+        .init(id: "air", area: .cab, trailerArea: .coupling, title: String(localized: "Air pressure correct, working, no leaks"), applies: .both),
+        .init(id: "brakeOffWarning", area: .cab, title: String(localized: "Brake-off / door-open warning fitted and working"), applies: .vehicle),
+        .init(id: "mirrors", area: .cab, title: String(localized: "Mirrors secure, undamaged and aligned"), applies: .vehicle),
+        .init(id: "windscreenArea", area: .cab, title: String(localized: "Windscreen area free from obstructions (sat-nav, phone…)"), applies: .vehicle, answer: .yesNo),
+        .init(id: "tacho", area: .cab, title: String(localized: "Tachograph works, spare print rolls available"), applies: .vehicle),
+        .init(id: "camera", area: .cab, title: String(localized: "Forward-facing camera powers up and is secure"), applies: .vehicle),
+        .init(id: "heightIndicator", area: .cab, trailerArea: .rear, title: String(localized: "Height indicator set to the correct height"), applies: .both),
+        .init(id: "loose", area: .cab, title: String(localized: "Loose items stowed securely in the cab"), applies: .vehicle),
+        .init(id: "bumpCards", area: .cab, title: String(localized: "Accident / bump cards in the cab"), applies: .vehicle, answer: .yesNo),
+        .init(id: "licenceDisc", area: .cab, title: String(localized: "Operator licence disc displayed and in date"), applies: .vehicle),
+        .init(id: "signs", area: .cab, trailerArea: .rear, title: String(localized: "Signs and documents displayed (plating, FORS, cameras, blind spot, height, no smoking)"), applies: .both),
+        // Front
+        .init(id: "windscreen", area: .front, title: String(localized: "Windscreen undamaged, wipers and washers working"), applies: .vehicle),
+        .init(id: "lights", area: .front, trailerArea: .rear, title: String(localized: "Lights, indicators and brake lights working, clean"), applies: .both),
+        .init(id: "plates", area: .front, trailerArea: .rear, title: String(localized: "Number plates secure and legible"), applies: .both),
+        .init(id: "reflectors", area: .front, trailerArea: .nearside, title: String(localized: "Reflectors and markings clean and visible"), applies: .both),
+        .init(id: "proximity", area: .front, title: String(localized: "Side / front proximity sensors working"), applies: .vehicle),
+        // Engine & fluids
+        .init(id: "fluids", area: .fluids, title: String(localized: "Fluid levels — oil, coolant, fuel, screenwash, AdBlue"), applies: .vehicle),
+        .init(id: "equipLeaks", area: .fluids, trailerArea: .equipment, title: String(localized: "Free from leaks — air, fluid, gas"), applies: .both),
+        // Nearside
+        .init(id: "tyres", area: .nearside, title: String(localized: "Tyres — inflation, tread, cuts and bulges"), applies: .both),
+        .init(id: "wheels", area: .nearside, title: String(localized: "Wheels and nuts secure, nut indicators in place"), applies: .both),
+        .init(id: "spray", area: .nearside, title: String(localized: "Spray suppression — wings and flaps fitted"), applies: .both),
+        .init(id: "tanks", area: .nearside, title: String(localized: "Fuel and AdBlue tanks secure, caps on, no leaks"), applies: .vehicle),
+        .init(id: "exhaust", area: .nearside, title: String(localized: "Exhaust — condition and excessive smoke"), applies: .vehicle),
+        .init(id: "suspension", area: .nearside, title: String(localized: "Suspension works, set to normal ride height"), applies: .both),
+        .init(id: "body", area: .nearside, title: String(localized: "Bodywork, steps, curtains, doors, locks, side guards secure"), applies: .both),
+        // Coupling
+        .init(id: "coupling", area: .coupling, title: String(localized: "Coupling secure, locking devices engaged — tug test done"), applies: .both, answer: .yesNo),
+        .init(id: "lines", area: .coupling, title: String(localized: "Air, electrical and ABS lines secure and undamaged"), applies: .both),
+        .init(id: "legs", area: .coupling, title: String(localized: "Landing legs undamaged, handle stowed"), applies: .trailer),
+        .init(id: "trailerMOT", area: .coupling, title: String(localized: "Trailer MOT disc / plating certificate in date"), applies: .trailer),
+        // Rear
+        .init(id: "rearProximity", area: .rear, title: String(localized: "Rear proximity sensors working"), applies: .trailer),
+        .init(id: "load", area: .rear, title: String(localized: "Load secured"), applies: .both),
+        // Equipment
+        .init(id: "equipOperates", area: .equipment, title: String(localized: "Tail lift, crane or moving floor operates correctly"), applies: .both),
+        .init(id: "equipWarnings", area: .equipment, title: String(localized: "Equipment warning lights and devices work, signs in place"), applies: .both),
+        .init(id: "equipSafety", area: .equipment, title: String(localized: "Safety devices, locks and stands in place and working"), applies: .both),
+        .init(id: "equipPower", area: .equipment, title: String(localized: "Power supplies, leads and sockets in good condition"), applies: .both),
+    ]
 }
 
 /// A completed (or in-progress) vehicle check: a column for the vehicle and each trailer.
@@ -165,6 +230,24 @@ extension VehicleCheck {
         return CheckItem.all.filter { $0.applies(toTrailer: trailer) && answers[Self.key($0.id, c)] == nil }.count
     }
 
+    /// Share of lines answered (0…1).
+    var progress: Double {
+        var total = 0
+        for trailer in trailerColumns { total += CheckItem.all.filter { $0.applies(toTrailer: trailer) }.count }
+        return total == 0 ? 0 : Double(total - openCount) / Double(total)
+    }
+
     /// Done for the shift checks: signed with every line answered.
     var isComplete: Bool { signed }
+}
+
+extension AppSettings {
+    /// You chose "Not needed today" for the vehicle check.
+    var vehicleCheckSkippedToday: Bool {
+        vehicleCheckSkippedOn > 0 && Calendar.hgv.isDateInToday(Date(timeIntervalSince1970: vehicleCheckSkippedOn))
+    }
+
+    mutating func skipVehicleCheckToday(_ skip: Bool) {
+        vehicleCheckSkippedOn = skip ? Calendar.hgv.startOfDay(for: .now).timeIntervalSince1970 : 0
+    }
 }

@@ -224,20 +224,53 @@ struct DayMileageCard: View {
         var id: String { (use?.id.uuidString ?? "day") + (start ? "s" : "e") }
     }
 
+    /// Uses of the same vehicle one after another (split only by trailer changes) shown as one block.
+    struct VehicleBlock: Identifiable {
+        var uses: [VehicleUse]
+        var id: UUID { uses[0].id }
+        var first: VehicleUse { uses[0] }
+        var last: VehicleUse { uses[uses.count - 1] }
+        var distanceKm: Double { uses.reduce(0) { $0 + $1.distanceKm } }
+    }
+
+    static func blocks(_ uses: [VehicleUse]) -> [VehicleBlock] {
+        var out: [VehicleBlock] = []
+        for u in uses {
+            if let lastBlock = out.last, lastBlock.last.vehicleID == u.vehicleID { out[out.count - 1].uses.append(u) } else { out.append(VehicleBlock(uses: [u])) }
+        }
+        return out
+    }
+
     var body: some View {
         let miles = store.settings.useMiles
         let cal = Calendar.hgv
         let dayStart = cal.startOfDay(for: now)
         let uses = allUses.filter { $0.start < dayStart.addingTimeInterval(86_400) && ($0.end ?? .now) > dayStart }
+        let blocks = Self.blocks(uses)
         let record = records.first { cal.isDate($0.day, inSameDayAs: now) }
-        let total = uses.isEmpty ? (record?.distanceKm ?? 0) : uses.reduce(0) { $0 + $1.distanceKm }
+        // Readings typed before a vehicle was chosen still count (unless they're for a vehicle listed below).
+        let recordCounts = record.map { r in r.distanceKm > 0 && !uses.contains { $0.vehicleID == r.vehicleID && !r.vehicleID.isEmpty } } ?? false
+        let total = blocks.reduce(0) { $0 + $1.distanceKm } + (uses.isEmpty || recordCounts ? (record?.distanceKm ?? 0) : 0)
+        // After a vehicle change: ask for the readings that are missing.
+        let missing = blocks.enumerated().flatMap { i, b -> [String] in
+            let name = vehicles.first { $0.id.uuidString == b.first.vehicleID }?.displayName ?? String(localized: "Vehicle")
+            var m: [String] = []
+            if b.first.startOdometerKm == 0 { m.append(String(localized: "start of \(name)")) }
+            if i < blocks.count - 1, !b.last.endEdited { m.append(String(localized: "end of \(name)")) }
+            return m
+        }
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Label("Mileage today", systemImage: "road.lanes").font(.subheadline.weight(.semibold))
                 Spacer()
                 Text(Fmt.distance(total, miles: miles)).font(.headline.monospacedDigit())
             }
-            if uses.isEmpty {
+            if blocks.count > 1, !missing.isEmpty {
+                Label("Vehicle changed — enter the mileage: \(missing.joined(separator: ", "))", systemImage: "exclamationmark.circle.fill")
+                    .font(.caption.weight(.semibold)).foregroundStyle(.orange)
+            }
+            if uses.isEmpty || recordCounts {
+                if !uses.isEmpty { Text("Before choosing a vehicle").font(.caption.weight(.semibold)) }
                 HStack(spacing: 8) {
                     odometerButton("Start", km: record?.startOdometerKm ?? 0, auto: false, reading: Reading(use: nil, start: true), miles: miles)
                     odometerButton("End", km: record?.endOdometerKm ?? 0, auto: false, reading: Reading(use: nil, start: false), miles: miles)
@@ -245,30 +278,38 @@ struct DayMileageCard: View {
                 if let gps = record?.gpsKm, gps > 0 {
                     Text("GPS (in-cab mode): \(Fmt.distance(gps, miles: miles))").font(.caption).foregroundStyle(.secondary)
                 }
-            } else {
-                ForEach(uses) { u in
-                    let v = vehicles.first { $0.id.uuidString == u.vehicleID }
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack {
-                            let t = vehicles.first { $0.id.uuidString == u.trailerID }
-                            Label((v?.displayName ?? "Vehicle") + (t.map { " + \($0.registration.isEmpty ? $0.displayName : $0.registration)" } ?? ""),
-                                  systemImage: v?.kind.symbol ?? "box.truck").font(.caption.weight(.semibold)).lineLimit(1)
-                            Spacer()
-                            Text("\(Fmt.time(u.start))–\(u.end.map(Fmt.time) ?? "now") · \(Fmt.distance(u.distanceKm, miles: miles))")
-                                .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
-                        }
-                        HStack(spacing: 8) {
-                            odometerButton("Start", km: u.startOdometerKm, auto: false, reading: Reading(use: u, start: true), miles: miles)
-                            odometerButton(u.endEdited ? "End" : "End (auto)", km: u.effectiveEndKm, auto: !u.endEdited,
-                                           reading: Reading(use: u, start: false), miles: miles)
-                        }
-                        if u.gpsKm > 0 {
-                            Text("GPS: \(Fmt.distance(u.gpsKm, miles: miles))\(u.endEdited ? "" : " — end worked out from GPS, tap to correct")")
-                                .font(.caption2).foregroundStyle(.secondary)
-                        }
+                if !uses.isEmpty { Divider() }
+            }
+            ForEach(Array(blocks.enumerated()), id: \.element.id) { i, b in
+                let v = vehicles.first { $0.id.uuidString == b.first.vehicleID }
+                let trailers = b.uses.compactMap { u in vehicles.first { $0.id.uuidString == u.trailerID } }
+                let trailerNames = Array(NSOrderedSet(array: trailers.map { $0.registration.isEmpty ? $0.displayName : $0.registration })).compactMap { $0 as? String }
+                let gps = b.uses.reduce(0) { $0 + $1.gpsKm }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Label { Text((v?.displayName ?? "Vehicle") + (trailerNames.isEmpty ? "" : " + " + trailerNames.joined(separator: ", "))) }
+                              icon: { (v?.kind ?? .rigid).icon }
+                              .font(.caption.weight(.semibold)).lineLimit(1)
+                        Spacer()
+                        Text("\(Fmt.time(b.first.start))–\(b.last.end.map(Fmt.time) ?? "now") · \(Fmt.distance(b.distanceKm, miles: miles))")
+                            .font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
                     }
-                    if u.id != uses.last?.id { Divider() }
+                    HStack(spacing: 8) {
+                        odometerButton("Start", km: b.first.startOdometerKm, auto: false, reading: Reading(use: b.first, start: true), miles: miles,
+                                       needed: blocks.count > 1 && b.first.startOdometerKm == 0)
+                        odometerButton(b.last.endEdited ? "End" : "End (auto)", km: b.last.effectiveEndKm, auto: !b.last.endEdited,
+                                       reading: Reading(use: b.last, start: false), miles: miles,
+                                       needed: i < blocks.count - 1 && !b.last.endEdited)
+                    }
+                    if gps > 0 {
+                        Text("GPS: \(Fmt.distance(gps, miles: miles))\(b.last.endEdited ? "" : " — end worked out from GPS, tap to correct")")
+                            .font(.caption2).foregroundStyle(.secondary)
+                    }
                 }
+                if b.id != blocks.last?.id { Divider() }
+            }
+            if blocks.count > 1 {
+                Text("Each vehicle's miles are added together for the day.").font(.caption2).foregroundStyle(.secondary)
             }
             HStack(spacing: 8) {
                 Button { adding = .diesel } label: { Label("Fuel", systemImage: "fuelpump.fill") }
@@ -292,7 +333,7 @@ struct DayMileageCard: View {
         }
     }
 
-    private func odometerButton(_ title: String, km: Double, auto: Bool, reading: Reading, miles: Bool) -> some View {
+    private func odometerButton(_ title: String, km: Double, auto: Bool, reading: Reading, miles: Bool, needed: Bool = false) -> some View {
         Button {
             let fallback = vehicles.first { $0.id.uuidString == (reading.use?.vehicleID ?? store.settings.currentVehicleID) }?.odometerKm ?? 0
             let current = km > 0 ? km : fallback
@@ -308,6 +349,8 @@ struct DayMileageCard: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .buttonStyle(.bordered)
+        .tint(needed ? .orange : nil)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(needed ? Color.orange : .clear, lineWidth: 1.5))
     }
 
     private func save(miles: Bool) {

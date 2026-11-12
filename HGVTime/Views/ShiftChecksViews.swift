@@ -21,6 +21,7 @@ struct ShiftChecksTile: View {
         let todaysCheck = vehicleChecks.first { Calendar.hgv.isDateInToday($0.date) }
         // The full vehicle check counts as a start-of-shift check when you've added it.
         let vehicleCheckDue = store.settings.vehicleCheckInShift && todaysCheck?.isComplete != true
+            && !(store.settings.vehicleCheckSkippedToday && todaysCheck == nil)
         let vehicleCheckDone = store.settings.vehicleCheckInShift && todaysCheck?.isComplete == true
         let doneThisShift = records.filter { $0.doneAt >= start.addingTimeInterval(-3 * 3600) && !$0.skipped }.count + (vehicleCheckDone ? 1 : 0)
         VStack(alignment: .leading, spacing: 8) {
@@ -71,6 +72,14 @@ struct ShiftChecksTile: View {
                 }
                 Spacer()
                 Image(systemName: "checklist.checked").foregroundStyle(Color.accentColor)
+                Menu {
+                    Button("Not needed today", systemImage: "forward") { store.settings.skipVehicleCheckToday(true) }
+                    if let check {
+                        Button("Delete today's check", systemImage: "trash", role: .destructive) {
+                            context.delete(check); try? context.save()
+                        }
+                    }
+                } label: { Image(systemName: "ellipsis.circle").foregroundStyle(.secondary) }
             }
         }
         .buttonStyle(.plain)

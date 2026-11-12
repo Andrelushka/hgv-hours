@@ -1,3 +1,4 @@
+import CoreLocation
 import XCTest
 @testable import HGVTime
 
@@ -224,5 +225,40 @@ final class StartFinishTests: XCTestCase {
         let decoded = try JSONDecoder().decode([PlanStop].self, from: Data(old.utf8))
         XCTAssertNil(decoded.first?.loadAfter)
         XCTAssertEqual(LoadState.title(nil), "")
+    }
+}
+
+/// 3.20: trailer on board by the plan, walk-round order, trail thinning.
+@MainActor
+final class Release320Tests: XCTestCase {
+    func testTrailerOnArrival() {
+        var pick = PlanStop(kind: .trailerPickup); pick.equipmentRef = "T42"
+        let deliver = PlanStop(kind: .delivery)
+        var swap = PlanStop(kind: .collection); swap.dropTrailerID = "current"; swap.pickTrailerRef = "T7"
+        let drop = PlanStop(kind: .trailerDrop)
+        let stops = [pick, deliver, swap, drop]
+        let start = TrailerRef(id: nil, ref: "T1")
+        XCTAssertEqual(stops.trailerOnArrival(at: 0, start: start)?.ref, "T1")
+        XCTAssertEqual(stops.trailerOnArrival(at: 1, start: start)?.ref, "T42")
+        XCTAssertEqual(stops.trailerOnArrival(at: 3, start: start)?.ref, "T7")
+        XCTAssertNil(stops.trailerOnArrival(at: 4, start: start))
+        XCTAssertNil(TrailerRef(id: "", ref: " "))
+    }
+
+    func testWalkRoundOrder() {
+        let vehicle = CheckItem.walkRound(trailer: false)
+        XCTAssertEqual(vehicle.first?.area, .cab)
+        let trailer = CheckItem.walkRound(trailer: true)
+        XCTAssertEqual(trailer.first?.area, .coupling, "a trailer check starts at the coupling")
+        // Every line appears exactly once per column type.
+        XCTAssertEqual(vehicle.flatMap(\.items).count, CheckItem.all.filter { $0.applies(toTrailer: false) }.count)
+        XCTAssertEqual(trailer.flatMap(\.items).count, CheckItem.all.filter { $0.applies(toTrailer: true) }.count)
+    }
+
+    func testThinTrail() {
+        let pts = (0..<100).map { CLLocationCoordinate2D(latitude: 51 + Double($0) * 0.00005, longitude: -1) }   // ~5.5 m apart
+        let thinned = NavigationModeView.thin(pts, metres: 25)
+        XCTAssertLessThan(thinned.count, 30)
+        XCTAssertGreaterThan(thinned.count, 15)
     }
 }

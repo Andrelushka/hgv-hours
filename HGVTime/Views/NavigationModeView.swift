@@ -28,6 +28,15 @@ struct NavigationModeView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var limits = RoadSpeedLimit()
     @State private var roadLimit: RoadSpeedLimit.Result?
+    /// Speed used for the zoom, eased so the map doesn't pump in and out with every speed change.
+    @State private var zoomKmh: Double = 0
+    /// Where you've driven this shift: the navigation trail and the in-cab recorded route.
+    @State private var driven: [CLLocationCoordinate2D] = []
+    @State private var recorded: [CLLocationCoordinate2D] = []
+    @State private var shiftStart: Date?
+    /// Hazards and reports to draw, refreshed now and then rather than on every frame.
+    @State private var shownHazards: [RoadHazards.Point] = []
+    @State private var shownReports: [RoadReport] = []
     /// Where to go. `nil` = carry on with the navigation already running.
     var target: MapScreen.NavTarget?
 
@@ -55,16 +64,39 @@ struct NavigationModeView: View {
     private var s: AppSettings { store.settings }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            map
+        // Each part reads the navigation engine in its own view (Isolated), so the 5-times-a-second
+        // position updates only redraw the map — not the banner, buttons and panel.
+        attachSheets(ZStack(alignment: .top) {
+            Isolated { map }
             VStack(spacing: 8) {
-                instructionBanner
-                if s.navShowLanes, let lanes = upcomingLanes { LaneHelper(lanes: lanes) }
+                Isolated { instructionBanner }
+                Isolated { if s.navShowLanes, let lanes = upcomingLanes { LaneHelper(lanes: lanes) } }
                 HStack(alignment: .top) {
-                    if s.navSpeedoSide == "left" { speedColumn; Spacer() } else { buttonColumn; Spacer() }
-                    if s.navSpeedoSide == "left" { buttonColumn } else { speedColumn }
+                    if s.navSpeedoSide == "left" { Isolated { speedColumn }; Spacer() } else { Isolated { buttonColumn }; Spacer() }
+                    if s.navSpeedoSide == "left" { Isolated { buttonColumn } } else { Isolated { speedColumn } }
                 }
                 Spacer()
+                Isolated { sideArrow }
+                Isolated { bottomPanel }
+            }
+            .padding()
+        })
+        .onAppear {
+            begin()
+            refreshOverlays()
+            follow(engine.location, animated: true, force: true)
+        }
+        .task {
+            // Hazards, reports and the recorded route change slowly: refresh every 10 s.
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(10))
+                refreshOverlays()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var sideArrow: some View {
                 if s.navSideArrow, let next = engine.nextStep {
                     // Big see-through arrow for the next turn: right side, just above the bottom bar.
                     HStack {
@@ -78,10 +110,11 @@ struct NavigationModeView: View {
                     }
                     .allowsHitTesting(false)
                 }
-                bottomPanel
-            }
-            .padding()
-        }
+    }
+
+    /// Sheets and alerts (kept apart so they don't depend on the moving parts).
+    private func attachSheets<C: View>(_ content: C) -> some View {
+        content
         .sheet(isPresented: $showingSteps) { stepsList }
         .alert("Use only when parked", isPresented: $safetyAlert) {
             Button("OK", role: .cancel) {}
@@ -101,16 +134,56 @@ struct NavigationModeView: View {
         } message: {
             Text("Saved on your iPhone and shown on the map; you'll be warned when you come this way again.")
         }
-        .onAppear {
-            begin()
-            follow(engine.location, animated: true, force: true)
+    }
+
+    /// Hazards and reports near you, and where you've driven this shift.
+    private func refreshOverlays() {
+        let settings = store.settings
+        shownHazards = hazards.nearby.filter {
+            $0.kind == .camera ? settings.navShowCameras : (settings.navShowTrafficLights && cameraDistance < 3000)
         }
+        shownReports = settings.navShowReports ? reports.filter { $0.expiresAt > .now } : []
+        shiftStart = ActivityController.currentShiftStart(context: context)
+        refreshDriven()
+        if let start = shiftStart, settings.navShowDriven {
+            let since = start
+            let points = (try? context.fetch(FetchDescriptor<TrackPoint>(predicate: #Predicate { $0.time >= since },
+                                                                        sortBy: [SortDescriptor(\.time)]))) ?? []
+            recorded = Self.thin(points.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) }, metres: 25)
+        } else {
+            recorded = []
+        }
+    }
+
+    private func refreshDriven() {
+        guard let start = shiftStart, store.settings.navShowDriven else { driven = []; return }
+        driven = engine.trail(since: start)
+    }
+
+    /// Drops points closer than `metres` to the last kept one, so long routes stay light to draw.
+    static func thin(_ coords: [CLLocationCoordinate2D], metres: Double) -> [CLLocationCoordinate2D] {
+        var out: [CLLocationCoordinate2D] = []
+        out.reserveCapacity(coords.count / 2)
+        for c in coords {
+            if let last = out.last, NavigationEngine.metres(last, c) < metres { continue }
+            out.append(c)
+        }
+        return out
     }
 
     // MARK: Map
 
     private var map: some View {
         Map(position: $position) {
+            // Where you've driven this shift (under the route).
+            if recorded.count > 1 {
+                MapPolyline(coordinates: recorded)
+                    .stroke(Color.gray.opacity(0.7), style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
+            }
+            if driven.count > 1 {
+                MapPolyline(coordinates: driven)
+                    .stroke(Color.gray.opacity(0.7), style: StrokeStyle(lineWidth: 6, lineCap: .round, lineJoin: .round))
+            }
             if let c = engine.displayCoordinate ?? engine.location?.coordinate {
                 Annotation("", coordinate: c, anchor: .center) {
                     // The camera turns with you in 3D / heading-up, so the cab points up; north-up shows the real heading.
@@ -132,9 +205,7 @@ struct NavigationModeView: View {
             ForEach(s.navShowParking ? engine.parkingOptions : [], id: \.self) { item in
                 Marker(item.name ?? "Parking", systemImage: "parkingsign.circle.fill", coordinate: item.placemark.coordinate).tint(.green)
             }
-            ForEach(hazards.nearby.filter {
-                $0.kind == .camera ? s.navShowCameras : (s.navShowTrafficLights && cameraDistance < 3000)
-            }) { p in
+            ForEach(shownHazards) { p in
                 Annotation("", coordinate: p.coordinate) {
                     Image(systemName: p.kind == .camera ? "camera.fill" : "light.beacon.max.fill")
                         .font(.system(size: p.kind == .camera ? 13 : 10, weight: .bold))
@@ -143,8 +214,8 @@ struct NavigationModeView: View {
                         .background(p.kind == .camera ? Color.orange : Color.red.opacity(0.85), in: Circle())
                 }
             }
-            if s.navShowReports {
-                ForEach(reports.filter { $0.expiresAt > .now }) { r in
+            if !shownReports.isEmpty {
+                ForEach(shownReports) { r in
                     Annotation(r.kind.title, coordinate: r.coordinate) {
                         Image(systemName: r.kind.symbol).font(.caption.weight(.bold)).foregroundStyle(.white)
                             .padding(6).background(Color.red, in: Circle())
@@ -154,8 +225,8 @@ struct NavigationModeView: View {
             }
         }
         .mapStyle(s.navMapStyle == "hybrid"
-                  ? .hybrid(elevation: view == .follow3D ? .realistic : .flat, pointsOfInterest: .including([.parking, .gasStation]), showsTraffic: true)
-                  : .standard(elevation: view == .follow3D ? .realistic : .flat,
+                  ? .hybrid(elevation: view == .follow3D && s.navRealistic3D ? .realistic : .flat, pointsOfInterest: .including([.parking, .gasStation]), showsTraffic: true)
+                  : .standard(elevation: view == .follow3D && s.navRealistic3D ? .realistic : .flat,
                               pointsOfInterest: .including([.parking, .gasStation, .restroom]), showsTraffic: true))
         .mapControls { MapCompass(); MapScaleView() }
         .ignoresSafeArea()
@@ -166,6 +237,7 @@ struct NavigationModeView: View {
         // Follow the smoothed position (5 times a second) so the map glides with the lorry.
         .onChange(of: engine.displayCoordinate?.latitude) { _, _ in follow(engine.location) }
         .onChange(of: position.positionedByUser) { _, moved in if moved { userMovedAt = .now } }
+        .onChange(of: engine.trailVersion) { _, _ in refreshDriven() }
         .onChange(of: scenePhase) { _, phase in if phase == .active { follow(engine.location, animated: true, force: true) } }
         .onChange(of: view) { _, _ in follow(engine.location, animated: true) }
     }
@@ -494,6 +566,9 @@ struct NavigationModeView: View {
         let miles = s.useMiles
         let vehicleMax = SpeedLimits.defaultKmh(kind: currentVehicle?.kind ?? .tractor, weightT: currentVehicle?.weight ?? 0, region: s.region)
         let ctx = context
+        // Your road reports, read from the database at most every 30 s (not on every GPS fix).
+        final class ReportCache { var items: [RoadReport] = []; var at = Date.distantPast }
+        let cache = ReportCache()
         engine.onUpdate = { loc in
             if online {
                 limits.update(loc, heavyVehicle: heavy) { r in
@@ -511,8 +586,11 @@ struct NavigationModeView: View {
             }
             hazards.update(loc, includeLights: lights)
             hazards.refreshNearby(loc, lights: lights)
-            let active = ((try? ctx.fetch(FetchDescriptor<RoadReport>())) ?? []).filter { $0.expiresAt > .now }
-            hazards.warnAhead(engine: NavigationEngine.shared, reports: active, cameras: cameras)
+            if Date.now.timeIntervalSince(cache.at) > 30 {
+                cache.items = ((try? ctx.fetch(FetchDescriptor<RoadReport>())) ?? []).filter { $0.expiresAt > .now }
+                cache.at = .now
+            }
+            hazards.warnAhead(engine: NavigationEngine.shared, reports: cache.items, cameras: cameras)
         }
         if engine.displayHeading == 0 { engine.displayHeading = engine.heading; engine.trailerHeading = engine.heading }
         guard let target else { follow(engine.location, animated: true, force: true); return }
@@ -546,7 +624,11 @@ struct NavigationModeView: View {
         }
         guard let loc else { return }
         let heading = engine.displayHeading
-        let kmh = max(0, loc.speed * 3.6)
+        // Ease the speed used for zoom, and ignore small changes, so the map stays calm.
+        let rawKmh = max(0, loc.speed * 3.6)
+        let eased = zoomKmh + (rawKmh - zoomKmh) * 0.06
+        if abs(eased - zoomKmh) > 0.3 || force { zoomKmh = force ? rawKmh : eased }
+        let kmh = zoomKmh
         let centre = engine.displayCoordinate ?? loc.coordinate
         let zoom = max(0.3, s.navZoom)
         let pitch = max(0, min(75, s.navPitch))
@@ -829,6 +911,8 @@ struct NavSettingsView: View {
                 }
                 Toggle("Road you're on", isOn: $store.settings.navShowRoad)
                 Toggle("Lane guidance", isOn: $store.settings.navShowLanes)
+                Toggle("Show where I've driven this shift", isOn: $store.settings.navShowDriven)
+                Toggle("3D buildings (slower map)", isOn: $store.settings.navRealistic3D)
                 Toggle("Big turn arrow (right side)", isOn: $store.settings.navSideArrow)
                 if store.settings.navSideArrow {
                     VStack(alignment: .leading) {
@@ -868,4 +952,12 @@ struct NavSettingsView: View {
         .navigationTitle("Navigation")
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
     }
+}
+
+
+/// Runs its content's body on its own, so whatever the content reads (e.g. the navigation engine)
+/// only redraws this part of the screen.
+struct Isolated<Content: View>: View {
+    @ViewBuilder var content: () -> Content
+    var body: some View { content() }
 }

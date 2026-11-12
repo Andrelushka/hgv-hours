@@ -263,6 +263,11 @@ struct TodayView: View {
             ?? "Tap Start shift when you begin work, then the activity buttons as you change activity."
         // Ring around the icon: how far through the current limit you are (4h30 driving, 6h work, the break).
         let ring: Double? = {
+            if status.hasData, let open = openEntry, open.endsShift {
+                // Daily / weekly rest: how far to the full rest (11 h, or 45 h weekly).
+                let full = open.restType == .weekly ? Limits.regularWeeklyRest : Limits.regularDailyRest
+                return status.now.timeIntervalSince(status.currentSince) / full
+            }
             guard onShift, status.hasData else { return nil }
             switch status.currentKind {
             case .drive: return status.stats.continuousDriving / Limits.continuousDriving
@@ -299,19 +304,38 @@ struct TodayView: View {
                     }
                 }
                 if status.hasData, openEntry?.endsShift == true {
-                    // Resting between shifts: count down to the next planned job; no counter when nothing is planned.
+                    // Resting between shifts: how long you've rested, when the rest is complete, and the next job.
+                    let weekly = openEntry?.restType == .weekly
+                    let full = weekly ? Limits.regularWeeklyRest : Limits.regularDailyRest
+                    let reduced = weekly ? Limits.reducedWeeklyRest : Limits.reducedDailyRest
+                    Text(status.currentSince, style: .timer)
+                        .font(.system(size: 44, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(color.gradient)
+                    Text(weekly ? "Weekly rest since \(Fmt.dayTime(status.currentSince))" : "Daily rest since \(Fmt.dayTime(status.currentSince))")
+                        .font(.caption).foregroundStyle(.secondary)
+                    let fullAt = status.currentSince.addingTimeInterval(full)
+                    let reducedAt = status.currentSince.addingTimeInterval(reduced)
+                    if status.now < fullAt {
+                        Text(status.now < reducedAt
+                             ? "Reduced (\(Fmt.hm(reduced))) at \(Fmt.dayTime(reducedAt)) · full (\(Fmt.hm(full))) at \(Fmt.dayTime(fullAt))"
+                             : "Reduced rest done · full (\(Fmt.hm(full))) at \(Fmt.dayTime(fullAt))")
+                            .font(.caption.weight(.semibold))
+                    } else {
+                        Label("Full rest done", systemImage: "checkmark.seal.fill").font(.caption.weight(.semibold)).foregroundStyle(.green)
+                    }
                     if let job = nextPlannedJob(after: status.now) {
-                        Text(timerInterval: status.now...max(status.now, job.plannedStart), countsDown: true)
-                            .font(.system(.largeTitle, design: .rounded).weight(.bold).monospacedDigit())
-                        Text("until your next job at \(Fmt.time(job.plannedStart))\(job.company.isEmpty ? "" : " · \(job.company)")")
+                        HStack(spacing: 4) {
+                            Text("Next job in").font(.caption).foregroundStyle(.secondary)
+                            Text(timerInterval: status.now...max(status.now, job.plannedStart), countsDown: true)
+                                .font(.caption.weight(.bold).monospacedDigit())
+                        }
+                        Text("at \(Fmt.time(job.plannedStart))\(job.company.isEmpty ? "" : " · \(job.company)")")
                             .font(.caption).foregroundStyle(.secondary)
                         WakeLeaveStrip()
                         let restAtStart = job.plannedStart.timeIntervalSince(status.currentSince)
                         if openEntry?.restType != .weekly && restAtStart < Limits.reducedDailyRest {
                             Text("⚠︎ Only \(Fmt.hm(restAtStart)) rest by then — 9h minimum").font(.caption.weight(.semibold)).foregroundStyle(.red)
                         }
-                    } else {
-                        Text("Resting since \(Fmt.dayTime(status.currentSince))").font(.subheadline).foregroundStyle(.secondary)
                     }
                     if let next = TodayHelp.next(status: status, openEntry: openEntry) {
                         Label(next, systemImage: "lightbulb.fill")

@@ -45,11 +45,19 @@ struct StopEditor: View {
     var isNew: Bool
     var onSave: (PlanStop) -> Void
     var onDelete: (() -> Void)?
+    /// The trailer you'll have when you get here, by the plan (for the drop choices).
+    var onBoard: TrailerRef?
 
     @State private var hasBooking: Bool
 
-    init(stop: PlanStop, isNew: Bool, onSave: @escaping (PlanStop) -> Void, onDelete: (() -> Void)? = nil) {
+    init(stop: PlanStop, isNew: Bool, onBoard: TrailerRef? = nil, onSave: @escaping (PlanStop) -> Void, onDelete: (() -> Void)? = nil) {
+        self.onBoard = onBoard
         var stop = stop
+        // Dropping a trailer: start from the one you'll have.
+        if isNew, stop.kind == .trailerDrop, stop.equipmentID == nil, stop.equipmentRef == nil, let onBoard {
+            stop.equipmentID = onBoard.id.isEmpty ? nil : onBoard.id
+            stop.equipmentRef = onBoard.ref.isEmpty ? nil : onBoard.ref
+        }
         // New collections usually leave loaded, deliveries empty — change it if not.
         if isNew, stop.loadAfter == nil {
             if stop.kind == .collection { stop.loadAfter = "loaded" } else if stop.kind == .delivery { stop.loadAfter = "empty" }
@@ -111,8 +119,12 @@ struct StopEditor: View {
                         Picker("Drop trailer", selection: Binding(get: { stop.dropTrailerID ?? "" },
                                                                   set: { stop.dropTrailerID = $0.isEmpty ? nil : $0 })) {
                             Text("No").tag("")
-                            Text("The trailer I have").tag("current")
-                            ForEach(trailers) { Text($0.displayName).tag($0.id.uuidString) }
+                            if let onBoard {
+                                Text("The trailer I'll have: \(onBoard.name(in: vehicles))").tag("current")
+                            } else {
+                                Text("The trailer I have").tag("current")
+                            }
+                            ForEach(trailers.filter { $0.id.uuidString != onBoard?.id }) { Text($0.displayName).tag($0.id.uuidString) }
                         }
                         Picker("Pick up trailer", selection: Binding(get: { stop.pickTrailerID ?? "" },
                                                                      set: { stop.pickTrailerID = $0.isEmpty ? nil : $0 })) {
@@ -123,10 +135,22 @@ struct StopEditor: View {
                             row("Trailer to pick up (number)", text: Binding(get: { stop.pickTrailerRef ?? "" }, set: { stop.pickTrailerRef = $0 }),
                                 prompt: "e.g. T1234")
                         }
+                        Picker("Swap vehicle", selection: Binding(get: { stop.pickVehicleID ?? "" },
+                                                                  set: { stop.pickVehicleID = $0.isEmpty ? nil : $0 })) {
+                            Text("No / not in my list").tag("")
+                            ForEach(vehicles.filter { $0.kind != .trailer }) { Text($0.displayName).tag($0.id.uuidString) }
+                        }
+                        if (stop.pickVehicleID ?? "").isEmpty {
+                            row("Vehicle to swap to (registration)", text: Binding(get: { stop.pickVehicleRef ?? "" }, set: { stop.pickVehicleRef = $0 }),
+                                prompt: "e.g. AB12 CDE")
+                        }
                     } header: {
-                        Text("Trailer at this stop")
+                        Text("Trailer and vehicle at this stop")
                     } footer: {
-                        Text("Swap trailers here: drop the one you have and/or pick up another (or leave both on No to run solo). When you tap Departed, your current trailer is updated.")
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(onBoard.map { String(localized: "By the plan you'll arrive here with \($0.name(in: vehicles)).") } ?? String(localized: "By the plan you won't have a trailer when you get here."))
+                            Text("Swap trailers here: drop the one you have and/or pick up another (or leave both on No to run solo). When you tap Departed, your current trailer is updated.")
+                        }
                     }
                 }
 
@@ -137,7 +161,16 @@ struct StopEditor: View {
                         Picker(trailer ? "Trailer" : "Vehicle", selection: Binding(get: { stop.equipmentID ?? "" },
                                                                                   set: { stop.equipmentID = $0.isEmpty ? nil : $0 })) {
                             Text("Not in my list").tag("")
-                            ForEach(list) { Text($0.displayName).tag($0.id.uuidString) }
+                            // When dropping, the trailer you'll have comes first.
+                            let first = stop.kind == .trailerDrop ? list.filter { $0.id.uuidString == onBoard?.id } : []
+                            ForEach(first) { Text("\($0.displayName) — on board").tag($0.id.uuidString) }
+                            ForEach(list.filter { v in !first.contains { $0.id == v.id } }) { Text($0.displayName).tag($0.id.uuidString) }
+                        }
+                        if stop.kind == .trailerDrop, let onBoard {
+                            Text("On board by the plan: \(onBoard.name(in: vehicles))").font(.caption).foregroundStyle(.secondary)
+                        } else if stop.kind == .trailerDrop {
+                            Label("By the plan you won't have a trailer here.", systemImage: "exclamationmark.triangle")
+                                .font(.caption).foregroundStyle(.orange)
                         }
                         if (stop.equipmentID ?? "").isEmpty {
                             row(trailer ? "Trailer number" : "Registration",
@@ -245,7 +278,7 @@ struct StopRow: View {
                     if !stop.bookingText.isEmpty { Text(stop.bookingText).font(.caption.weight(.semibold).monospacedDigit()) }
                 }
                 let equipment = stop.equipmentName(in: vehicles)
-                Text([stop.kindTitle, equipment, stop.trailerChangeText(in: vehicles),
+                Text([stop.kindTitle, equipment, stop.trailerChangeText(in: vehicles), stop.vehicleSwapText(in: vehicles),
                       stop.loadAfter == nil ? "" : "→ " + LoadState.title(stop.loadAfter), stop.fullAddress].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
                 let refs = [stop.reference.isEmpty ? "" : "Booking \(stop.reference)", (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                             stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.weight ?? ""].filter { !$0.isEmpty }

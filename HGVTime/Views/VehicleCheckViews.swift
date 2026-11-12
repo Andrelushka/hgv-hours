@@ -1,23 +1,30 @@
 import SwiftData
 import SwiftUI
 
-/// Today: the full vehicle (walk-round) check — optional, hide it in Customise Today.
+/// Today: the full vehicle (walk-round) check — optional: skip it for today, delete it, or hide the tile.
 struct VehicleCheckTile: View {
     @Environment(SettingsStore.self) private var store
     @Environment(\.modelContext) private var context
     @Query(sort: \VehicleCheck.date, order: .reverse) private var checks: [VehicleCheck]
-    @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
     @State private var opening: VehicleCheck?
     @State private var showingList = false
+    @State private var confirmDelete = false
 
     var body: some View {
         let today = checks.first { Calendar.hgv.isDateInToday($0.date) }
+        let skipped = store.settings.vehicleCheckSkippedToday && today == nil
         HStack(spacing: 12) {
-            Image(systemName: "checklist.checked")
-                .font(.title2).foregroundStyle(.white)
-                .frame(width: 44, height: 44)
-                .background((today?.signed == true ? (today!.defectCount > 0 ? Color.orange : Color.green) : Color.gray).gradient,
-                            in: RoundedRectangle(cornerRadius: 12))
+            ZStack {
+                Circle().stroke(Color.secondary.opacity(0.2), lineWidth: 4)
+                if let today {
+                    Circle().trim(from: 0, to: today.progress)
+                        .stroke(statusColor(today).gradient, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .rotationEffect(.degrees(-90))
+                }
+                Image(systemName: skipped ? "forward.fill" : (today?.signed == true ? "checkmark" : "checklist.checked"))
+                    .font(.headline).foregroundStyle(today.map(statusColor) ?? .secondary)
+            }
+            .frame(width: 46, height: 46)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Vehicle check").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 if let today {
@@ -26,185 +33,300 @@ struct VehicleCheckTile: View {
                          : "In progress · \(today.openCount) left")
                         .font(.headline)
                     Text(today.columns.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                } else if skipped {
+                    Text("Not needed today").font(.headline).foregroundStyle(.secondary)
                 } else {
                     Text("Not done today").font(.headline)
                 }
             }
             Spacer(minLength: 0)
-            VStack(spacing: 6) {
-                Button(today == nil ? "Start" : "Open") { opening = today ?? newCheck() }
+            if !skipped {
+                Button(today == nil ? "Start" : "Open") { opening = today ?? VehicleCheck.today(in: context, settings: store.settings) }
                     .buttonStyle(.borderedProminent).controlSize(.small)
-                Button("History") { showingList = true }.font(.caption)
             }
+            Menu {
+                if skipped {
+                    Button("Do the check after all", systemImage: "arrow.uturn.backward") { store.settings.skipVehicleCheckToday(false) }
+                } else if today == nil {
+                    Button("Not needed today", systemImage: "forward") { store.settings.skipVehicleCheckToday(true) }
+                }
+                if today != nil {
+                    Button("Delete today's check", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                }
+                Button("History", systemImage: "clock.arrow.circlepath") { showingList = true }
+                Button("Hide this tile", systemImage: "eye.slash") { store.settings.setTile(.vehicleCheck, visible: false, on: .today) }
+            } label: {
+                Image(systemName: "ellipsis.circle").font(.title3).foregroundStyle(.secondary).frame(width: 32, height: 32)
+            }
+            .accessibilityLabel("Vehicle check options")
         }
         .padding(12)
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 14))
         .sheet(item: $opening) { c in NavigationStack { VehicleCheckView(check: c) } }
         .sheet(isPresented: $showingList) { NavigationStack { VehicleCheckListView() } }
+        .confirmationDialog("Delete today's vehicle check?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                if let today { context.delete(today); try? context.save() }
+            }
+        } message: {
+            Text("Everything ticked in it is removed. This can't be undone.")
+        }
     }
 
-    private func newCheck() -> VehicleCheck { VehicleCheck.today(in: context, settings: store.settings) }
+    private func statusColor(_ c: VehicleCheck) -> Color {
+        c.signed ? (c.defectCount > 0 ? .orange : .green) : .blue
+    }
 }
 
-/// The check itself: one section per vehicle / trailer, tap each line to cycle ✓ → ✗ → N/A.
+/// The check: pick the vehicle or a trailer at the top, then work down the walk round — cab, front, sides,
+/// coupling, rear — answering each line with ✓ / ✗ / N/A.
 struct VehicleCheckView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
     @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
     @Bindable var check: VehicleCheck
-    @State private var defectFor: (key: String, title: String)?
-    @State private var defectText = ""
+    @State private var column = 0
     @State private var addingTrailer = false
     @State private var trailerText = ""
+    @State private var confirmDelete = false
+    @State private var collapsed: Set<CheckArea> = []
 
     var body: some View {
-        Form {
-            Section {
-                LabeledContent("Date", value: Fmt.dayTime(check.date))
-                TextField("Driver name", text: $check.driverName)
-            }
-            ForEach(Array(check.columns.enumerated()), id: \.offset) { c, name in
-                column(c, name: name)
-            }
-            Section {
-                Menu {
-                    ForEach(vehicles.filter { $0.kind == .trailer }) { t in
-                        Button(t.displayName) { addColumn(t.registration.isEmpty ? t.fleetNumber : t.registration, trailer: true, height: t.height) }
-                    }
-                    Button("Type a trailer number…") { trailerText = ""; addingTrailer = true }
-                } label: {
-                    Label("Add a trailer", systemImage: "plus.circle.fill")
+        let c = min(column, max(0, check.columns.count - 1))
+        let trailer = c < check.trailerColumns.count && check.trailerColumns[c]
+        let groups = CheckItem.walkRound(trailer: trailer)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                columnPicker(selected: c)
+                ForEach(groups, id: \.area) { group in
+                    areaCard(group.area, items: group.items, column: c)
                 }
-            } footer: {
-                Text("Add every trailer you use today (up to 6), like the paper sheet.")
+                heightCard(column: c)
+                declarationCard
             }
-            if !check.defects.isEmpty {
-                Section("Defects reported") {
-                    ForEach(check.defects.sorted { $0.key < $1.key }, id: \.key) { key, note in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(title(forKey: key)).font(.subheadline.weight(.semibold))
-                            Text(note.isEmpty ? "—" : note).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                }
-            }
-            Section {
-                TextField("Defect book reference", text: $check.defectBookRef)
-                TextField("Notes", text: $check.notes, axis: .vertical)
-                Toggle("I've followed the check procedure and reported all defects", isOn: Binding(
-                    get: { check.signed },
-                    set: { check.signed = $0; check.signedAt = $0 ? .now : nil }))
-            } header: {
-                Text("Declaration")
-            } footer: {
-                Text(check.openCount > 0 ? "\(check.openCount) line(s) not answered yet." : "Every line answered.")
-            }
+            .padding()
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Vehicle check")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) { ShareLink(item: shareText) { Image(systemName: "square.and.arrow.up") } }
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close") { try? context.save(); dismiss() }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    ShareLink(item: shareText) { Label("Share", systemImage: "square.and.arrow.up") }
+                    Button("Delete this check", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                } label: { Image(systemName: "ellipsis.circle") }
+            }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
-                    try? context.save()
-                    if check.signed {
-                        EventRecorder.log(.note, title: String(localized: "Vehicle check done"),
-                                          detail: check.defectCount > 0 ? "\(check.defectCount) defect(s)" : String(localized: "No defects"),
-                                          context: context, settings: store.settings)
-                    }
-                    dismiss()
-                }
+                Button("Done") { finish() }.fontWeight(.semibold)
             }
         }
-        .alert("What's the defect?", isPresented: Binding(get: { defectFor != nil }, set: { if !$0 { defectFor = nil } })) {
-            TextField("Describe it (optional)", text: $defectText)
-            Button("Save") {
-                if let d = defectFor { var all = check.defects; all[d.key] = defectText; check.defects = all }
-                defectFor = nil
+        .confirmationDialog("Delete this vehicle check?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) {
+                context.delete(check)
+                try? context.save()
+                dismiss()
             }
         } message: {
-            Text(defectFor?.title ?? "")
+            Text("Everything ticked in it is removed. This can't be undone.")
         }
         .alert("Trailer number", isPresented: $addingTrailer) {
             TextField("e.g. T1234", text: $trailerText)
-            Button("Add") { if !trailerText.isEmpty { addColumn(trailerText, trailer: true, height: 0) } }
+            Button("Add") { if !trailerText.isEmpty, let i = check.addColumn(trailerText, trailer: true, height: 0) { column = i } }
             Button("Cancel", role: .cancel) {}
         }
     }
 
-    @ViewBuilder
-    private func column(_ c: Int, name: String) -> some View {
-        let trailer = c < check.trailerColumns.count ? check.trailerColumns[c] : false
-        let items = CheckItem.all.filter { $0.applies(toTrailer: trailer) }
-        Section {
-            ForEach(items) { item in
-                let key = VehicleCheck.key(item.id, c)
-                Button { cycle(item, key: key) } label: {
-                    HStack(alignment: .top) {
-                        Text(item.title).font(.subheadline).foregroundStyle(.primary).multilineTextAlignment(.leading)
-                        Spacer(minLength: 8)
-                        answerBadge(check.answers[key], yesNo: item.answer == .yesNo)
+    // MARK: Vehicle / trailer picker
+
+    private func columnPicker(selected: Int) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Array(check.columns.enumerated()), id: \.offset) { i, name in
+                    let trailer = i < check.trailerColumns.count && check.trailerColumns[i]
+                    let open = check.openCount(column: i)
+                    let defects = check.answers.filter { $0.key.hasSuffix("|\(i)") && ($0.value == "defect" || $0.value == "no") }.count
+                    Button { withAnimation(.snappy) { column = i } } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: trailer ? "shippingbox.fill" : "truck.box.fill")
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(name).font(.subheadline.weight(.bold)).lineLimit(1)
+                                Text(open == 0 ? String(localized: "All answered") : String(localized: "\(open) left"))
+                                    .font(.caption2)
+                            }
+                            if defects > 0 {
+                                Text("\(defects)").font(.caption2.weight(.heavy)).foregroundStyle(.white)
+                                    .padding(.horizontal, 6).padding(.vertical, 2).background(.red, in: Capsule())
+                            } else if open == 0 {
+                                Image(systemName: "checkmark.circle.fill").foregroundStyle(i == selected ? .white : .green)
+                            }
+                        }
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .foregroundStyle(i == selected ? .white : .primary)
+                        .background(i == selected ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(Color(.secondarySystemGroupedBackground)),
+                                    in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    .buttonStyle(.plain)
+                    .contextMenu {
+                        if i > 0 {
+                            Button("Remove \(name)", systemImage: "trash", role: .destructive) { removeColumn(i) }
+                        }
+                    }
+                }
+                if check.columns.count < 7 {
+                    Menu {
+                        ForEach(vehicles.filter { $0.kind == .trailer }) { t in
+                            Button(t.displayName) {
+                                if let i = check.addColumn(VehicleCheck.columnName(t), trailer: true, height: t.height) { column = i }
+                            }
+                        }
+                        Button("Type a trailer number…") { trailerText = ""; addingTrailer = true }
+                    } label: {
+                        Label("Trailer", systemImage: "plus")
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 12).padding(.vertical, 14)
+                            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
                     }
                 }
             }
-            HStack {
-                Text("Height when leaving").font(.subheadline)
-                Spacer()
-                TextField("m", value: Binding(
-                    get: { c < check.heights.count && check.heights[c] > 0 ? check.heights[c] : nil },
-                    set: { v in var h = check.heights; while h.count <= c { h.append(0) }; h[c] = v ?? 0; check.heights = h }),
-                          format: .number.precision(.fractionLength(0...2)))
-                    .keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(width: 70)
-                Text("m").foregroundStyle(.secondary)
-                if c < check.heights.count, check.heights[c] > 0 {
-                    Text(Fmt.feetInches(check.heights[c])).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                }
-            }
-        } header: {
-            HStack {
-                Label(name, systemImage: trailer ? "shippingbox.fill" : "box.truck.fill")
-                Spacer()
-                Button("All ✓") { tickAll(items, column: c) }.font(.caption.weight(.semibold)).textCase(nil)
-                if c > 0 {
-                    Button(role: .destructive) { removeColumn(c) } label: { Image(systemName: "trash") }
-                        .font(.caption).textCase(nil)
-                }
-            }
-        } footer: {
-            Text("Tap a line: ✓ satisfactory → ✗ action required → N/A. Yes/No lines: Yes → No → N/A.")
         }
     }
 
-    private func answerBadge(_ a: String?, yesNo: Bool) -> some View {
-        let (text, color): (String, Color) = switch a {
-        case "ok": ("✓", .green)
-        case "defect": ("✗", .red)
-        case "yes": (String(localized: "Yes"), .green)
-        case "no": (String(localized: "No"), .red)
-        case "na": ("N/A", .secondary)
-        default: (yesNo ? "Y/N" : "—", .secondary)
+    // MARK: One area of the walk round
+
+    private func areaCard(_ area: CheckArea, items: [CheckItem], column c: Int) -> some View {
+        let answered = items.filter { check.answers[VehicleCheck.key($0.id, c)] != nil }.count
+        let isCollapsed = collapsed.contains(area)
+        return VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 10) {
+                Image(systemName: area.symbol).font(.subheadline.weight(.bold)).foregroundStyle(.white)
+                    .frame(width: 32, height: 32).background(area.color.gradient, in: RoundedRectangle(cornerRadius: 9))
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(area.title).font(.headline)
+                    Text("\(answered) of \(items.count)").font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if answered < items.count {
+                    Button("All OK") { tickAll(items, column: c) }
+                        .buttonStyle(.bordered).controlSize(.small).tint(.green)
+                } else {
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.title3)
+                }
+                Button { withAnimation(.snappy) { if isCollapsed { collapsed.remove(area) } else { collapsed.insert(area) } } } label: {
+                    Image(systemName: "chevron.down").rotationEffect(.degrees(isCollapsed ? -90 : 0)).foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(isCollapsed ? "Show" : "Hide")
+            }
+            .padding(12)
+            if !isCollapsed {
+                ForEach(items) { item in
+                    Divider().padding(.leading, 12)
+                    itemRow(item, column: c)
+                }
+            }
         }
-        return Text(text)
-            .font(.subheadline.weight(.bold))
-            .foregroundStyle(a == nil ? Color.secondary : .white)
-            .frame(minWidth: 44, minHeight: 30)
-            .background(a == nil ? Color(.tertiarySystemFill) : (color == .secondary ? Color.gray : color), in: RoundedRectangle(cornerRadius: 8))
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(alignment: .leading) {
+            RoundedRectangle(cornerRadius: 2).fill(area.color).frame(width: 4).padding(.vertical, 14)
+        }
     }
 
-    private func cycle(_ item: CheckItem, key: String) {
+    private func itemRow(_ item: CheckItem, column c: Int) -> some View {
+        let key = VehicleCheck.key(item.id, c)
+        let answer = check.answers[key]
+        let options: [(value: String, label: String, color: Color)] = item.answer == .yesNo
+            ? [("yes", String(localized: "Yes"), .green), ("no", String(localized: "No"), .red), ("na", "N/A", .gray)]
+            : [("ok", "✓", .green), ("defect", "✗", .red), ("na", "N/A", .gray)]
+        let isDefect = answer == "defect" || answer == "no"
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(item.title).font(.subheadline).fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 8) {
+                ForEach(options, id: \.value) { o in
+                    let on = answer == o.value
+                    Button {
+                        set(key, on ? nil : o.value)
+                    } label: {
+                        Text(o.label)
+                            .font(.subheadline.weight(.bold))
+                            .frame(maxWidth: .infinity, minHeight: 36)
+                            .foregroundStyle(on ? .white : o.color)
+                            .background(on ? AnyShapeStyle(o.color.gradient) : AnyShapeStyle(o.color.opacity(0.12)),
+                                        in: RoundedRectangle(cornerRadius: 10))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(o.value == "ok" ? String(localized: "Satisfactory") : o.value == "defect" ? String(localized: "Action required") : o.label)
+                    .accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+            if isDefect {
+                TextField("What's wrong? (optional)", text: Binding(get: { check.defects[key] ?? "" },
+                                                                    set: { var d = check.defects; d[key] = $0; check.defects = d }),
+                          axis: .vertical)
+                    .font(.subheadline)
+                    .padding(8)
+                    .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(12)
+        .background(isDefect ? Color.red.opacity(0.04) : .clear)
+    }
+
+    // MARK: Height and declaration
+
+    private func heightCard(column c: Int) -> some View {
+        HStack {
+            Image(systemName: "arrow.up.and.down").foregroundStyle(.white)
+                .frame(width: 32, height: 32).background(Color.purple.gradient, in: RoundedRectangle(cornerRadius: 9))
+            Text("Height when leaving").font(.subheadline.weight(.semibold))
+            Spacer()
+            TextField("m", value: Binding(
+                get: { c < check.heights.count && check.heights[c] > 0 ? check.heights[c] : nil },
+                set: { v in var h = check.heights; while h.count <= c { h.append(0) }; h[c] = v ?? 0; check.heights = h }),
+                      format: .number.precision(.fractionLength(0...2)))
+                .keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(width: 64)
+                .padding(6).background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8))
+            Text("m").foregroundStyle(.secondary)
+            if c < check.heights.count, check.heights[c] > 0 {
+                Text(Fmt.feetInches(check.heights[c])).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            }
+        }
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    private var declarationCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Declaration", systemImage: "signature").font(.headline)
+            TextField("Driver name", text: $check.driverName)
+                .padding(8).background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8))
+            TextField("Defect book reference", text: $check.defectBookRef)
+                .padding(8).background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8))
+            TextField("Notes", text: $check.notes, axis: .vertical)
+                .padding(8).background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8))
+            Toggle("I've followed the check procedure and reported all defects", isOn: Binding(
+                get: { check.signed },
+                set: { check.signed = $0; check.signedAt = $0 ? .now : nil }))
+                .font(.subheadline)
+            Text(check.openCount > 0 ? "\(check.openCount) line(s) not answered yet." : "Every line answered.")
+                .font(.caption).foregroundStyle(check.openCount > 0 ? .orange : .green)
+            Text("Date: \(Fmt.dayTime(check.date))").font(.caption).foregroundStyle(.secondary)
+        }
+        .padding(12)
+        .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
+    }
+
+    // MARK: Actions
+
+    private func set(_ key: String, _ value: String?) {
         var all = check.answers
-        let order = item.answer == .yesNo ? ["yes", "no", "na"] : ["ok", "defect", "na"]
-        let next: String? = {
-            guard let current = all[key], let i = order.firstIndex(of: current) else { return order[0] }
-            return i + 1 < order.count ? order[i + 1] : nil
-        }()
-        all[key] = next
+        all[key] = value
         check.answers = all
-        if next == "defect" || next == "no" {
-            defectText = check.defects[key] ?? ""
-            defectFor = (key, item.title)
-        } else if check.defects[key] != nil {
+        if value != "defect" && value != "no", check.defects[key] != nil {
             var d = check.defects; d[key] = nil; check.defects = d
         }
     }
@@ -214,11 +336,17 @@ struct VehicleCheckView: View {
         for item in items where all[VehicleCheck.key(item.id, c)] == nil {
             all[VehicleCheck.key(item.id, c)] = item.answer == .yesNo ? "yes" : "ok"
         }
-        check.answers = all
+        withAnimation(.snappy) { check.answers = all }
     }
 
-    private func addColumn(_ name: String, trailer: Bool, height: Double) {
-        check.addColumn(name, trailer: trailer, height: height)
+    private func finish() {
+        try? context.save()
+        if check.signed {
+            EventRecorder.log(.note, title: String(localized: "Vehicle check done"),
+                              detail: check.defectCount > 0 ? "\(check.defectCount) defect(s)" : String(localized: "No defects"),
+                              context: context, settings: store.settings)
+        }
+        dismiss()
     }
 
     private func removeColumn(_ c: Int) {
@@ -228,14 +356,19 @@ struct VehicleCheckView: View {
         if c < tr.count { tr.remove(at: c) }
         if c < h.count { h.remove(at: c) }
         // Answers for later columns move left.
-        var answers: [String: String] = [:]
-        for (k, v) in check.answers {
-            let parts = k.split(separator: "|"); guard parts.count == 2, let col = Int(parts[1]) else { continue }
-            if col == c { continue }
-            answers[VehicleCheck.key(String(parts[0]), col > c ? col - 1 : col)] = v
+        func shifted(_ dict: [String: String]) -> [String: String] {
+            var out: [String: String] = [:]
+            for (k, v) in dict {
+                let parts = k.split(separator: "|"); guard parts.count == 2, let col = Int(parts[1]) else { continue }
+                if col == c { continue }
+                out[VehicleCheck.key(String(parts[0]), col > c ? col - 1 : col)] = v
+            }
+            return out
         }
-        check.columns = cols; check.trailerColumns = tr; check.heights = h; check.answers = answers
-        check.defects = check.defects.filter { !$0.key.hasSuffix("|\(c)") }
+        check.columns = cols; check.trailerColumns = tr; check.heights = h
+        check.answers = shifted(check.answers)
+        check.defects = shifted(check.defects)
+        column = max(0, min(column, cols.count - 1))
     }
 
     private func title(forKey key: String) -> String {
@@ -252,10 +385,13 @@ struct VehicleCheckView: View {
             out += "\n\(trailer ? "Trailer" : "Vehicle") \(name)"
             if c < check.heights.count, check.heights[c] > 0 { out += " · height \(Fmt.length(check.heights[c]))" }
             out += "\n"
-            for item in CheckItem.all where item.applies(toTrailer: trailer) {
-                let a = check.answers[VehicleCheck.key(item.id, c)] ?? "—"
-                let mark = ["ok": "✓", "defect": "✗", "yes": "Yes", "no": "No", "na": "N/A"][a] ?? "—"
-                out += "\(mark)  \(item.title)\n"
+            for group in CheckItem.walkRound(trailer: trailer) {
+                out += "— \(group.area.title)\n"
+                for item in group.items {
+                    let a = check.answers[VehicleCheck.key(item.id, c)] ?? "—"
+                    let mark = ["ok": "✓", "defect": "✗", "yes": "Yes", "no": "No", "na": "N/A"][a] ?? "—"
+                    out += "\(mark)  \(item.title)\n"
+                }
             }
         }
         if !check.defects.isEmpty {
@@ -289,8 +425,10 @@ struct VehicleCheckListView: View {
                     }
                 }
                 .tint(.primary)
+                .swipeActions {
+                    Button("Delete", role: .destructive) { context.delete(c); try? context.save() }
+                }
             }
-            .onDelete { idx in idx.map { checks[$0] }.forEach(context.delete); try? context.save() }
         }
         .navigationTitle("Vehicle checks")
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

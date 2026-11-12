@@ -200,6 +200,21 @@ final class RulesEngineTests: XCTestCase {
         XCTAssertEqual(result.total, 8 * 10 + 2 * 15, accuracy: 0.05)
     }
 
+    func testPayStopsAtEndOfShift() {
+        var pay = PaySettings()
+        pay.baseRate = 10
+        pay.payBreaks = true
+        // Work 06:00–14:00, then End shift (rest). An hour later, pay must still be 8h — the rest isn't a paid break.
+        let entries = [e(.otherWork, t(6), t(14)), e(.rest, t(14), nil)]
+        let a = RulesEngine.analyze(entries, now: t(15), config: config)
+        let result = PayCalculator.calculate(shifts: a.shifts, nightOuts: 0, settings: pay, calendar: cal)
+        XCTAssertEqual(result.paidHours, 8, accuracy: 0.01)
+        // A short break followed by work is still paid when breaks are paid.
+        let withBreak = [e(.otherWork, t(6), t(10)), e(.rest, t(10), t(10, 30)), e(.otherWork, t(10, 30), t(14))]
+        let b = RulesEngine.analyze(withBreak, now: t(15), config: config)
+        XCTAssertEqual(PayCalculator.calculate(shifts: b.shifts, nightOuts: 0, settings: pay, calendar: cal).paidHours, 8, accuracy: 0.01)
+    }
+
     func testDayRateWithOvertime() {
         var pay = PaySettings()
         pay.payBasis = PayBasis.daily.rawValue

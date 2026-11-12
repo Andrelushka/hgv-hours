@@ -2,6 +2,22 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.20.0 — Smoother navigation, driven route, new vehicle check, pay and rest fixes
+- Fixed: earnings kept counting after End shift (with "pay breaks" on, the rest after the shift was paid as a break). Pay now stops when you stop working.
+- Back on Today: the daily / weekly rest counter — how long you've rested, when reduced (9h / 24h) and full (11h / 45h) rest are done, a progress ring, and the countdown to your next job.
+- Navigation is smoother and calmer: only the map redraws as you move (banner, buttons and panel no longer redraw 5 times a second); the marker and heading only update when they really change; zoom follows your speed gently instead of pumping; road reports are read every 30 s instead of on every GPS fix; 3D buildings are off by default (Navigation settings → 3D buildings) so the map loads and moves faster.
+- Navigation map shows where you've driven this shift (grey line, from navigation and in-cab route recording). It starts again at End shift. Turn it off in Navigation settings.
+- Vehicle check redesigned: pick the vehicle or a trailer at the top, then go round in walk-round order — In the cab, Front, Engine & fluids, Nearside, Coupling & lines, Rear, Equipment & load (a trailer starts at the coupling) — each with an icon, "x of y" and All OK. Every line has big ✓ / ✗ / N/A (or Yes / No / N/A) buttons; a ✗ opens a box for what's wrong. Sections fold away.
+- Vehicle check you don't want: "Not needed today" (tile or shift checks), Delete today's check, Delete this check (inside the check), swipe to delete in History, or hide the tile.
+- Drop choices follow the plan: a stop knows which trailer you'll have when you get there (start pick-up, earlier pick-ups and drops), shows it first and pre-fills a Drop off trailer stop with it.
+- Finish option "Leave the vehicle, back as a passenger": after Finished you choose to record the travel as POA or other work (or leave your activity as it is).
+- Swap vehicle at a stop (like the trailer swap): choose the vehicle or type its registration; tapping Departed makes it your current vehicle.
+- Mileage today groups each vehicle (trailer changes no longer split it), adds every vehicle's miles together, keeps readings typed before you chose a vehicle, and after a vehicle change highlights the readings to enter (end of the old one, start of the new one).
+- "Working left" now also stops at the shift length (when daily rest must start, 13h / 15h), however often a break resets the 6-hour clock. "Driving left" already stops at the daily 9h / 10h.
+- Rigid and tractor unit have their own icons (unit: cab and fifth wheel; rigid: cab and box body).
+- All new texts translated into Polish, Romanian, Russian and Ukrainian.
+- 6 new tests (119 in total).
+
 ## 3.19.0 — Numbered stops, trailer at start and finish, loaded/empty per stop
 - Stops are numbered on Today's job and in Jobs (planner cards), with a green tick once you've left a stop. The debrief table shows S (start) and F (finish) rows.
 - Start of the job (plan editor → Trailer at the start): choose a trailer to pick up (from your list or typed) and whether it's loaded or empty. Today's job then starts with an S row — tap Coupled: the trailer becomes your current trailer and loaded/empty is set (and the vehicle check opens if you turned that on for pick-ups). Stop 1 waits until you've coupled.

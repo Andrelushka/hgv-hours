@@ -48,7 +48,7 @@ struct VehiclesView: View {
         HStack(spacing: 8) {
             Button { editing = v } label: {
                 VStack(alignment: .leading, spacing: 2) {
-                    Label(v.displayName, systemImage: v.kind.symbol).font(.subheadline.weight(.semibold))
+                    Label { Text(v.displayName) } icon: { v.kind.icon }.font(.subheadline.weight(.semibold))
                     if !v.specsLine.isEmpty {
                         Text(v.specsLine).font(.caption).foregroundStyle(.secondary)
                     }
@@ -151,7 +151,7 @@ struct VehicleEditor: View {
             Form {
                 Section {
                     Picker("Type", selection: $kind) {
-                        ForEach(VehicleKind.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
+                        ForEach(VehicleKind.allCases) { k in Label { Text(k.title) } icon: { k.icon }.tag(k) }
                     }
                     HStack {
                         TextField(kind == .trailer ? "Trailer number / ID" : "Registration", text: $registration)

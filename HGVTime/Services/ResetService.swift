@@ -146,7 +146,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.navShowReports = d.navShowReports; s.navViewMode = d.navViewMode; s.navShowCameras = d.navShowCameras; s.navShowParking = d.navShowParking
             s.mapShowRoute = d.mapShowRoute; s.mapShowPlanned = d.mapShowPlanned; s.mapShowStops = d.mapShowStops
             s.mapProblemsOnly = d.mapProblemsOnly; s.mapHiddenEvents = d.mapHiddenEvents; s.mapHiddenByContext = d.mapHiddenByContext; s.navPitch = d.navPitch; s.navZoom = d.navZoom
-            s.navPinStyle = d.navPinStyle; s.navPinSize = d.navPinSize; s.navPinColor = d.navPinColor; s.navPin3D = d.navPin3D
+            s.navShowDriven = d.navShowDriven; s.navRealistic3D = d.navRealistic3D; s.navPinStyle = d.navPinStyle; s.navPinSize = d.navPinSize; s.navPinColor = d.navPinColor; s.navPin3D = d.navPin3D
             s.navPinAnimate = d.navPinAnimate; s.navPinPosition = d.navPinPosition; s.navLimitCorner = d.navLimitCorner
             s.keepScreenOn = d.keepScreenOn
         case .layout:

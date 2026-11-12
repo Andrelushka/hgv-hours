@@ -328,7 +328,9 @@ struct PlanEditor: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save) }
             }
             .sheet(item: $editingStop) { item in
-                StopEditor(stop: item.stop, isNew: item.isNew, onSave: { saved in
+                let index = stops.firstIndex { $0.id == item.stop.id } ?? stops.count
+                let start = TrailerRef(id: startTrailerID, ref: startTrailerRef) ?? TrailerRef(id: store.settings.currentTrailerID, ref: nil)
+                StopEditor(stop: item.stop, isNew: item.isNew, onBoard: stops.trailerOnArrival(at: index, start: start), onSave: { saved in
                     if let i = stops.firstIndex(where: { $0.id == saved.id }) { stops[i] = saved } else { stops.append(saved) }
                 }, onDelete: {
                     stops.removeAll { $0.id == item.stop.id }

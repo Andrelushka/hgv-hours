@@ -279,6 +279,8 @@ struct AppSettings: Codable, Equatable {
     var vehicleCheckInShift = false
     /// Offer the vehicle check when you pick up a vehicle or trailer (off unless you turn it on).
     var vehicleCheckAtPickup = false
+    /// Day you said the vehicle check isn't needed (start of day, seconds since 1970; 0 = never).
+    var vehicleCheckSkippedOn: Double = 0
     /// Company / client profiles: name, location and phone numbers.
     var companies: [CompanyProfile] = []
     /// Your own emergency contacts (breakdown, transport office, next of kin…).
@@ -344,6 +346,10 @@ struct AppSettings: Codable, Equatable {
     // Lorry pin
     /// "artic", "rigid", "van", "arrow" or "dot".
     var navPinStyle = "artic"
+    /// Show where you've driven this shift on the navigation map.
+    var navShowDriven = true
+    /// 3D buildings and terrain on the navigation map (heavier: the map loads and moves less smoothly).
+    var navRealistic3D = false
     var navPinSize = "m"
     var navPinColor = "blue"
     var navPin3D = true
