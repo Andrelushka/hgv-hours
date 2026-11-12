@@ -54,55 +54,55 @@ enum Tile: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .date: "Today's date"
-        case .card: "Driver card"
-        case .expiry: "Expiry warnings"
-        case .status: "Current activity"
-        case .buttons: "Activity buttons"
-        case .inCab: "In-cab automatic"
-        case .warnings: "Urgent warnings"
-        case .earnings: "Earnings"
-        case .nightOut: "Night out"
-        case .job: "Today's job"
-        case .checks: "Shift checks"
-        case .navMap: "Navigation map"
-        case .navTurn: "Next turn"
-        case .navRoad: "Road you're on"
-        case .navSpeedLimit: "Speed limit"
-        case .navArrival: "Arrival time"
-        case .navVoice: "Navigation voice"
-        case .vehicle: "Vehicle & height"
-        case .mileage: "Mileage & fuel"
-        case .driveLeft: "Driving left"
-        case .workLeft: "Working left"
-        case .restBy: "Start daily rest by"
-        case .shiftLeft: "Shift time left"
-        case .breakDue: "Break due in"
-        case .drivenToday: "Driven today"
-        case .workedToday: "Worked today"
-        case .restNow: "Current rest"
-        case .nextBreak: "Next break"
-        case .comingUp: "Coming up"
-        case .tenHourDays: "10h driving days"
-        case .fifteenHourDays: "15h days"
-        case .shiftLength: "Shift length"
-        case .restRules: "Rest rules"
-        case .beforeBreak: "Before break"
-        case .dailyDriving: "Daily driving"
-        case .weekDriving: "This week"
-        case .fortnight: "Fortnight"
-        case .dailyRest: "Daily rest"
-        case .reducedRests: "Reduced rests"
-        case .weeklyRest: "Weekly rest"
-        case .compensation: "Compensation owed"
-        case .wtdBreak: "Before 6h break"
-        case .shiftWorking: "Shift working time"
-        case .weekWorking: "Week working"
-        case .average: "Weekly average"
-        case .gbDriving: "GB driving"
-        case .gbDuty: "GB duty"
-        case .allWarnings: "All warnings"
-        case .infringements: "Infringements"
+        case .date: String(localized: "Today's date")
+        case .card: String(localized: "Driver card")
+        case .expiry: String(localized: "Expiry warnings")
+        case .status: String(localized: "Current activity")
+        case .buttons: String(localized: "Activity buttons")
+        case .inCab: String(localized: "In-cab automatic")
+        case .warnings: String(localized: "Urgent warnings")
+        case .earnings: String(localized: "Earnings")
+        case .nightOut: String(localized: "Night out")
+        case .job: String(localized: "Today's job")
+        case .checks: String(localized: "Shift checks")
+        case .navMap: String(localized: "Navigation map")
+        case .navTurn: String(localized: "Next turn")
+        case .navRoad: String(localized: "Road you're on")
+        case .navSpeedLimit: String(localized: "Speed limit")
+        case .navArrival: String(localized: "Arrival time")
+        case .navVoice: String(localized: "Navigation voice")
+        case .vehicle: String(localized: "Vehicle & height")
+        case .mileage: String(localized: "Mileage & fuel")
+        case .driveLeft: String(localized: "Driving left")
+        case .workLeft: String(localized: "Working left")
+        case .restBy: String(localized: "Start daily rest by")
+        case .shiftLeft: String(localized: "Shift time left")
+        case .breakDue: String(localized: "Break due in")
+        case .drivenToday: String(localized: "Driven today")
+        case .workedToday: String(localized: "Worked today")
+        case .restNow: String(localized: "Current rest")
+        case .nextBreak: String(localized: "Next break")
+        case .comingUp: String(localized: "Coming up")
+        case .tenHourDays: String(localized: "10h driving days")
+        case .fifteenHourDays: String(localized: "15h days")
+        case .shiftLength: String(localized: "Shift length")
+        case .restRules: String(localized: "Rest rules")
+        case .beforeBreak: String(localized: "Before break")
+        case .dailyDriving: String(localized: "Daily driving")
+        case .weekDriving: String(localized: "This week")
+        case .fortnight: String(localized: "Fortnight")
+        case .dailyRest: String(localized: "Daily rest")
+        case .reducedRests: String(localized: "Reduced rests")
+        case .weeklyRest: String(localized: "Weekly rest")
+        case .compensation: String(localized: "Compensation owed")
+        case .wtdBreak: String(localized: "Before 6h break")
+        case .shiftWorking: String(localized: "Shift working time")
+        case .weekWorking: String(localized: "Week working")
+        case .average: String(localized: "Weekly average")
+        case .gbDriving: String(localized: "GB driving")
+        case .gbDuty: String(localized: "GB duty")
+        case .allWarnings: String(localized: "All warnings")
+        case .infringements: String(localized: "Infringements")
         }
     }
 
@@ -166,15 +166,15 @@ enum TileGroup: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .today: "Today"
-        case .now: "Right now"
-        case .breaks: "Breaks & deadlines"
-        case .extensions: "Extensions & shift length"
-        case .tacho: "Drivers' hours (tacho)"
-        case .rest: "Rest"
-        case .wtd: "Working time"
-        case .gb: "GB domestic"
-        case .alerts: "Warnings & night out"
+        case .today: String(localized: "Today")
+        case .now: String(localized: "Right now")
+        case .breaks: String(localized: "Breaks & deadlines")
+        case .extensions: String(localized: "Extensions & shift length")
+        case .tacho: String(localized: "Drivers' hours (tacho)")
+        case .rest: String(localized: "Rest")
+        case .wtd: String(localized: "Working time")
+        case .gb: String(localized: "GB domestic")
+        case .alerts: String(localized: "Warnings & night out")
         }
     }
 }

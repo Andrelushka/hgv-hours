@@ -76,7 +76,20 @@ struct NavRoute {
     var isTruckRoute: Bool
     var notices: [String] = []
 
-    var polyline: MKPolyline { MKPolyline(coordinates: coordinates, count: coordinates.count) }
+    /// Built once (making it on every map redraw for thousands of points made navigation stutter).
+    let polyline: MKPolyline
+
+    init(coordinates: [CLLocationCoordinate2D], distance: CLLocationDistance, duration: TimeInterval, steps: [NavStep],
+         source: String, isTruckRoute: Bool, notices: [String] = []) {
+        self.coordinates = coordinates
+        self.distance = distance
+        self.duration = duration
+        self.steps = steps
+        self.source = source
+        self.isTruckRoute = isTruckRoute
+        self.notices = notices
+        self.polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+    }
 
     /// Share of the distance on motorways and A-roads.
     @MainActor var majorShare: Double {

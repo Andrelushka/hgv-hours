@@ -29,15 +29,15 @@ final class RoadReport {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .accident: "Accident"
-            case .closure: "Road closed"
-            case .roadworks: "Roadworks"
-            case .police: "Police / DVSA"
-            case .camera: "Speed camera"
-            case .hazard: "Hazard on road"
-            case .traffic: "Traffic jam"
-            case .lowBridge: "Low bridge"
-            case .weighbridge: "Weighbridge / check site"
+            case .accident: String(localized: "Accident")
+            case .closure: String(localized: "Road closed")
+            case .roadworks: String(localized: "Roadworks")
+            case .police: String(localized: "Police / DVSA")
+            case .camera: String(localized: "Speed camera")
+            case .hazard: String(localized: "Hazard on road")
+            case .traffic: String(localized: "Traffic jam")
+            case .lowBridge: String(localized: "Low bridge")
+            case .weighbridge: String(localized: "Weighbridge / check site")
             }
         }
         var symbol: String {
@@ -82,6 +82,21 @@ final class RoadHazards {
 
     static let shared = RoadHazards()
     private(set) var points: [Point] = []
+    /// What's drawn on the navigation map: cameras within 5 km and up to 40 traffic lights within 1.5 km
+    /// (drawing hundreds of lights made the map freeze). Updated as you move, not on every redraw.
+    private(set) var nearby: [Point] = []
+    @ObservationIgnored private var lastNearby: CLLocation?
+
+    func refreshNearby(_ loc: CLLocation, lights: Bool) {
+        if let last = lastNearby, loc.distance(from: last) < 150 { return }
+        lastNearby = loc
+        let here = loc.coordinate
+        let cams = points.filter { $0.kind == .camera }
+        let lightsNear = lights ? points.filter { $0.kind == .trafficLight }
+            .map { ($0, NavigationEngine.metres(here, $0.coordinate)) }
+            .filter { $0.1 < 1500 }.sorted { $0.1 < $1.1 }.prefix(40).map(\.0) : []
+        nearby = cams + lightsNear
+    }
     @ObservationIgnored private var lastQuery: (CLLocation, Date)?
     @ObservationIgnored private var busy = false
     @ObservationIgnored private var warned: Set<String> = []
@@ -94,7 +109,11 @@ final class RoadHazards {
         lastQuery = (loc, .now)
         Task {
             defer { busy = false }
-            if let found = try? await Self.fetch(around: loc.coordinate, radius: 5000, lights: includeLights) { points = found }
+            if let found = try? await Self.fetch(around: loc.coordinate, radius: 5000, lights: includeLights) {
+                points = found
+                lastNearby = nil
+                refreshNearby(loc, lights: includeLights)
+            }
         }
     }
 

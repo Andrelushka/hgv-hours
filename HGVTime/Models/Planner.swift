@@ -9,14 +9,14 @@ enum FuelType: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .diesel: "Diesel"
-        case .dieselAdBlue: "Diesel + AdBlue"
-        case .hvo: "HVO"
-        case .lng: "Gas (LNG)"
-        case .cng: "Gas (CNG)"
-        case .electric: "Electric"
-        case .hybrid: "Hybrid"
-        case .petrol: "Petrol"
+        case .diesel: String(localized: "Diesel")
+        case .dieselAdBlue: String(localized: "Diesel + AdBlue")
+        case .hvo: String(localized: "HVO")
+        case .lng: String(localized: "Gas (LNG)")
+        case .cng: String(localized: "Gas (CNG)")
+        case .electric: String(localized: "Electric")
+        case .hybrid: String(localized: "Hybrid")
+        case .petrol: String(localized: "Petrol")
         }
     }
 }
@@ -26,10 +26,10 @@ enum VehicleKind: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .tractor: "Tractor unit (artic)"
-        case .rigid: "Rigid"
-        case .van: "Van"
-        case .trailer: "Trailer"
+        case .tractor: String(localized: "Tractor unit (artic)")
+        case .rigid: String(localized: "Rigid")
+        case .van: String(localized: "Van")
+        case .trailer: String(localized: "Trailer")
         }
     }
     var symbol: String {
@@ -144,14 +144,14 @@ struct PlanStop: Codable, Equatable, Identifiable {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .collection: "Collection"
-            case .delivery: "Delivery"
-            case .depot: "Depot"
-            case .fuel: "Fuel"
-            case .parking: "Parking / rest"
-            case .trailer: "Trailer swap"
-            case .service: "Vehicle service"
-            case .other: "Custom stop"
+            case .collection: String(localized: "Collection")
+            case .delivery: String(localized: "Delivery")
+            case .depot: String(localized: "Depot")
+            case .fuel: String(localized: "Fuel")
+            case .parking: String(localized: "Parking / rest")
+            case .trailer: String(localized: "Trailer swap")
+            case .service: String(localized: "Vehicle service")
+            case .other: String(localized: "Custom stop")
             }
         }
         var symbol: String {
@@ -217,16 +217,16 @@ struct PlanStop: Codable, Equatable, Identifiable {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .cancelled: "Cancelled"
-            case .failed: "Failed"
-            case .rejected: "Rejected"
+            case .cancelled: String(localized: "Cancelled")
+            case .failed: String(localized: "Failed")
+            case .rejected: String(localized: "Rejected")
             }
         }
         var detail: String {
             switch self {
-            case .cancelled: "Customer or office cancelled the stop"
-            case .failed: "Couldn't deliver or collect (closed, no access, no booking…)"
-            case .rejected: "Goods refused or load rejected"
+            case .cancelled: String(localized: "Customer or office cancelled the stop")
+            case .failed: String(localized: "Couldn't deliver or collect (closed, no access, no booking…)")
+            case .rejected: String(localized: "Goods refused or load rejected")
             }
         }
         var symbol: String {
@@ -317,9 +317,9 @@ final class WorkPlan {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .same: "Same as start"
-            case .different: "Somewhere else"
-            case .unknown: "Not known yet"
+            case .same: String(localized: "Same as start")
+            case .different: String(localized: "Somewhere else")
+            case .unknown: String(localized: "Not known yet")
             }
         }
     }
@@ -458,14 +458,14 @@ enum ResourceKind: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .diesel: "Diesel"
-        case .petrol: "Petrol"
-        case .adblue: "AdBlue"
-        case .gas: "Gas (LNG/CNG)"
-        case .electricity: "Electricity"
-        case .tachoRoll: "Tacho roll"
-        case .oil: "Oil"
-        case .other: "Other"
+        case .diesel: String(localized: "Diesel")
+        case .petrol: String(localized: "Petrol")
+        case .adblue: String(localized: "AdBlue")
+        case .gas: String(localized: "Gas (LNG/CNG)")
+        case .electricity: String(localized: "Electricity")
+        case .tachoRoll: String(localized: "Tacho roll")
+        case .oil: String(localized: "Oil")
+        case .other: String(localized: "Other")
         }
     }
     var unit: String {
@@ -526,17 +526,17 @@ enum ReminderTrigger: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .time: "At a time"
-        case .shiftStart: "When I start a shift"
-        case .shiftEnd: "When I end a shift"
-        case .arrived: "When I tap Arrived"
-        case .cardInserted: "When I insert my card"
-        case .beforeDrivingBreak: "Before my driving break is due"
-        case .beforeWorkingBreak: "Before my working-time break is due"
-        case .beforeDailyRest: "Before I must start daily rest"
-        case .beforeWeeklyRest: "Before weekly rest is due"
-        case .afterShiftStart: "Some time after shift start"
-        case .dailyRestComplete: "When my daily rest is complete"
+        case .time: String(localized: "At a time")
+        case .shiftStart: String(localized: "When I start a shift")
+        case .shiftEnd: String(localized: "When I end a shift")
+        case .arrived: String(localized: "When I tap Arrived")
+        case .cardInserted: String(localized: "When I insert my card")
+        case .beforeDrivingBreak: String(localized: "Before my driving break is due")
+        case .beforeWorkingBreak: String(localized: "Before my working-time break is due")
+        case .beforeDailyRest: String(localized: "Before I must start daily rest")
+        case .beforeWeeklyRest: String(localized: "Before weekly rest is due")
+        case .afterShiftStart: String(localized: "Some time after shift start")
+        case .dailyRestComplete: String(localized: "When my daily rest is complete")
         }
     }
 
@@ -578,10 +578,10 @@ enum ReminderRepeat: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .once: "Once"
-        case .daily: "Every day"
-        case .weekdays: "Mon–Fri"
-        case .weekly: "Every week"
+        case .once: String(localized: "Once")
+        case .daily: String(localized: "Every day")
+        case .weekdays: String(localized: "Mon–Fri")
+        case .weekly: String(localized: "Every week")
         }
     }
 }
@@ -637,19 +637,19 @@ enum EventKind: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .shiftStart: "Shift started"
-        case .shiftEnd: "Shift ended"
-        case .activity: "Activity"
-        case .cardIn: "Card inserted"
-        case .cardOut: "Card withdrawn"
-        case .arrived: "Arrived"
-        case .departed: "Departed"
-        case .fuel: "Fuel / resources"
-        case .overspeed: "Overspeed"
-        case .infringement: "Infringement"
-        case .note: "Note"
-        case .correction: "Record changed"
-        case .harshBraking: "Harsh braking"
+        case .shiftStart: String(localized: "Shift started")
+        case .shiftEnd: String(localized: "Shift ended")
+        case .activity: String(localized: "Activity")
+        case .cardIn: String(localized: "Card inserted")
+        case .cardOut: String(localized: "Card withdrawn")
+        case .arrived: String(localized: "Arrived")
+        case .departed: String(localized: "Departed")
+        case .fuel: String(localized: "Fuel / resources")
+        case .overspeed: String(localized: "Overspeed")
+        case .infringement: String(localized: "Infringement")
+        case .note: String(localized: "Note")
+        case .correction: String(localized: "Record changed")
+        case .harshBraking: String(localized: "Harsh braking")
         }
     }
 
@@ -746,20 +746,20 @@ enum ActivitySubtype: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .loading: "Loading"
-        case .unloading: "Unloading"
-        case .vehicleCheck: "Vehicle check"
-        case .yardCheck: "Yard check"
-        case .fuelling: "Fuelling"
-        case .paperwork: "Paperwork"
-        case .cleaning: "Cleaning"
-        case .waitingLoad: "Waiting to load"
-        case .waitingUnload: "Waiting to unload"
-        case .waitingShift: "Waiting for shift"
-        case .waitingJob: "Waiting for job"
-        case .spare: "Spare / standby"
-        case .ferryTrain: "Ferry / train"
-        case .doubleManned: "Double-manned"
+        case .loading: String(localized: "Loading")
+        case .unloading: String(localized: "Unloading")
+        case .vehicleCheck: String(localized: "Vehicle check")
+        case .yardCheck: String(localized: "Yard check")
+        case .fuelling: String(localized: "Fuelling")
+        case .paperwork: String(localized: "Paperwork")
+        case .cleaning: String(localized: "Cleaning")
+        case .waitingLoad: String(localized: "Waiting to load")
+        case .waitingUnload: String(localized: "Waiting to unload")
+        case .waitingShift: String(localized: "Waiting for shift")
+        case .waitingJob: String(localized: "Waiting for job")
+        case .spare: String(localized: "Spare / standby")
+        case .ferryTrain: String(localized: "Ferry / train")
+        case .doubleManned: String(localized: "Double-manned")
         }
     }
 

@@ -104,7 +104,7 @@ struct RestRulesCard: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: symbol).frame(width: 24).foregroundStyle(active ? .orange : .teal)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.subheadline.weight(.semibold))
+                Text(LocalizedStringKey(title)).font(.subheadline.weight(.semibold))
                 Text(detail).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
         }

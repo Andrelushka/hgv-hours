@@ -81,10 +81,10 @@ struct ReportProblemView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .bug: "Something isn't working"
-            case .rules: "A rule or limit looks wrong"
-            case .pay: "Pay looks wrong"
-            case .idea: "Idea / feature request"
+            case .bug: String(localized: "Something isn't working")
+            case .rules: String(localized: "A rule or limit looks wrong")
+            case .pay: String(localized: "Pay looks wrong")
+            case .idea: String(localized: "Idea / feature request")
             }
         }
     }

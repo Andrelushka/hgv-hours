@@ -300,7 +300,7 @@ struct DayMileageCard: View {
             entering = reading
         } label: {
             VStack(alignment: .leading, spacing: 1) {
-                Text(title).font(.caption2).foregroundStyle(.secondary)
+                Text(LocalizedStringKey(title)).font(.caption2).foregroundStyle(.secondary)
                 Text(km > 0 ? Fmt.odometer(km, miles: miles) : "Enter")
                     .font(.subheadline.weight(.semibold).monospacedDigit())
                     .foregroundStyle(auto ? .secondary : .primary)

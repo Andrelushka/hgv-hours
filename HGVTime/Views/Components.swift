@@ -120,7 +120,7 @@ struct IssueRow: View {
 struct SectionHeader: View {
     var title: String
     var body: some View {
-        Text(title)
+        Text(LocalizedStringKey(title))
             .font(.headline)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 8)
@@ -142,6 +142,7 @@ struct DisclaimerView: View {
                     Text("HGV Hours helps you plan your driving, breaks, rest and working time against UK rules: assimilated (retained EU) rules, AETR, the Road Transport (Working Time) Regulations, and GB domestic rules.")
                     Text("It is a planning aid, **not** a legal record. Your tachograph and your employer's records are what count. Always follow your tachograph, your operator's instructions and DVSA guidance.")
                     Text("Exemptions, derogations, ferry/train rest rules and workforce agreements aren't fully modelled. If in doubt, check GOV.UK: “Drivers' hours and tachographs: goods vehicles”.")
+                    SafetyNotice()
                     Text("All data stays on this iPhone.")
                         .foregroundStyle(.secondary)
                 }
@@ -222,7 +223,7 @@ struct MiniStat: View {
 
     var body: some View {
         VStack(spacing: 2) {
-            Text(title).font(.caption2.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1)
+            Text(LocalizedStringKey(title)).font(.caption2.weight(.semibold)).foregroundStyle(.secondary).lineLimit(1)
             Text(value).font(.subheadline.weight(.bold).monospacedDigit()).foregroundStyle(tint)
                 .lineLimit(1).minimumScaleFactor(0.7)
         }
@@ -326,7 +327,7 @@ struct CountCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 2) {
-                Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                Text(LocalizedStringKey(title)).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
                 Spacer(minLength: 0)
                 if let info = RuleInfo.text(for: title) { InfoDot(title: title, text: info).padding(-6) }
             }
@@ -441,7 +442,7 @@ struct InfoDot: View {
         .popover(isPresented: $showing) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title).font(.headline)
+                    Text(LocalizedStringKey(title)).font(.headline)
                     Text(text).font(.subheadline).fixedSize(horizontal: false, vertical: true)
                 }
                 .padding()
@@ -575,5 +576,42 @@ extension Binding where Value == Double {
     /// Shows an empty box instead of "0" so there's nothing to delete before typing.
     var emptyIfZero: Binding<Double?> {
         Binding<Double?>(get: { wrappedValue == 0 ? nil : wrappedValue }, set: { wrappedValue = $0 ?? 0 })
+    }
+}
+
+
+/// Phone-use warning (UK law: Road Vehicles (Construction and Use) Regulations 1986, reg. 110; Highway Code rule 149).
+struct SafetyNotice: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "iphone.slash").font(.title2).foregroundStyle(.red)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Use only when parked").font(.headline)
+                Text("It's illegal to hold or use a phone while driving — including when stopped in traffic or queuing (Highway Code rule 149). Set up navigation, change settings and enter records only when you're safely parked with the engine off or the handbrake on. A sat-nav may be used hands-free, fixed in a holder that doesn't block your view.")
+                    .font(.subheadline)
+            }
+        }
+        .padding(12)
+        .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+/// Shown on Today while the vehicle is moving (in-cab mode): don't touch the phone.
+struct DrivingSafetyBanner: View {
+    @State private var detector = AutoDriveDetector.shared
+
+    var body: some View {
+        if detector.isMoving {
+            HStack(spacing: 8) {
+                Image(systemName: "iphone.slash")
+                Text("Driving — don't use the phone. Driving is being recorded for you.")
+                    .font(.footnote.weight(.semibold))
+                Spacer(minLength: 0)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 14).padding(.vertical, 8)
+            .background(Color.red.gradient)
+            .accessibilityElement(children: .combine)
+        }
     }
 }

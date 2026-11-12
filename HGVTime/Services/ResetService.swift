@@ -14,27 +14,27 @@ enum DataGroup: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .driverLog: "Driver log"
-        case .jobs: "Jobs & day debriefs"
-        case .earnings: "Earnings extras & nights out"
-        case .vehicles: "Vehicles, mileage & fuel"
-        case .notes: "Notes"
-        case .reminders: "Reminders & shift checks done"
-        case .events: "Event log, speed & routes"
-        case .assistant: "Assistant keys & AI models"
+        case .driverLog: String(localized: "Driver log")
+        case .jobs: String(localized: "Jobs & day debriefs")
+        case .earnings: String(localized: "Earnings extras & nights out")
+        case .vehicles: String(localized: "Vehicles, mileage & fuel")
+        case .notes: String(localized: "Notes")
+        case .reminders: String(localized: "Reminders & shift checks done")
+        case .events: String(localized: "Event log, speed & routes")
+        case .assistant: String(localized: "Assistant keys & AI models")
         }
     }
 
     var detail: String {
         switch self {
-        case .driverLog: "All activities (driving, work, breaks, rest) and driver card in/out"
-        case .jobs: "Planned jobs, stops, cancelled jobs and per-day vehicle and distance records"
-        case .earnings: "Bonuses, deductions, holidays and nights out (pay is worked out from the driver log)"
-        case .vehicles: "Your vehicles and trailers, mileage per shift, fuel, AdBlue and other items used"
-        case .notes: "Notebook pages and tables"
-        case .reminders: "Your reminders (the default ones come back)"
-        case .events: "Event log, overspeed and harsh braking, recorded GPS routes"
-        case .assistant: "Claude and DVLA keys in the Keychain, downloaded on-device AI models"
+        case .driverLog: String(localized: "All activities (driving, work, breaks, rest) and driver card in/out")
+        case .jobs: String(localized: "Planned jobs, stops, cancelled jobs and per-day vehicle and distance records")
+        case .earnings: String(localized: "Bonuses, deductions, holidays and nights out (pay is worked out from the driver log)")
+        case .vehicles: String(localized: "Your vehicles and trailers, mileage per shift, fuel, AdBlue and other items used")
+        case .notes: String(localized: "Notebook pages and tables")
+        case .reminders: String(localized: "Your reminders (the default ones come back)")
+        case .events: String(localized: "Event log, overspeed and harsh braking, recorded GPS routes")
+        case .assistant: String(localized: "Claude and DVLA keys in the Keychain, downloaded on-device AI models")
         }
     }
 
@@ -60,29 +60,29 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
 
     var title: String {
         switch self {
-        case .profile: "Driver profile & home"
-        case .pay: "Pay rates & overtime"
-        case .rules: "Country & hours rules"
-        case .alerts: "Alerts, voice, alarm & leave home"
-        case .inCab: "In-cab, speed & navigation"
-        case .layout: "Today & Hours layout, units"
-        case .assistant: "Assistant choices"
-        case .security: "App lock"
-        case .other: "Everything else"
+        case .profile: String(localized: "Driver profile & home")
+        case .pay: String(localized: "Pay rates & overtime")
+        case .rules: String(localized: "Country & hours rules")
+        case .alerts: String(localized: "Alerts, voice, alarm & leave home")
+        case .inCab: String(localized: "In-cab, speed & navigation")
+        case .layout: String(localized: "Today & Hours layout, units")
+        case .assistant: String(localized: "Assistant choices")
+        case .security: String(localized: "App lock")
+        case .other: String(localized: "Everything else")
         }
     }
 
     var detail: String {
         switch self {
-        case .profile: "Name, employer, licence, card, CPC and medical dates, home address"
-        case .pay: "Hourly or day rate, overtime, extras, currency"
-        case .rules: "Country, tachograph/GB rules, working time, double-manned"
-        case .alerts: "Notifications, Live Activity, spoken alerts, wake-up alarm, leave-home reminder"
-        case .inCab: "Automatic drive detection, overspeed, harsh braking, routes, screen on"
-        case .layout: "Tile order and hidden tiles, date style, miles and feet"
-        case .assistant: "Claude or on-device AI, chosen model"
-        case .security: "Face ID lock"
-        case .other: "Welcome screen, current vehicle and card state"
+        case .profile: String(localized: "Name, employer, licence, card, CPC and medical dates, home address")
+        case .pay: String(localized: "Hourly or day rate, overtime, extras, currency")
+        case .rules: String(localized: "Country, tachograph/GB rules, working time, double-manned")
+        case .alerts: String(localized: "Notifications, Live Activity, spoken alerts, wake-up alarm, leave-home reminder")
+        case .inCab: String(localized: "Automatic drive detection, overspeed, harsh braking, routes, screen on")
+        case .layout: String(localized: "Tile order and hidden tiles, date style, miles and feet")
+        case .assistant: String(localized: "Claude or on-device AI, chosen model")
+        case .security: String(localized: "Face ID lock")
+        case .other: String(localized: "Welcome screen, current vehicle and card state")
         }
     }
 

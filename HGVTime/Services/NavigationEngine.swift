@@ -405,10 +405,10 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
 
     // MARK: Smooth marker
 
-    /// Moves the lorry marker 10 times a second between GPS fixes, along the road, so it glides instead of jumping.
+    /// Moves the lorry marker 5 times a second between GPS fixes, along the road, so it glides instead of jumping.
     private func startSmoothing() {
         smoother?.invalidate()
-        smoother = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+        smoother = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.smoothStep() }
         }
     }

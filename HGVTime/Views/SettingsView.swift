@@ -47,6 +47,10 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink { LanguageSettingsView() } label: {
+                        SettingsRow(title: "Language", symbol: "globe", color: .indigo,
+                                    value: AppLanguage.all.first { $0.code == AppLanguage.current }?.native ?? "")
+                    }
                     NavigationLink { NavSettingsView() } label: {
                         SettingsRow(title: "Navigation", symbol: "location.north.line.fill", color: .blue,
                                     value: s.navRouting == "valhalla" ? "Lorry route" : "Apple Maps")
@@ -139,7 +143,7 @@ struct SettingsRow: View {
                 .foregroundStyle(.white)
                 .frame(width: 28, height: 28)
                 .background(color.gradient, in: RoundedRectangle(cornerRadius: 7))
-            Text(title)
+            Text(LocalizedStringKey(title))
             Spacer()
             Text(value).foregroundStyle(.secondary).lineLimit(1)
         }
@@ -667,12 +671,12 @@ struct RateEditor: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .normal: "Normal rate"
-            case .x125: "Time and a quarter (×1.25)"
-            case .x15: "Time and a half (×1.5)"
-            case .x2: "Double time (×2)"
-            case .customMultiplier: "Custom multiplier"
-            case .customRate: "Custom rate (type amount)"
+            case .normal: String(localized: "Normal rate")
+            case .x125: String(localized: "Time and a quarter (×1.25)")
+            case .x15: String(localized: "Time and a half (×1.5)")
+            case .x2: String(localized: "Double time (×2)")
+            case .customMultiplier: String(localized: "Custom multiplier")
+            case .customRate: String(localized: "Custom rate (type amount)")
             }
         }
         var preset: Double? {

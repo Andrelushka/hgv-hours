@@ -42,20 +42,30 @@ struct NowDatePicker: View {
     var body: some View {
         HStack(spacing: 8) {
             picker
-            // Not a Button: a picker with hidden labels would hide the button's text too.
-            Text("Now")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.accentColor)
-                .padding(.horizontal, 10).padding(.vertical, 5)
-                .background(Color.accentColor.opacity(0.12), in: Capsule())
-                .contentShape(Capsule())
-                .onTapGesture {
-                    // Whole minute, like the picker shows.
-                    let now = Calendar.current.date(bySetting: .second, value: 0, of: .now) ?? .now
-                    selection = clamp(min(now, .now))
-                }
-                .accessibilityAddTraits(.isButton)
-                .accessibilityLabel(Text("Set \(Text(title)) to now"))
+            NowPill {
+                // Whole minute, like the picker shows.
+                let now = Calendar.current.date(bySetting: .second, value: 0, of: .now) ?? .now
+                selection = clamp(min(now, .now))
+            }
         }
+    }
+}
+
+
+/// Small "Now" capsule that sets a time to now.
+struct NowPill: View {
+    var action: () -> Void
+
+    var body: some View {
+        // A plain tappable text, not a Button: a picker with hidden labels hides a button's text.
+        Text("Now")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.accentColor)
+            .padding(.horizontal, 10).padding(.vertical, 5)
+            .background(Color.accentColor.opacity(0.12), in: Capsule())
+            .contentShape(Capsule())
+            .onTapGesture(perform: action)
+            .fixedSize()
+            .accessibilityAddTraits(.isButton)
     }
 }

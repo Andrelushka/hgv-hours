@@ -11,19 +11,19 @@ enum DutyKind: String, Codable, CaseIterable, Hashable, Identifiable {
 
     var title: String {
         switch self {
-        case .drive: "Driving"
-        case .otherWork: "Other work"
-        case .availability: "Availability (POA)"
-        case .rest: "Break / rest"
+        case .drive: String(localized: "Driving")
+        case .otherWork: String(localized: "Other work")
+        case .availability: String(localized: "Availability (POA)")
+        case .rest: String(localized: "Break / rest")
         }
     }
 
     var shortTitle: String {
         switch self {
-        case .drive: "Drive"
-        case .otherWork: "Work"
-        case .availability: "POA"
-        case .rest: "Rest"
+        case .drive: String(localized: "Drive")
+        case .otherWork: String(localized: "Work")
+        case .availability: String(localized: "POA")
+        case .rest: String(localized: "Rest")
         }
     }
 

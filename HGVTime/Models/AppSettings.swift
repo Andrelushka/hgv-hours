@@ -92,9 +92,9 @@ enum PayBasis: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .hourly: "Hourly"
-        case .daily: "Day rate"
-        case .salary: "Salary"
+        case .hourly: String(localized: "Hourly")
+        case .daily: String(localized: "Day rate")
+        case .salary: String(localized: "Salary")
         }
     }
     var unit: String { self == .daily ? "/day" : "/h" }
@@ -105,10 +105,10 @@ enum SalaryPeriod: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .year: "per year"
-        case .month: "per month"
-        case .week: "per week"
-        case .day: "per day"
+        case .year: String(localized: "per year")
+        case .month: String(localized: "per month")
+        case .week: String(localized: "per week")
+        case .day: String(localized: "per day")
         }
     }
 }
@@ -118,9 +118,9 @@ enum HolidayMode: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .none: "Don't track"
-        case .included: "Included in my rate"
-        case .separate: "Paid separately"
+        case .none: String(localized: "Don't track")
+        case .included: String(localized: "Included in my rate")
+        case .separate: String(localized: "Paid separately")
         }
     }
     /// UK statutory accrual for irregular hours / rolled-up holiday pay: 5.6 weeks ÷ 46.4 weeks.
@@ -134,9 +134,9 @@ struct PayExtra: Codable, Equatable, Identifiable {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .shift: "per shift"
-            case .week: "per week"
-            case .nightOut: "per night out"
+            case .shift: String(localized: "per shift")
+            case .week: String(localized: "per week")
+            case .nightOut: String(localized: "per night out")
             }
         }
     }

@@ -3,14 +3,31 @@ import SwiftData
 import MapKit
 
 /// Map of a day: the route driven, every event with where it happened, job stops, and navigation to the next stop.
+/// Holds the day; the map below reloads only that day's route and events when the day changes.
 struct MapScreen: View {
+    typealias NavTarget = MapDayView.NavTarget
+    @State private var day: Date
+    var isLive: Bool
+
+    init(day: Date = .now, isLive: Bool = false) {
+        _day = State(initialValue: Calendar.hgv.startOfDay(for: day))
+        self.isLive = isLive
+    }
+
+    var body: some View {
+        MapDayView(day: $day, isLive: isLive).id(day)
+    }
+}
+
+struct MapDayView: View {
     @Environment(SettingsStore.self) private var store
-    @Query(sort: \TrackPoint.time) private var track: [TrackPoint]
-    @Query(sort: \EventLog.time) private var events: [EventLog]
+    // Only this day's route and events are loaded (not every point ever recorded).
+    @Query private var track: [TrackPoint]
+    @Query private var events: [EventLog]
     @Query(sort: \WorkPlan.plannedStart) private var plans: [WorkPlan]
     @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
 
-    @State var day: Date
+    @Binding var day: Date
     @State private var position: MapCameraPosition = .automatic
     @State private var showRoute = true
     @State private var showActivity = true
@@ -39,9 +56,15 @@ struct MapScreen: View {
     @State private var nav = NavigationEngine.shared
     @State private var resumingNav = false
 
-    init(day: Date = .now, isLive: Bool = false) {
-        _day = State(initialValue: Calendar.hgv.startOfDay(for: day))
+    init(day: Binding<Date>, isLive: Bool = false) {
+        let start = Calendar.hgv.startOfDay(for: day.wrappedValue)
+        let end = start.addingTimeInterval(86_400)
+        _day = day
         self.isLive = isLive
+        _track = Query(filter: #Predicate<TrackPoint> { $0.time >= start && $0.time < end }, sort: \TrackPoint.time)
+        // The main map shows no events at all (they're on the driver log's day map) — less to draw, no lag.
+        let none = isLive
+        _events = Query(filter: #Predicate<EventLog> { !none && $0.time >= start && $0.time < end }, sort: \EventLog.time)
     }
 
     var body: some View {
@@ -99,7 +122,8 @@ struct MapScreen: View {
                 }
             }
         }
-        .onMapCameraChange(frequency: .continuous) { ctx in cameraHeading = ctx.camera.heading }
+        // Only when the camera stops moving: updating on every frame re-drew the whole map and made it stutter.
+        .onMapCameraChange(frequency: .onEnd) { ctx in cameraHeading = ctx.camera.heading }
         .onAppear { live.start() }
         .onDisappear { live.stop() }
         .mapControls {
@@ -117,7 +141,7 @@ struct MapScreen: View {
                 Menu {
                     Toggle("Route driven", isOn: $showRoute)
                     Toggle("Planned route", isOn: $showPlannedRoute)
-                    Toggle("Activity changes", isOn: $showActivity)
+                    if !isLive { Toggle("Activity changes", isOn: $showActivity) }
                     if !isLive { Toggle("Problems only", isOn: $problemsOnly) }
                 } label: { Image(systemName: "line.3.horizontal.decrease.circle") }
             }
@@ -180,7 +204,8 @@ struct MapScreen: View {
                 Spacer()
                 VStack(spacing: 1) {
                     Text(day.formatted(.dateTime.weekday(.wide).day().month(.wide))).font(.subheadline.weight(.semibold))
-                    Text("\(Fmt.distance(km, miles: store.settings.useMiles)) route · \(events.count) event\(events.count == 1 ? "" : "s")\(problems > 0 ? " · \(problems) problem\(problems == 1 ? "" : "s")" : "")")
+                    Text(isLive ? "\(Fmt.distance(km, miles: store.settings.useMiles)) route"
+                         : "\(Fmt.distance(km, miles: store.settings.useMiles)) route · \(events.count) event\(events.count == 1 ? "" : "s")\(problems > 0 ? " · \(problems) problem\(problems == 1 ? "" : "s")" : "")")
                         .font(.caption).foregroundStyle(problems > 0 ? .red : .secondary)
                 }
                 Spacer()
@@ -188,7 +213,7 @@ struct MapScreen: View {
                     .disabled(Calendar.hgv.isDateInToday(day))
             }
             HStack(spacing: 8) {
-                Button { showingList = true } label: { Label("Event log", systemImage: "list.bullet") }
+                if !isLive { Button { showingList = true } label: { Label("Event log", systemImage: "list.bullet") } }
                 if let next {
                     let target = NavTarget(name: next.displayName,
                                            coordinate: next.latitude.map { CLLocationCoordinate2D(latitude: $0, longitude: next.longitude ?? 0) } ?? geocoded[next.id],

@@ -150,7 +150,7 @@ struct ResetView: View {
                     .frame(width: 24)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
-                        Text(title)
+                        Text(LocalizedStringKey(title))
                         if let count, count > 0 {
                             Text("\(count)").font(.caption2.weight(.bold)).padding(.horizontal, 6).padding(.vertical, 1)
                                 .background(Color(.tertiarySystemFill), in: Capsule())

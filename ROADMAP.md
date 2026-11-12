@@ -66,6 +66,7 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Piper voices (sherpa-onnx) for notifications and the assistant
 - ✅ CarPlay screens built (Hours, Activity, Route) — ⬜ live in the car needs a paid account and Apple's CarPlay approval; a CarPlay map needs the navigation approval
 - ✅ Adjustable navigation tilt/zoom; clearer widgets (3.11.0)
+- ✅ Languages: Polish, Romanian, Russian, Ukrainian (3.12.0) — ⬜ Bulgarian, Lithuanian, Portuguese; ⬜ translate calculated help texts
 
 ## V3.9 (3.9.0) — Shift checks, reports, loaded/empty, alarms
 - ✅ Today circles per 4h30 / 6h period

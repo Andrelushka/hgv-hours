@@ -8,13 +8,13 @@ enum RuleRegion: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .uk: "United Kingdom"
-        case .eu: "EU / EEA / Switzerland"
-        case .aetr: "AETR countries"
-        case .usa: "United States (FMCSA)"
-        case .canada: "Canada (south of 60°)"
-        case .australia: "Australia (NHVR standard hours)"
-        case .newZealand: "New Zealand"
+        case .uk: String(localized: "United Kingdom")
+        case .eu: String(localized: "EU / EEA / Switzerland")
+        case .aetr: String(localized: "AETR countries")
+        case .usa: String(localized: "United States (FMCSA)")
+        case .canada: String(localized: "Canada (south of 60°)")
+        case .australia: String(localized: "Australia (NHVR standard hours)")
+        case .newZealand: String(localized: "New Zealand")
         }
     }
 

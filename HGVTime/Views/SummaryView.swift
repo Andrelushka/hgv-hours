@@ -24,13 +24,13 @@ struct SummaryView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .day: "Day"
-            case .company: "Company"
-            case .vehicle: "Vehicle"
-            case .trailer: "Trailer"
-            case .location: "Start place"
-            case .weekday: "Weekday"
-            case .month: "Month"
+            case .day: String(localized: "Day")
+            case .company: String(localized: "Company")
+            case .vehicle: String(localized: "Vehicle")
+            case .trailer: String(localized: "Trailer")
+            case .location: String(localized: "Start place")
+            case .weekday: String(localized: "Weekday")
+            case .month: String(localized: "Month")
             }
         }
     }

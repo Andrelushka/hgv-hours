@@ -16,17 +16,17 @@ enum Regime: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .assimilated: "Assimilated / AETR (tacho)"
-        case .gbDomestic: "GB domestic"
-        case .exempt: "Exempt (no drivers' hours rules)"
+        case .assimilated: String(localized: "Assimilated / AETR (tacho)")
+        case .gbDomestic: String(localized: "GB domestic")
+        case .exempt: String(localized: "Exempt (no drivers' hours rules)")
         }
     }
 
     var shortTitle: String {
         switch self {
-        case .assimilated: "EU/AETR"
-        case .gbDomestic: "GB"
-        case .exempt: "Exempt"
+        case .assimilated: String(localized: "EU/AETR")
+        case .gbDomestic: String(localized: "GB")
+        case .exempt: String(localized: "Exempt")
         }
     }
 }
@@ -109,9 +109,9 @@ enum RestType: String, Codable, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .breakTime: "Break"
-        case .daily: "Daily rest"
-        case .weekly: "Weekly rest"
+        case .breakTime: String(localized: "Break")
+        case .daily: String(localized: "Daily rest")
+        case .weekly: String(localized: "Weekly rest")
         }
     }
 

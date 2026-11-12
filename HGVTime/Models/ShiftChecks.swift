@@ -14,11 +14,11 @@ struct ShiftCheckTemplate: Codable, Identifiable, Equatable, Hashable {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .everyShift: "Every shift"
-            case .days: "On chosen days"
-            case .weekly: "Once a week"
-            case .fortnightly: "Every 2 weeks"
-            case .monthly: "Once a month"
+            case .everyShift: String(localized: "Every shift")
+            case .days: String(localized: "On chosen days")
+            case .weekly: String(localized: "Once a week")
+            case .fortnightly: String(localized: "Every 2 weeks")
+            case .monthly: String(localized: "Once a month")
             }
         }
     }

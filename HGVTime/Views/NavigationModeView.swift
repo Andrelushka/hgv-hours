@@ -17,6 +17,11 @@ struct NavigationModeView: View {
     @State private var showingSteps = false
     @State private var showingSettings = false
     @State private var reporting = false
+    @State private var safetyAlert = false
+    /// The parked reminder is shown once per app launch.
+    nonisolated(unsafe) static var safetyShown = false
+    /// Moving faster than walking pace: block fiddly controls.
+    private var moving: Bool { (engine.location?.speed ?? 0) * 3.6 > 8 }
     @State private var cameraHeading: CLLocationDirection = 0
     @State private var cameraDistance: Double = 1000
     @State private var limits = RoadSpeedLimit()
@@ -29,10 +34,10 @@ struct NavigationModeView: View {
         var id: String { rawValue }
         var title: String {
             switch self {
-            case .follow3D: "3D from behind"
-            case .headingUp: "Heading up"
-            case .northUp: "North up"
-            case .overview: "Route overview"
+            case .follow3D: String(localized: "3D from behind")
+            case .headingUp: String(localized: "Heading up")
+            case .northUp: String(localized: "North up")
+            case .overview: String(localized: "Route overview")
             }
         }
         var symbol: String {
@@ -58,26 +63,34 @@ struct NavigationModeView: View {
                     if s.navSpeedoSide == "left" { buttonColumn } else { speedColumn }
                 }
                 Spacer()
+                if s.navSideArrow, let next = engine.nextStep {
+                    // Big see-through arrow for the next turn: right side, just above the bottom bar.
+                    HStack {
+                        Spacer()
+                        Image(systemName: next.symbol)
+                            .font(.system(size: 96, weight: .black))
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.6), radius: 6)
+                            .opacity(s.navSideArrowOpacity)
+                            .accessibilityHidden(true)
+                    }
+                    .allowsHitTesting(false)
+                }
                 bottomPanel
             }
             .padding()
-            if s.navSideArrow, let next = engine.nextStep {
-                // Big see-through arrow for the next turn, right middle.
-                HStack {
-                    Spacer()
-                    Image(systemName: next.symbol)
-                        .font(.system(size: 110, weight: .black))
-                        .foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.6), radius: 6)
-                        .opacity(s.navSideArrowOpacity)
-                        .padding(.trailing, 12)
-                        .accessibilityHidden(true)
-                }
-                .frame(maxHeight: .infinity)
-                .allowsHitTesting(false)
-            }
         }
         .sheet(isPresented: $showingSteps) { stepsList }
+        .alert("Use only when parked", isPresented: $safetyAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("For your safety and the law, set the route and change settings only when you're parked. While driving, just listen to the directions.")
+        }
+        .alert("Navigation", isPresented: Binding(get: { !NavigationModeView.safetyShown && target != nil }, set: { _ in NavigationModeView.safetyShown = true })) {
+            Button("I'm parked") { NavigationModeView.safetyShown = true }
+        } message: {
+            Text("Set your route before you drive. It's illegal to hold or use a phone while driving (Highway Code rule 149) — keep the iPhone in a holder and follow the voice directions.")
+        }
         .sheet(isPresented: $showingSettings) { NavigationStack { NavSettingsView() } }
         .confirmationDialog("Report on the road here", isPresented: $reporting, titleVisibility: .visible) {
             ForEach(RoadReport.Kind.allCases) { k in
@@ -110,7 +123,7 @@ struct NavigationModeView: View {
             ForEach(engine.parkingOptions, id: \.self) { item in
                 Marker(item.name ?? "Parking", systemImage: "parkingsign.circle.fill", coordinate: item.placemark.coordinate).tint(.green)
             }
-            ForEach(hazards.points.filter { $0.kind == .camera || (s.navShowTrafficLights && cameraDistance < 3000) }) { p in
+            ForEach(hazards.nearby.filter { $0.kind == .camera || cameraDistance < 3000 }) { p in
                 Annotation("", coordinate: p.coordinate) {
                     Image(systemName: p.kind == .camera ? "camera.fill" : "light.beacon.max.fill")
                         .font(.system(size: p.kind == .camera ? 13 : 10, weight: .bold))
@@ -228,11 +241,11 @@ struct NavigationModeView: View {
                 if !engine.voiceOn { VoiceService.shared.stopSpeaking() }
             } label: { roundIcon(s.navVoiceOn ? "speaker.wave.2.fill" : "speaker.slash.fill") }
             .accessibilityLabel(s.navVoiceOn ? "Mute directions" : "Unmute directions")
-            Button { reporting = true } label: { roundIcon("exclamationmark.bubble.fill") }
+            Button { if moving { safetyAlert = true } else { reporting = true } } label: { roundIcon("exclamationmark.bubble.fill") }
                 .accessibilityLabel("Report on the road")
-            Button { showingSteps = true } label: { roundIcon("list.bullet") }
+            Button { if moving { safetyAlert = true } else { showingSteps = true } } label: { roundIcon("list.bullet") }
                 .accessibilityLabel("All directions")
-            Button { showingSettings = true } label: { roundIcon("slider.horizontal.3") }
+            Button { if moving { safetyAlert = true } else { showingSettings = true } } label: { roundIcon("slider.horizontal.3") }
                 .accessibilityLabel("Navigation settings")
         }
         .foregroundStyle(.primary)
@@ -443,6 +456,7 @@ struct NavigationModeView: View {
                 }
             }
             hazards.update(loc, includeLights: lights)
+            hazards.refreshNearby(loc, lights: lights)
             let active = ((try? ctx.fetch(FetchDescriptor<RoadReport>())) ?? []).filter { $0.expiresAt > .now }
             hazards.warnAhead(engine: NavigationEngine.shared, reports: active, cameras: cameras)
         }

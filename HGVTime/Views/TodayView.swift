@@ -103,6 +103,7 @@ struct TodayView: View {
                         .onTapGesture { withAnimation { self.toast = nil } }
                 }
             }
+            .safeAreaInset(edge: .top, spacing: 0) { DrivingSafetyBanner() }
             .navigationTitle("Today")
             .toolbar { toolbarContent }
             .sheet(item: $editingPlan) { PlanEditor(plan: $0) }
@@ -251,7 +252,7 @@ struct TodayView: View {
                 .background(color.gradient, in: RoundedRectangle(cornerRadius: 16))
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(title).font(.headline)
+                    Text(LocalizedStringKey(title)).font(.headline)
                     if onShift {
                         Text("ON SHIFT")
                             .font(.caption2.weight(.bold))
@@ -287,7 +288,7 @@ struct TodayView: View {
                         Text("since").font(.caption).foregroundStyle(.secondary)
                         if let open = openEntry {
                             // Tap the time to correct it straight away.
-                            NowDatePicker("Start time", selection: Binding(
+                            DatePicker("Start time", selection: Binding(
                                 get: { open.start },
                                 set: { ActivityController.adjustStart(of: open, to: $0, context: context, settings: store.settings) }),
                                        in: (Date.now.addingTimeInterval(-24 * 3600))...Date.now,
@@ -296,6 +297,9 @@ struct TodayView: View {
                                 .datePickerStyle(.compact)
                                 .scaleEffect(0.85, anchor: .leading)
                                 .frame(height: 28)
+                            NowPill {
+                                ActivityController.adjustStart(of: open, to: .now, context: context, settings: store.settings)
+                            }
                         }
                         Text("· \(store.settings.currentRegime.shortTitle)\(store.settings.multiManned ? " · 2-man" : "")")
                             .font(.caption).foregroundStyle(.secondary)
@@ -408,7 +412,7 @@ struct TodayView: View {
         } label: {
             VStack(spacing: 6) {
                 Image(systemName: symbol ?? kind.symbol).font(.title2)
-                Text(label).font(.subheadline.weight(.semibold))
+                Text(LocalizedStringKey(label)).font(.subheadline.weight(.semibold))
             }
             .frame(maxWidth: .infinity, minHeight: 64)
             .foregroundStyle(selected ? .white : kind.color)

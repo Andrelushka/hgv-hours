@@ -2,6 +2,14 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.12.0 — Languages, smoother map, safety warning
+- Settings → Language: English, Polski, Română, Русский, Українська, or follow the iPhone. About 1,150 screens, buttons, settings and messages are translated; some help texts and calculated hints are still in English. The language can also be changed in iPhone Settings → Apps → HGV Hours → Language.
+- Map no longer lags or freezes: the main map loads only the day shown (not every GPS point ever recorded) and no longer redraws on every camera movement; the navigation route line is built once; the lorry marker updates 5 times a second instead of 10; at most 40 nearby traffic lights are drawn.
+- Events are no longer shown on the main map — only activities, your route, jobs and stops. Events (and problems) are on the driver log's day map.
+- Navigation: the see-through turn arrow sits lower, on the right just above the bottom bar.
+- Safety: a "Use only when parked" notice (UK law — Highway Code rule 149) in the welcome screen, a reminder when you open navigation, a red "Driving — don't use the phone" bar on Today while the lorry is moving (in-cab mode), and navigation settings, directions list and road reports are blocked while moving.
+- Fixed: the "Now" pill on the status card was empty.
+
 ## 3.11.0 — Adjustable navigation view, clearer widgets, CarPlay screens
 - Navigation: choose the view (3D behind, heading up, north up, overview), the 3D tilt (flat to behind the cab) and zoom (very close to very far) from the view button, or set them exactly in Settings → Navigation. Your choice is remembered.
 - Widgets redesigned so every number says what it is: "Driving till break" (4h30) and "Working till break" (6h) as rings, plus driving left today, next break (length and time), start rest by, worked this shift, week driving/working, 10h days and 9h rests left, and earnings. Countdowns tick live while you drive. New "Driving left today" option for the custom widgets. The large size is the third option in the widget gallery.
