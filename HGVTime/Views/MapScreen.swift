@@ -34,8 +34,14 @@ struct MapScreen: View {
         var address: String
     }
 
-    init(day: Date = .now) {
+    /// The main map (from Today): shows activities and events but not problems — those are on the driver log's day map.
+    var isLive = false
+    @State private var nav = NavigationEngine.shared
+    @State private var resumingNav = false
+
+    init(day: Date = .now, isLive: Bool = false) {
         _day = State(initialValue: Calendar.hgv.startOfDay(for: day))
+        self.isLive = isLive
     }
 
     var body: some View {
@@ -44,6 +50,7 @@ struct MapScreen: View {
         let route = track.filter { $0.time >= day && $0.time < end }
         let dayEvents = events.filter { $0.time >= day && $0.time < end && $0.hasLocation }
             .filter { !problemsOnly || $0.kind.isProblem }
+            .filter { !isLive || !$0.kind.isProblem }
             .filter { showActivity || $0.kind != .activity }
         let plan = plans.first { cal.isDate($0.plannedStart, inSameDayAs: day) }
         let planStops: [(stop: PlanStop, index: Int, coordinate: CLLocationCoordinate2D)] = (plan?.stops ?? []).enumerated().compactMap { i, st in
@@ -111,7 +118,7 @@ struct MapScreen: View {
                     Toggle("Route driven", isOn: $showRoute)
                     Toggle("Planned route", isOn: $showPlannedRoute)
                     Toggle("Activity changes", isOn: $showActivity)
-                    Toggle("Problems only", isOn: $problemsOnly)
+                    if !isLive { Toggle("Problems only", isOn: $problemsOnly) }
                 } label: { Image(systemName: "line.3.horizontal.decrease.circle") }
             }
         }
@@ -132,6 +139,28 @@ struct MapScreen: View {
         .onChange(of: day) { _, _ in position = .automatic; plannedRoutes = [] }
         .task(id: day) { await preparePlan(plan) }
         .fullScreenCover(item: $navigatingInApp) { NavigationModeView(target: $0) }
+        .fullScreenCover(isPresented: $resumingNav) { NavigationModeView(target: nil) }
+        .safeAreaInset(edge: .top) {
+            if nav.isRunning {
+                Button { resumingNav = true } label: {
+                    HStack {
+                        Image(systemName: nav.nextStep?.symbol ?? "location.north.line.fill").font(.title3.weight(.bold))
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Navigating to \(nav.destinationName)").font(.subheadline.weight(.semibold)).lineLimit(1)
+                            Text(nav.distanceToNextManeuver.map { "\(NavigationEngine.distanceText($0)) · \(nav.nextInstruction)" } ?? nav.status)
+                                .font(.caption).lineLimit(1)
+                        }
+                        Spacer()
+                        Text("Open").font(.subheadline.weight(.bold))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(10)
+                    .background(Color.green.gradient, in: RoundedRectangle(cornerRadius: 12))
+                    .padding(.horizontal)
+                }
+                .buttonStyle(.plain)
+            }
+        }
     }
 
     // MARK: Panel

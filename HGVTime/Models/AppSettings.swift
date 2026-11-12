@@ -285,6 +285,30 @@ struct AppSettings: Codable, Equatable {
     var onlineSpeedLimits = true
     /// Spoken turn-by-turn directions.
     var navVoiceOn = true
+    /// Directions voice: "all" prompts or "turns" only.
+    var navVoiceLevel = "all"
+    /// Routing: "valhalla" (lorry route from OpenStreetMap) or "apple" (Apple Maps, not lorry-checked).
+    var navRouting = "valhalla"
+    var navPreferMotorways = true
+    var navAvoidTolls = false
+    // Navigation screen layout
+    /// Speedometer size: "s", "m" or "l".
+    var navSpeedoSize = "l"
+    /// Speedometer on the "left" or "right".
+    var navSpeedoSide = "left"
+    var navShowLanes = true
+    /// Big see-through arrow on the right of the screen.
+    var navSideArrow = true
+    var navSideArrowOpacity: Double = 0.35
+    var navShowRoad = true
+    /// "standard" or "hybrid" (satellite with roads).
+    var navMapStyle = "standard"
+    /// Directions banner: "m" or "l".
+    var navBannerSize = "m"
+    // Alerts on the map
+    var navCameraAlerts = true
+    var navShowTrafficLights = true
+    var navShowReports = true
 
     // Wake-up alarm and "time to leave" (worked out from the next planned job)
     var wakeAlarmEnabled = false

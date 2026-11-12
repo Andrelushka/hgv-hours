@@ -2,6 +2,19 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.10.0 — Lorry routing, lane guidance, new navigation screen
+- Fixed: a 15 min break didn't reset the 6h working-time clock. Under the working-time rules any break of 15 min or more interrupts the 6h run; the daily total (30 min for 6–9h, 45 min over 9h) is still checked separately. Driving still needs the 30 min after a 15.
+- Lorry routing: routes are now built for your vehicle (height, width, length, weight, axles, speed limiter) with the free OpenStreetMap Valhalla service — avoiding low bridges, weight and width limits and lorry bans, preferring motorways and A-roads (optional: avoid tolls). Apple Maps is used if it can't be reached (marked "not checked for lorries"). Live traffic delays still come from Apple Maps.
+- Lane guidance: lane arrows for the next junction from 2 km out, the lanes you need highlighted.
+- Correct turn arrows from the route data (incl. roundabout exit number), and spoken prompts at the right distances; each said once.
+- Navigation screen: bigger speedometer with the speed limit sign on its corner (the lower of the road and your vehicle's limit, no caption); the road you're on always shown, with space under the speedometer; big see-through turn arrow on the right; arrival time, time left, distance and traffic delay; smooth lorry marker that glides along the road.
+- Speed cameras and traffic lights from OpenStreetMap on the map, with a spoken "Speed camera ahead". Report accidents, closures, roadworks, police/DVSA, hazards, jams, low bridges and check sites with the ⚠︎ button — kept on your iPhone and you're warned when you come back that way.
+- Navigation keeps going when you leave the screen, switch app or lock the phone: directions are still spoken, and the next turn, distance, road and arrival show on the Lock Screen. Reopen it from the green banner on the map or the Today tiles.
+- Today tiles while navigating (choose them in Customise Today): mini map, next turn, road, speed limit, arrival time, voice on/off.
+- Settings → Navigation: routing, motorways, tolls, voice (all prompts or turns only), camera warnings, speedometer size and side, banner size, lanes, big arrow and its transparency, map style, traffic lights, reports.
+- The main map (from Today) shows activities and events but not problems; problems stay on the driver log day map.
+- 6 new tests (97 in total).
+
 ## 3.9.0 — Shift checks, reports by company/vehicle, loaded/empty, alarm snooze
 - Today's two circles now show the current period, as on a tacho: Driving left = what's left of the 4h30 before a break (or less if the daily/weekly limit is nearer); Working left = what's left of the 6h before a working-time break. They're independent (driving is no longer capped by the 6h clock), don't drop to 0 during a break, and refill when the break counts. Daily, weekly and fortnight totals stay on the Hours page.
 - Shift checks: your own start- and end-of-shift checks — agency forms, licence checks, card and tacho downloads, signing the register — every shift, on chosen days, weekly, every 2 weeks or monthly, optionally only for one company, with a link to open (e.g. an online form). Tick them off on Today; ending a shift lists any end checks not done. Settings → Shift checks.

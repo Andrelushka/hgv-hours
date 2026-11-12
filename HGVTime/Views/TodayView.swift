@@ -168,6 +168,7 @@ struct TodayView: View {
         case .vehicle: return true
         case .mileage: return onShift || VehicleLog.hasMileage(on: now, context: context)
         case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks: return true
+        case .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice: return NavigationEngine.shared.isRunning
         default: return data.applies(tile)
         }
     }
@@ -198,6 +199,8 @@ struct TodayView: View {
         case .job: todaysPlan(now: now)
         case .vehicle: CurrentVehicleCard()
         case .mileage: DayMileageCard(now: now)
+        case .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice:
+            NavTile(tile: tile)
         case .checks:
             ShiftChecksTile(shiftStart: onShift ? status.currentShift?.period.start : nil,
                             company: plans.first { Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.cancelled }?.company ?? "")
@@ -714,7 +717,7 @@ struct TodayView: View {
             }
         }
         ToolbarItem(placement: .topBarTrailing) {
-            NavigationLink { MapScreen(day: .now) } label: {
+            NavigationLink { MapScreen(day: .now, isLive: true) } label: {
                 Label("Map", systemImage: "map.fill")
             }
         }

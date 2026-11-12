@@ -2,23 +2,28 @@ import MapKit
 import SwiftData
 import SwiftUI
 
-/// Full-screen turn-by-turn navigation.
+/// Full-screen turn-by-turn navigation. The engine is shared, so closing this screen (or switching app) doesn't stop
+/// navigation — open it again from Today or the map.
 struct NavigationModeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
     @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
-    @State private var engine = NavigationEngine()
+    @Query(sort: \RoadReport.createdAt) private var reports: [RoadReport]
+    @State private var engine = NavigationEngine.shared
+    @State private var hazards = RoadHazards.shared
     @State private var position: MapCameraPosition = .userLocation(followsHeading: true, fallback: .automatic)
     @State private var view: ViewMode = .follow3D
-    @State private var lastHeading: CLLocationDirection = 0
     @State private var showingSteps = false
+    @State private var showingSettings = false
+    @State private var reporting = false
     @State private var cameraHeading: CLLocationDirection = 0
+    @State private var cameraDistance: Double = 1000
     @State private var limits = RoadSpeedLimit()
     @State private var roadLimit: RoadSpeedLimit.Result?
-    var target: MapScreen.NavTarget
+    /// Where to go. `nil` = carry on with the navigation already running.
+    var target: MapScreen.NavTarget?
 
-    /// How the map follows you, like Apple Maps navigation.
     enum ViewMode: String, CaseIterable, Identifiable {
         case follow3D, headingUp, northUp, overview
         var id: String { rawValue }
@@ -40,139 +45,130 @@ struct NavigationModeView: View {
         }
     }
 
+    private var s: AppSettings { store.settings }
+
     var body: some View {
         ZStack(alignment: .top) {
-            Map(position: $position) {
-                if let loc = engine.location {
-                    // Small lorry seen from above, pointing where you're heading.
-                    Annotation("", coordinate: loc.coordinate, anchor: .center) {
-                        TruckMarker(rotation: lastHeading - cameraHeading)
-                    }
-                } else {
-                    UserAnnotation()
-                }
-                if let route = engine.route {
-                    MapPolyline(route.polyline).stroke(.blue, style: StrokeStyle(lineWidth: 7, lineCap: .round, lineJoin: .round))
-                }
-                if let d = engine.destination {
-                    Marker(engine.destinationName, systemImage: "flag.checkered", coordinate: d).tint(.indigo)
-                }
-                ForEach(engine.parkingOptions, id: \.self) { item in
-                    Marker(item.name ?? "Parking", systemImage: "parkingsign.circle.fill", coordinate: item.placemark.coordinate).tint(.green)
-                }
-            }
-            .mapStyle(.standard(elevation: view == .follow3D ? .realistic : .flat,
-                                pointsOfInterest: .including([.parking, .gasStation, .restroom]), showsTraffic: true))
-            .mapControls { MapCompass(); MapScaleView() }
-            .ignoresSafeArea()
-            .onMapCameraChange(frequency: .continuous) { ctx in cameraHeading = ctx.camera.heading }
-            .onChange(of: engine.location) { _, loc in
-                follow(loc)
-                if let loc, store.settings.onlineSpeedLimits {
-                    limits.update(loc, heavyVehicle: isHeavy) { roadLimit = $0 }
-                }
-            }
-            .onChange(of: view) { _, _ in follow(engine.location, animated: true) }
-
+            map
             VStack(spacing: 8) {
                 instructionBanner
+                if s.navShowLanes, let lanes = upcomingLanes { LaneHelper(lanes: lanes) }
                 HStack(alignment: .top) {
-                    VStack(spacing: 8) {
-                        speedLimitSign
-                        speedBubble
-                        if let road = currentRoad {
-                            RoadShield(text: road, large: true)
-                        }
-                    }
-                    Spacer()
-                    VStack(spacing: 8) {
-                        Menu {
-                            Picker("View", selection: $view) {
-                                ForEach(ViewMode.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
-                            }
-                        } label: {
-                            Image(systemName: view.symbol).font(.title3).frame(width: 44, height: 44)
-                                .background(.regularMaterial, in: Circle())
-                        }
-                        if position.positionedByUser {
-                            Button { follow(engine.location, animated: true, force: true) } label: {
-                                Image(systemName: "location.fill").font(.title3).frame(width: 44, height: 44)
-                                    .background(.regularMaterial, in: Circle())
-                            }
-                            .accessibilityLabel("Re-centre")
-                        }
-                        Button {
-                            store.settings.navVoiceOn.toggle()
-                            engine.voiceOn = store.settings.navVoiceOn
-                            if !engine.voiceOn { VoiceService.shared.stopSpeaking() }
-                        } label: {
-                            Image(systemName: store.settings.navVoiceOn ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                                .font(.title3).frame(width: 44, height: 44)
-                                .background(.regularMaterial, in: Circle())
-                        }
-                        .accessibilityLabel(store.settings.navVoiceOn ? "Mute directions" : "Unmute directions")
-                        Button { showingSteps = true } label: {
-                            Image(systemName: "list.bullet").font(.title3).frame(width: 44, height: 44)
-                                .background(.regularMaterial, in: Circle())
-                        }
-                        .accessibilityLabel("All directions")
-                    }
-                    .foregroundStyle(.primary)
+                    if s.navSpeedoSide == "left" { speedColumn; Spacer() } else { buttonColumn; Spacer() }
+                    if s.navSpeedoSide == "left" { buttonColumn } else { speedColumn }
                 }
                 Spacer()
                 bottomPanel
             }
             .padding()
-        }
-        .sheet(isPresented: $showingSteps) {
-            NavigationStack {
-                List(Array((engine.route?.steps ?? []).enumerated()).filter { !$0.element.instructions.isEmpty }, id: \.offset) { i, step in
-                    HStack(spacing: 12) {
-                        Image(systemName: Self.maneuverSymbol(step.instructions)).frame(width: 28)
-                            .foregroundStyle(i == engine.stepIndex + 1 ? Color.green : .secondary)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(step.instructions).font(.subheadline)
-                            Text(NavigationEngine.distanceText(step.distance)).font(.caption).foregroundStyle(.secondary)
-                        }
-                    }
-                    .opacity(i <= engine.stepIndex ? 0.4 : 1)
+            if s.navSideArrow, let next = engine.nextStep {
+                // Big see-through arrow for the next turn, right middle.
+                HStack {
+                    Spacer()
+                    Image(systemName: next.symbol)
+                        .font(.system(size: 110, weight: .black))
+                        .foregroundStyle(.white)
+                        .shadow(color: .black.opacity(0.6), radius: 6)
+                        .opacity(s.navSideArrowOpacity)
+                        .padding(.trailing, 12)
+                        .accessibilityHidden(true)
                 }
-                .navigationTitle("Directions")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar { Button("Done") { showingSteps = false } }
-            }
-            .presentationDetents([.medium, .large])
-        }
-        .onAppear {
-            engine.driveLeft = { driveLeftNow() }
-            engine.limiterKmh = limiterKmh
-            engine.voiceOn = store.settings.navVoiceOn
-            if let c = target.coordinate {
-                engine.start(to: c, name: target.name)
-            } else {
-                Task {
-                    let placemark = try? await CLGeocoder().geocodeAddressString(target.address).first
-                    if let c = placemark?.location?.coordinate { engine.start(to: c, name: target.name) } else { engine.status = "Couldn't find that address." }
-                }
+                .frame(maxHeight: .infinity)
+                .allowsHitTesting(false)
             }
         }
-        .onDisappear { engine.stop() }
+        .sheet(isPresented: $showingSteps) { stepsList }
+        .sheet(isPresented: $showingSettings) { NavigationStack { NavSettingsView() } }
+        .confirmationDialog("Report on the road here", isPresented: $reporting, titleVisibility: .visible) {
+            ForEach(RoadReport.Kind.allCases) { k in
+                Button(k.title) { report(k) }
+            }
+        } message: {
+            Text("Saved on your iPhone and shown on the map; you'll be warned when you come this way again.")
+        }
+        .onAppear(perform: begin)
     }
 
+    // MARK: Map
+
+    private var map: some View {
+        Map(position: $position) {
+            if let c = engine.displayCoordinate ?? engine.location?.coordinate {
+                Annotation("", coordinate: c, anchor: .center) {
+                    TruckMarker(rotation: engine.heading - cameraHeading)
+                }
+            } else {
+                UserAnnotation()
+            }
+            if let route = engine.route {
+                MapPolyline(route.polyline).stroke(route.isTruckRoute ? Color.blue : .purple,
+                                                   style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+            }
+            if let d = engine.destination {
+                Marker(engine.destinationName, systemImage: "flag.checkered", coordinate: d).tint(.indigo)
+            }
+            ForEach(engine.parkingOptions, id: \.self) { item in
+                Marker(item.name ?? "Parking", systemImage: "parkingsign.circle.fill", coordinate: item.placemark.coordinate).tint(.green)
+            }
+            ForEach(hazards.points.filter { $0.kind == .camera || (s.navShowTrafficLights && cameraDistance < 3000) }) { p in
+                Annotation("", coordinate: p.coordinate) {
+                    Image(systemName: p.kind == .camera ? "camera.fill" : "light.beacon.max.fill")
+                        .font(.system(size: p.kind == .camera ? 13 : 10, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(5)
+                        .background(p.kind == .camera ? Color.orange : Color.red.opacity(0.85), in: Circle())
+                }
+            }
+            if s.navShowReports {
+                ForEach(reports.filter { $0.expiresAt > .now }) { r in
+                    Annotation(r.kind.title, coordinate: r.coordinate) {
+                        Image(systemName: r.kind.symbol).font(.caption.weight(.bold)).foregroundStyle(.white)
+                            .padding(6).background(Color.red, in: Circle())
+                            .overlay(Circle().stroke(.white, lineWidth: 1.5))
+                    }
+                }
+            }
+        }
+        .mapStyle(s.navMapStyle == "hybrid"
+                  ? .hybrid(elevation: view == .follow3D ? .realistic : .flat, pointsOfInterest: .including([.parking, .gasStation]), showsTraffic: true)
+                  : .standard(elevation: view == .follow3D ? .realistic : .flat,
+                              pointsOfInterest: .including([.parking, .gasStation, .restroom]), showsTraffic: true))
+        .mapControls { MapCompass(); MapScaleView() }
+        .ignoresSafeArea()
+        .onMapCameraChange(frequency: .onEnd) { ctx in
+            cameraHeading = ctx.camera.heading
+            cameraDistance = ctx.camera.distance
+        }
+        .onChange(of: engine.location) { _, loc in follow(loc) }
+        .onChange(of: view) { _, _ in follow(engine.location, animated: true) }
+    }
+
+    // MARK: Panels
+
+    private var bannerLarge: Bool { s.navBannerSize == "l" }
+
     private var instructionBanner: some View {
-        HStack(spacing: 12) {
-            let nextText = engine.nextInstruction
-            Image(systemName: Self.maneuverSymbol(nextText)).font(.system(size: 40, weight: .bold)).foregroundStyle(.white)
-                .frame(width: 52)
+        let next = engine.nextStep
+        return HStack(spacing: 12) {
+            ZStack(alignment: .bottomTrailing) {
+                Image(systemName: next?.symbol ?? "arrow.up")
+                    .font(.system(size: bannerLarge ? 52 : 40, weight: .bold)).foregroundStyle(.white)
+                if let exit = next?.roundaboutExit {
+                    Text("\(exit)").font(.caption.weight(.heavy)).foregroundStyle(.green)
+                        .frame(width: 20, height: 20).background(.white, in: Circle()).offset(x: 6, y: 6)
+                }
+            }
+            .frame(width: bannerLarge ? 66 : 54)
             VStack(alignment: .leading, spacing: 2) {
                 if let d = engine.distanceToNextManeuver {
-                    Text(NavigationEngine.distanceText(d)).font(.title2.weight(.bold)).foregroundStyle(.white)
+                    Text(NavigationEngine.distanceText(d)).font(bannerLarge ? .largeTitle.weight(.bold) : .title2.weight(.bold))
+                        .foregroundStyle(.white).monospacedDigit()
                 }
-                if let n = RoadSpeedLimit.roadNumber(in: nextText) {
-                    RoadShield(text: n, large: true)
+                if let road = next.map(\.roadLabel), !road.isEmpty, RoadSpeedLimit.isMajor(road) || road.count <= 6 {
+                    RoadShield(text: road, large: true)
                 }
-                Text(nextText.isEmpty ? engine.status : nextText)
-                    .font(.headline).foregroundStyle(.white).lineLimit(2)
+                Text(engine.route == nil ? engine.status : engine.nextInstruction)
+                    .font(bannerLarge ? .title3.weight(.semibold) : .headline).foregroundStyle(.white).lineLimit(2)
             }
             Spacer()
         }
@@ -180,34 +176,88 @@ struct NavigationModeView: View {
         .background(Color.green.gradient, in: RoundedRectangle(cornerRadius: 18))
     }
 
+    /// Lanes for the next junction, shown from 2 km out.
+    private var upcomingLanes: [NavLane]? {
+        guard let next = engine.nextStep, !next.lanes.isEmpty, let d = engine.distanceToNextManeuver, d < 2000 else { return nil }
+        return next.lanes
+    }
+
+    private var speedColumn: some View {
+        VStack(spacing: 14) {
+            speedometer
+            if s.navShowRoad, let road = currentRoad {
+                RoadShield(text: road, large: true)
+                    .padding(.top, 4)
+            }
+        }
+    }
+
+    private var buttonColumn: some View {
+        VStack(spacing: 8) {
+            Menu {
+                Picker("View", selection: $view) {
+                    ForEach(ViewMode.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
+                }
+            } label: { roundIcon(view.symbol) }
+            if position.positionedByUser {
+                Button { follow(engine.location, animated: true, force: true) } label: { roundIcon("location.fill") }
+                    .accessibilityLabel("Re-centre")
+            }
+            Button {
+                store.settings.navVoiceOn.toggle()
+                engine.voiceOn = store.settings.navVoiceOn
+                if !engine.voiceOn { VoiceService.shared.stopSpeaking() }
+            } label: { roundIcon(s.navVoiceOn ? "speaker.wave.2.fill" : "speaker.slash.fill") }
+            .accessibilityLabel(s.navVoiceOn ? "Mute directions" : "Unmute directions")
+            Button { reporting = true } label: { roundIcon("exclamationmark.bubble.fill") }
+                .accessibilityLabel("Report on the road")
+            Button { showingSteps = true } label: { roundIcon("list.bullet") }
+                .accessibilityLabel("All directions")
+            Button { showingSettings = true } label: { roundIcon("slider.horizontal.3") }
+                .accessibilityLabel("Navigation settings")
+        }
+        .foregroundStyle(.primary)
+    }
+
+    private func roundIcon(_ name: String) -> some View {
+        Image(systemName: name).font(.title3).frame(width: 46, height: 46).background(.regularMaterial, in: Circle())
+    }
+
     private var bottomPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(engine.eta.map { "Arrive \(Fmt.time($0))" } ?? "—").font(.title3.weight(.bold).monospacedDigit())
-                    Text("\(NavigationEngine.distanceText(engine.remainingDistance)) · \(engine.destinationName)").font(.caption).foregroundStyle(.secondary)
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(engine.eta.map { "Arrive \(Fmt.time($0))" } ?? "—").font(.title2.weight(.bold).monospacedDigit())
+                    HStack(spacing: 8) {
+                        Text(Fmt.hm(engine.remainingTime)).font(.headline.monospacedDigit())
+                        Text(NavigationEngine.distanceText(engine.remainingDistance)).font(.subheadline).foregroundStyle(.secondary)
+                        if engine.trafficDelay > 120 {
+                            Text("+\(Int(engine.trafficDelay / 60)) min traffic").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                        }
+                    }
+                    Text("\(engine.destinationName) · \(engine.route?.source ?? "")").font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
-                Button(role: .destructive) { engine.stop(); dismiss() } label: {
-                    Text("End").font(.headline).padding(.horizontal, 12)
+                VStack(spacing: 6) {
+                    Button { dismiss() } label: { Text("Hide").font(.subheadline.weight(.semibold)) }
+                        .buttonStyle(.bordered)
+                    Button(role: .destructive) { engine.stop(); dismiss() } label: {
+                        Text("End").font(.headline).padding(.horizontal, 8)
+                    }
+                    .buttonStyle(.borderedProminent).tint(.red)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(.red)
             }
-            if let h = heightText {
+            if let h = heightText, engine.route?.isTruckRoute != true {
                 Label(h, systemImage: "exclamationmark.triangle.fill").font(.caption.weight(.semibold)).foregroundStyle(.orange)
             }
             if engine.notEnoughTime {
                 VStack(alignment: .leading, spacing: 4) {
                     Label("Not enough driving time to arrive", systemImage: "clock.badge.exclamationmark")
                         .font(.subheadline.weight(.bold)).foregroundStyle(.red)
-                    Text("Places to stop within reach (check they suit your vehicle):").font(.caption).foregroundStyle(.secondary)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
                             ForEach(engine.parkingOptions, id: \.self) { item in
-                                Button {
-                                    engine.start(to: item.placemark.coordinate, name: item.name ?? "Parking")
-                                } label: {
+                                Button { engine.start(to: item.placemark.coordinate, name: item.name ?? "Parking") } label: {
                                     Label(item.name ?? "Parking", systemImage: "parkingsign.circle.fill").font(.caption)
                                 }
                                 .buttonStyle(.bordered)
@@ -221,76 +271,179 @@ struct NavigationModeView: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
     }
 
-    /// Current speed, like the sat-nav speedometer.
-    private var speedBubble: some View {
-        let kmh = max(0, (engine.location?.speed ?? 0) * 3.6)
-        let miles = store.settings.useMiles
-        return VStack(spacing: 0) {
-            Text("\(Int((miles ? kmh / 1.609344 : kmh).rounded()))").font(.title2.weight(.bold).monospacedDigit())
-            Text(miles ? "mph" : "km/h").font(.caption2).foregroundStyle(.secondary)
-        }
-        .frame(width: 64, height: 64)
-        .background(.regularMaterial, in: Circle())
-        .overlay(Circle().stroke(kmh > effectiveLimitKmh + 2 ? Color.red : .clear, lineWidth: 3))
-        .overlay(alignment: .bottom) {
-            if limiterKmh > 0 {
-                Text("Limiter \(miles ? Int((limiterKmh / 1.609344).rounded()) : Int(limiterKmh))")
-                    .font(.system(size: 9, weight: .bold)).padding(.horizontal, 4).padding(.vertical, 1)
-                    .background(.thinMaterial, in: Capsule()).offset(y: 8)
-            }
-        }
-    }
-
-    /// The road's limit as a round sign (with the lower of the road and your vehicle's limit).
-    @ViewBuilder
-    private var speedLimitSign: some View {
-        if let r = roadLimit {
-            let miles = store.settings.useMiles
-            let vehicleMax = SpeedLimits.defaultKmh(kind: currentVehicle?.kind ?? .tractor, weightT: currentVehicle?.weight ?? 0,
-                                                    region: store.settings.region)
-            let lower = isHeavy && vehicleMax + 1 < r.roadKmh
-            let text = lower ? "\(Int((miles ? vehicleMax / 1.609344 : vehicleMax).rounded()))" : r.signText
-            VStack(spacing: 2) {
-                Text(text)
-                    .font(.system(size: text.count > 2 ? 22 : 26, weight: .heavy, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.black)
-                    .frame(width: 64, height: 64)
-                    .background(Circle().fill(.white))
-                    .overlay(Circle().stroke(.red, lineWidth: 7))
-                    .shadow(radius: 2)
-                if lower {
-                    Text("Road \(r.signText)").font(.system(size: 10, weight: .bold)).padding(.horizontal, 5)
-                        .background(.thinMaterial, in: Capsule())
+    private var stepsList: some View {
+        NavigationStack {
+            List(Array((engine.route?.steps ?? []).enumerated()), id: \.element.id) { i, step in
+                HStack(spacing: 12) {
+                    Image(systemName: step.symbol).frame(width: 28)
+                        .foregroundStyle(i == engine.stepIndex + 1 ? Color.green : .secondary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(step.instruction).font(.subheadline)
+                        Text(NavigationEngine.distanceText(step.distance)).font(.caption).foregroundStyle(.secondary)
+                    }
                 }
+                .opacity(i <= engine.stepIndex ? 0.4 : 1)
             }
-            .accessibilityLabel("Speed limit \(text)")
+            .navigationTitle("Directions")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { Button("Done") { showingSteps = false } }
         }
+        .presentationDetents([.medium, .large])
     }
 
-    /// Lowest of the road limit (for your vehicle) and the limiter, km/h.
+    // MARK: Speed
+
+    private var speedoSize: CGFloat { s.navSpeedoSize == "s" ? 70 : s.navSpeedoSize == "m" ? 86 : 104 }
+
+    /// Speedometer with the speed limit sign on its top corner (no caption).
+    private var speedometer: some View {
+        let kmh = max(0, (engine.location?.speed ?? 0) * 3.6)
+        let miles = s.useMiles
+        let size = speedoSize
+        let over = kmh > effectiveLimitKmh + 2
+        return VStack(spacing: 0) {
+            Text("\(Int((miles ? kmh / 1.609344 : kmh).rounded()))")
+                .font(.system(size: size * 0.42, weight: .bold, design: .rounded).monospacedDigit())
+                .foregroundStyle(over ? .red : .primary)
+                .contentTransition(.numericText())
+            Text(miles ? "mph" : "km/h").font(.system(size: size * 0.14)).foregroundStyle(.secondary)
+        }
+        .frame(width: size, height: size)
+        .background(.regularMaterial, in: Circle())
+        .overlay(Circle().stroke(over ? Color.red : .clear, lineWidth: 4))
+        .overlay(alignment: s.navSpeedoSide == "left" ? .topTrailing : .topLeading) {
+            if let text = limitSignText {
+                Text(text)
+                    .font(.system(size: size * (text.count > 2 ? 0.2 : 0.24), weight: .heavy, design: .rounded).monospacedDigit())
+                    .foregroundStyle(.black)
+                    .frame(width: size * 0.5, height: size * 0.5)
+                    .background(Circle().fill(.white))
+                    .overlay(Circle().stroke(.red, lineWidth: size * 0.065))
+                    .shadow(radius: 2)
+                    .offset(x: s.navSpeedoSide == "left" ? size * 0.18 : -size * 0.18, y: -size * 0.14)
+                    .accessibilityLabel("Speed limit \(text)")
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if limiterKmh > 0 && kmh > limiterKmh - 3 {
+                Text("Limiter").font(.system(size: 9, weight: .bold)).padding(.horizontal, 4).padding(.vertical, 1)
+                    .background(.thinMaterial, in: Capsule()).offset(y: 6)
+            }
+        }
+        .animation(.snappy, value: Int(kmh))
+    }
+
+    /// The limit that applies to you: the lower of the road's limit and your vehicle's (e.g. 60 mph for a lorry on a motorway).
+    private var limitSignText: String? {
+        guard let r = roadLimit else { return nil }
+        let miles = s.useMiles
+        let vehicleMax = SpeedLimits.defaultKmh(kind: currentVehicle?.kind ?? .tractor, weightT: currentVehicle?.weight ?? 0, region: s.region)
+        if isHeavy && vehicleMax + 1 < r.roadKmh {
+            return "\(Int((miles ? vehicleMax / 1.609344 : vehicleMax).rounded()))"
+        }
+        return r.signText
+    }
+
     private var effectiveLimitKmh: Double {
         var l = AutoDriveDetector.shared.speedLimitKmh
         if let r = roadLimit { l = min(l, r.roadKmh) }
         return l
     }
 
-    /// Road you're on: OpenStreetMap ref, else the current direction step.
+    /// Road you're on: OpenStreetMap ref, else the route's.
     private var currentRoad: String? {
         if let ref = roadLimit?.roadRef, !ref.isEmpty { return ref.components(separatedBy: ";").first }
-        return engine.currentStep.flatMap { RoadSpeedLimit.roadNumber(in: $0.instructions) }
+        let r = engine.currentRoad
+        return r.isEmpty ? nil : r
     }
 
-    private var currentVehicle: Vehicle? { vehicles.first { $0.id.uuidString == store.settings.currentVehicleID } }
+    private var currentVehicle: Vehicle? { vehicles.first { $0.id.uuidString == s.currentVehicleID } }
+    private var currentTrailer: Vehicle? { vehicles.first { $0.id.uuidString == s.currentTrailerID } }
 
     private var isHeavy: Bool {
         guard let v = currentVehicle else { return true }
         return !(v.kind == .van && (v.weight == 0 || v.weight <= 3.5))
     }
 
-    /// Speed limiter of the vehicle in use: as set, or 90 km/h (56 mph) for lorries over 3.5 t.
     private var limiterKmh: Double {
         if let l = currentVehicle?.limiterKmh, l > 0 { return l }
         return isHeavy ? 90 : 0
+    }
+
+    private var heightText: String? {
+        let h = [currentVehicle, currentTrailer].compactMap { $0?.height }.max() ?? 0
+        return h > 0 ? "Your height: \(Fmt.length(h)). This route isn't checked for low bridges — follow the signs." : nil
+    }
+
+    /// The lorry's size and weight for the router (sensible UK artic defaults where not set).
+    private var profile: TruckProfile {
+        let unit = currentVehicle, trailer = currentTrailer
+        var p = TruckProfile()
+        p.isTruck = isHeavy
+        p.heightM = [unit?.height ?? 0, trailer?.height ?? 0].max().flatMap { $0 > 0 ? $0 : nil } ?? 4.0
+        p.widthM = [unit?.width ?? 0, trailer?.width ?? 0].max().flatMap { $0 > 0 ? $0 : nil } ?? 2.55
+        let length = (unit?.length ?? 0) + (trailer?.length ?? 0)
+        p.lengthM = length > 0 ? length : (trailer == nil ? 12 : 16.5)
+        let weight = max(unit?.weight ?? 0, trailer?.weight ?? 0)
+        p.weightT = weight > 0 ? weight : 44
+        let axles = (unit?.axles ?? 0) + (trailer?.axles ?? 0)
+        p.axles = axles > 0 ? axles : 5
+        p.axleLoadT = min(11.5, p.weightT / Double(max(2, p.axles)) * 1.4)
+        p.topSpeedKmh = limiterKmh > 0 ? limiterKmh : 112
+        p.preferMotorways = s.navPreferMotorways
+        p.avoidTolls = s.navAvoidTolls
+        return p
+    }
+
+    // MARK: Actions
+
+    private func begin() {
+        engine.driveLeft = { driveLeftNow() }
+        engine.profile = profile
+        engine.provider = s.navRouting
+        engine.voiceOn = s.navVoiceOn
+        engine.turnsOnly = s.navVoiceLevel == "turns"
+        let lights = s.navShowTrafficLights, cameras = s.navCameraAlerts, heavy = isHeavy, online = s.onlineSpeedLimits
+        let miles = s.useMiles
+        let vehicleMax = SpeedLimits.defaultKmh(kind: currentVehicle?.kind ?? .tractor, weightT: currentVehicle?.weight ?? 0, region: s.region)
+        let ctx = context
+        engine.onUpdate = { loc in
+            if online {
+                limits.update(loc, heavyVehicle: heavy) { r in
+                    roadLimit = r
+                    let eng = NavigationEngine.shared
+                    if let r {
+                        eng.speedLimitText = heavy && vehicleMax + 1 < r.roadKmh
+                            ? "\(Int((miles ? vehicleMax / 1.609344 : vehicleMax).rounded()))" : r.signText
+                        let ref = r.roadRef.components(separatedBy: ";").first ?? ""
+                        eng.roadRef = ref.isEmpty ? (r.roadName.isEmpty ? nil : r.roadName) : ref
+                    } else {
+                        eng.speedLimitText = nil
+                    }
+                }
+            }
+            hazards.update(loc, includeLights: lights)
+            let active = ((try? ctx.fetch(FetchDescriptor<RoadReport>())) ?? []).filter { $0.expiresAt > .now }
+            hazards.warnAhead(engine: NavigationEngine.shared, reports: active, cameras: cameras)
+        }
+        guard let target else { follow(engine.location, animated: true, force: true); return }
+        if engine.isRunning, let d = engine.destination, let c = target.coordinate,
+           NavigationEngine.metres(d, c) < 30 { return }
+        if let c = target.coordinate {
+            engine.start(to: c, name: target.name)
+        } else {
+            Task {
+                let placemark = try? await CLGeocoder().geocodeAddressString(target.address).first
+                if let c = placemark?.location?.coordinate { engine.start(to: c, name: target.name) } else { engine.status = "Couldn't find that address." }
+            }
+        }
+    }
+
+    private func report(_ kind: RoadReport.Kind) {
+        guard let c = engine.location?.coordinate else { return }
+        context.insert(RoadReport(kind: kind, coordinate: c))
+        try? context.save()
+        EventRecorder.log(.note, title: "Reported: \(kind.title)", coordinate: c, context: context, settings: s)
     }
 
     /// Moves the camera with you: behind the lorry in 3D (zooming out as speed rises), heading up, north up, or the whole route.
@@ -298,79 +451,59 @@ struct NavigationModeView: View {
         if position.positionedByUser && !force { return }
         if view == .overview, let route = engine.route {
             let rect = route.polyline.boundingMapRect
-            let padded = rect.insetBy(dx: -rect.size.width * 0.15, dy: -rect.size.height * 0.25)
-            withAnimation(.easeInOut(duration: 0.6)) { position = .rect(padded) }
+            withAnimation(.easeInOut(duration: 0.6)) { position = .rect(rect.insetBy(dx: -rect.size.width * 0.15, dy: -rect.size.height * 0.25)) }
             return
         }
         guard let loc else { return }
-        if loc.course >= 0 && loc.speed > 1.5 { lastHeading = loc.course }
+        let heading = engine.heading
         let kmh = max(0, loc.speed * 3.6)
+        let centre = engine.displayCoordinate ?? loc.coordinate
         let camera: MapCamera
         switch view {
         case .follow3D:
-            // Look ahead of the lorry: camera centre a little in front, tilted like Apple Maps.
-            let ahead = Self.offset(loc.coordinate, metres: 120 + kmh * 2, bearing: lastHeading)
-            camera = MapCamera(centerCoordinate: ahead, distance: 420 + kmh * 9, heading: lastHeading, pitch: 62)
+            let ahead = NavigationEngine.offset(centre, metres: 120 + kmh * 2, bearing: heading)
+            camera = MapCamera(centerCoordinate: ahead, distance: 420 + kmh * 9, heading: heading, pitch: 62)
         case .headingUp:
-            camera = MapCamera(centerCoordinate: loc.coordinate, distance: 900 + kmh * 15, heading: lastHeading, pitch: 0)
+            camera = MapCamera(centerCoordinate: centre, distance: 900 + kmh * 15, heading: heading, pitch: 0)
         case .northUp, .overview:
-            camera = MapCamera(centerCoordinate: loc.coordinate, distance: 1100 + kmh * 15, heading: 0, pitch: 0)
+            camera = MapCamera(centerCoordinate: centre, distance: 1100 + kmh * 15, heading: 0, pitch: 0)
         }
-        if animated {
-            withAnimation(.easeInOut(duration: 0.5)) { position = .camera(camera) }
-        } else {
-            withAnimation(.linear(duration: 0.9)) { position = .camera(camera) }
-        }
-    }
-
-    static func offset(_ c: CLLocationCoordinate2D, metres: Double, bearing: CLLocationDirection) -> CLLocationCoordinate2D {
-        let r = 6_371_000.0
-        let b = bearing * .pi / 180, lat = c.latitude * .pi / 180, lon = c.longitude * .pi / 180
-        let d = metres / r
-        let lat2 = asin(sin(lat) * cos(d) + cos(lat) * sin(d) * cos(b))
-        let lon2 = lon + atan2(sin(b) * sin(d) * cos(lat), cos(d) - sin(lat) * sin(lat2))
-        return CLLocationCoordinate2D(latitude: lat2 * 180 / .pi, longitude: lon2 * 180 / .pi)
-    }
-
-    /// Arrow for a spoken instruction.
-    /// Arrow for an instruction. Only the manoeuvre part is read ("Turn right onto Leftwich Road" → right),
-    /// and only whole words count, so road names can't flip the arrow.
-    static func maneuverSymbol(_ text: String) -> String {
-        let t = text.lowercased()
-        if t.contains("arrive") || t.contains("destination") { return "flag.checkered" }
-        var action = t
-        for cut in [" onto ", " toward ", " towards ", " to stay on ", " on to ", " for "] {
-            if let r = action.range(of: cut) { action = String(action[..<r.lowerBound]) }
-        }
-        func has(_ w: String) -> Bool { action.range(of: "\\b\(w)\\b", options: .regularExpression) != nil }
-        let left = has("left"), right = has("right")
-        let side: String? = left && !right ? "left" : right && !left ? "right" : nil
-        if has("roundabout") {
-            if has("1st") || has("first") { return "arrow.triangle.turn.up.right.circle.fill" }
-            return "arrow.triangle.turn.up.right.circle.fill"
-        }
-        if has("u-turn") || action.contains("make a u") { return "arrow.uturn.down" }
-        if has("merge") { return "arrow.merge" }
-        if has("exit") || has("slip") || has("keep") || has("bear") || has("slight") || has("fork") {
-            return side == "left" ? "arrow.up.left" : side == "right" ? "arrow.up.right" : "arrow.up"
-        }
-        if side == "left" { return has("sharp") ? "arrow.turn.left.down" : "arrow.turn.up.left" }
-        if side == "right" { return has("sharp") ? "arrow.turn.right.down" : "arrow.turn.up.right" }
-        return "arrow.up"
-    }
-
-    private var heightText: String? {
-        let ids = [store.settings.currentVehicleID, store.settings.currentTrailerID]
-        let h = vehicles.filter { ids.contains($0.id.uuidString) }.map(\.height).max() ?? 0
-        return h > 0 ? "Your height: \(Fmt.length(h, feet: true)). Route isn't checked for low bridges — follow the signs." : nil
+        withAnimation(animated ? .easeInOut(duration: 0.5) : .linear(duration: 1.0)) { position = .camera(camera) }
     }
 
     private func driveLeftNow() -> TimeInterval {
         let settings = store.settings
         let snaps = ActivityController.recentSnapshots(context: context, settings: settings)
-        let s = RulesEngine.status(snaps, now: .now, config: settings.ruleConfig)
+        let st = RulesEngine.status(snaps, now: .now, config: settings.ruleConfig)
         if let world = WorldRulesCache.refresh(snaps, now: .now, settings: settings) { return world.driveLeft }
-        return s.currentShift == nil ? .infinity : s.driveAvailableNow
+        return st.currentShift == nil ? .infinity : st.drivingLeftToday
+    }
+
+    /// Arrow for a plain-text instruction (kept for Apple-style instructions).
+    static func maneuverSymbol(_ text: String) -> String {
+        let p = TruckRouter.parse(text)
+        return NavStep.symbol(type: p.type, modifier: p.modifier)
+    }
+}
+
+/// Lane arrows for the next junction: lanes you can use are bright, others dimmed.
+struct LaneHelper: View {
+    var lanes: [NavLane]
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(Array(lanes.enumerated()), id: \.offset) { _, lane in
+                Image(systemName: lane.symbol)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(lane.valid ? .white : .white.opacity(0.3))
+                    .frame(width: 38, height: 40)
+                    .background(lane.valid ? Color.green.opacity(0.9) : Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 8))
+            }
+        }
+        .padding(6)
+        .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Use lane \(lanes.enumerated().filter { $0.element.valid }.map { "\($0.offset + 1)" }.joined(separator: ", ")) of \(lanes.count)")
     }
 }
 
@@ -392,7 +525,7 @@ struct TruckMarker: View {
         .padding(3)
         .shadow(color: .black.opacity(0.45), radius: 3, y: 1)
         .rotationEffect(.degrees(rotation))
-        .animation(.linear(duration: 0.8), value: rotation)
+        .animation(.linear(duration: 0.15), value: rotation)
         .accessibilityLabel("Your lorry")
     }
 }
@@ -409,10 +542,80 @@ struct RoadShield: View {
         Text(t)
             .font(.system(size: large ? 24 : 15, weight: .heavy, design: .rounded))
             .foregroundStyle(green ? Color.yellow : (motorway ? .white : .black))
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
             .padding(.horizontal, large ? 10 : 6).padding(.vertical, large ? 4 : 2)
             .background(RoundedRectangle(cornerRadius: 6).fill(motorway ? Color.blue : (green ? Color(red: 0, green: 0.42, blue: 0.24) : .white)))
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(.white, lineWidth: 2))
             .shadow(radius: 1)
             .accessibilityLabel("Road \(t)")
+    }
+}
+
+/// Settings → Navigation: routing, voice, what's shown and where.
+struct NavSettingsView: View {
+    @Environment(SettingsStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        @Bindable var store = store
+        Form {
+            Section {
+                Picker("Routing", selection: $store.settings.navRouting) {
+                    Text("Lorry route (OpenStreetMap)").tag("valhalla")
+                    Text("Apple Maps").tag("apple")
+                }
+                Toggle("Prefer motorways and A-roads", isOn: $store.settings.navPreferMotorways)
+                Toggle("Avoid tolls", isOn: $store.settings.navAvoidTolls)
+            } header: {
+                Text("Route")
+            } footer: {
+                Text("Lorry routing (Valhalla, free OpenStreetMap server) uses your vehicle's height, width, length, weight and axles to avoid low bridges, weight limits and lorry bans, and gives lane guidance. It needs internet. If it can't be reached, Apple Maps is used (not checked for lorries). Live traffic delays come from Apple Maps.")
+            }
+            Section("Voice") {
+                Toggle("Spoken directions", isOn: $store.settings.navVoiceOn)
+                Picker("Say", selection: $store.settings.navVoiceLevel) {
+                    Text("All prompts").tag("all")
+                    Text("Turns only").tag("turns")
+                }
+                Toggle("Speed camera warnings", isOn: $store.settings.navCameraAlerts)
+            }
+            Section {
+                Picker("Speedometer size", selection: $store.settings.navSpeedoSize) {
+                    Text("Small").tag("s"); Text("Medium").tag("m"); Text("Large").tag("l")
+                }
+                Picker("Speedometer side", selection: $store.settings.navSpeedoSide) {
+                    Text("Left").tag("left"); Text("Right").tag("right")
+                }
+                Picker("Directions banner", selection: $store.settings.navBannerSize) {
+                    Text("Normal").tag("m"); Text("Large").tag("l")
+                }
+                Toggle("Road you're on", isOn: $store.settings.navShowRoad)
+                Toggle("Lane guidance", isOn: $store.settings.navShowLanes)
+                Toggle("Big turn arrow (right side)", isOn: $store.settings.navSideArrow)
+                if store.settings.navSideArrow {
+                    VStack(alignment: .leading) {
+                        Text("Arrow see-through: \(Int((1 - store.settings.navSideArrowOpacity) * 100))%").font(.caption)
+                        Slider(value: $store.settings.navSideArrowOpacity, in: 0.15...0.8)
+                    }
+                }
+                Picker("Map", selection: $store.settings.navMapStyle) {
+                    Text("Standard").tag("standard"); Text("Satellite").tag("hybrid")
+                }
+            } header: {
+                Text("Screen")
+            }
+            Section {
+                Toggle("Road speed limits (OpenStreetMap)", isOn: $store.settings.onlineSpeedLimits)
+                Toggle("Traffic lights on the map", isOn: $store.settings.navShowTrafficLights)
+                Toggle("Your road reports", isOn: $store.settings.navShowReports)
+            } header: {
+                Text("On the map")
+            } footer: {
+                Text("Speed cameras and traffic lights come from OpenStreetMap. Reports (accident, closure, police, low bridge…) are the ones you add with the ⚠︎ button; they're kept on your iPhone.")
+            }
+        }
+        .navigationTitle("Navigation")
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
     }
 }

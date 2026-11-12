@@ -47,6 +47,10 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    NavigationLink { NavSettingsView() } label: {
+                        SettingsRow(title: "Navigation", symbol: "location.north.line.fill", color: .blue,
+                                    value: s.navRouting == "valhalla" ? "Lorry route" : "Apple Maps")
+                    }
                     NavigationLink { UnitsSettingsView() } label: {
                         SettingsRow(title: "Units", symbol: "ruler.fill", color: .teal,
                                     value: "\(s.useMiles ? "mi" : "km") · \(s.heightUnit.hasPrefix("ft") ? "ft" : "m")")

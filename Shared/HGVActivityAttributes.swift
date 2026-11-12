@@ -15,6 +15,12 @@ struct HGVActivityAttributes: ActivityAttributes {
         var targetDate: Date?
         /// Highlights the countdown in red/orange when a limit is close.
         var isWarning: Bool
+        /// While navigating: next turn, how far, the road, and arrival (all nil when not navigating).
+        var navInstruction: String? = nil
+        var navSymbol: String? = nil
+        var navDistance: String? = nil
+        var navRoad: String? = nil
+        var navArrival: Date? = nil
     }
 
     var driverName: String

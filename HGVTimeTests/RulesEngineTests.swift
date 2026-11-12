@@ -478,7 +478,9 @@ final class RulesEngineTests: XCTestCase {
         var s = AppSettings()
         s.todayOrder = ["earnings", "status", "buttons"]
         s.todayHidden = ["card"]
-        let order = s.tileOrder(.today)
+        // Navigation tiles only appear while navigating; check the rest of the order.
+        let order = s.tileOrder(.today).filter { !$0.rawValue.hasPrefix("nav") }
+        XCTAssertEqual(Array(s.tileOrder(.today).drop { $0 != .navTurn }.prefix(7)).last, .buttons, "nav tiles go above the buttons")
         let hidden = s.tileHidden(.today)
         XCTAssertEqual(order.first, .date, "older layouts get the date tile at the top")
         XCTAssertEqual(Array(order[1...3]), [.earnings, .status, .buttons])

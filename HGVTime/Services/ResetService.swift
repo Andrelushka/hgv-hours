@@ -137,7 +137,12 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.recordOverspeed = d.recordOverspeed; s.recordHarshBraking = d.recordHarshBraking
             s.harshBrakeMS2 = d.harshBrakeMS2; s.onlineSpeedLimits = d.onlineSpeedLimits
             s.recordEventLocations = d.recordEventLocations; s.recordRoute = d.recordRoute
-            s.navVoiceOn = d.navVoiceOn
+            s.navVoiceOn = d.navVoiceOn; s.navVoiceLevel = d.navVoiceLevel; s.navRouting = d.navRouting
+            s.navPreferMotorways = d.navPreferMotorways; s.navAvoidTolls = d.navAvoidTolls; s.navSpeedoSize = d.navSpeedoSize
+            s.navSpeedoSide = d.navSpeedoSide; s.navShowLanes = d.navShowLanes; s.navSideArrow = d.navSideArrow
+            s.navSideArrowOpacity = d.navSideArrowOpacity; s.navShowRoad = d.navShowRoad; s.navMapStyle = d.navMapStyle
+            s.navBannerSize = d.navBannerSize; s.navCameraAlerts = d.navCameraAlerts; s.navShowTrafficLights = d.navShowTrafficLights
+            s.navShowReports = d.navShowReports
             s.keepScreenOn = d.keepScreenOn
         case .layout:
             s.todayOrder = d.todayOrder; s.todayHidden = d.todayHidden
@@ -202,7 +207,7 @@ enum ResetService {
             case .vehicles: wipe(Vehicle.self); wipe(VehicleUse.self); wipe(ResourceLog.self)
             case .notes: wipe(NoteItem.self)
             case .reminders: wipe(Reminder.self); wipe(CheckRecord.self)
-            case .events: wipe(EventLog.self); wipe(SpeedEvent.self); wipe(TrackPoint.self)
+            case .events: wipe(EventLog.self); wipe(SpeedEvent.self); wipe(TrackPoint.self); wipe(RoadReport.self)
             case .assistant:
                 KeychainKey.delete()
                 DVLAKey.delete()

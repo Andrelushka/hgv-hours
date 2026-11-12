@@ -37,7 +37,7 @@ struct PeriodStats: Equatable {
     var maxContinuousDriving: TimeInterval = 0
     var splitBreakFirstTaken = false
 
-    /// RT(WT)R working time since the last 30 min of breaks (in pieces of ≥ 15 min).
+    /// RT(WT)R working time since the last break of at least 15 min.
     var wtdWorkSinceBreak: TimeInterval = 0
     var wtdMaxWorkWithoutBreak: TimeInterval = 0
     var wtdPendingBreak: TimeInterval = 0
@@ -216,14 +216,12 @@ enum RulesEngine {
                     s.splitBreakFirstTaken = true
                 }
 
-                // RT(WT)R: breaks in pieces of at least 15 min.
+                // RT(WT)R / Directive 2002/15 art. 5: no more than 6 consecutive hours without a break; breaks may be
+                // split into pieces of at least 15 min. Any break of 15 min or more interrupts the 6h run.
+                // The daily total (30 min for 6–9h of work, 45 min over 9h) is checked separately.
                 if d >= Limits.wtdBreakPiece - 1 {
                     s.wtdBreakTotal += d
-                    s.wtdPendingBreak += d
-                    if s.wtdPendingBreak >= Limits.wtdBreakShortDay - 1 {
-                        s.wtdWorkSinceBreak = 0
-                        s.wtdPendingBreak = 0
-                    }
+                    s.wtdWorkSinceBreak = 0
                 }
             }
 
