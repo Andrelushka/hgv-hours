@@ -116,7 +116,7 @@ struct MapDayView: View {
         Map(position: $position, selection: .constant(nil as Int?)) {
             if let loc = live.location {
                 Annotation("", coordinate: loc.coordinate, anchor: .center) {
-                    TruckMarker(rotation: live.heading - cameraHeading)
+                    TruckMarker(rotation: live.heading - cameraHeading).environment(store)
                 }
             } else {
                 UserAnnotation()

@@ -117,6 +117,7 @@ struct NavigationModeView: View {
                     TruckMarker(rotation: view == .northUp || view == .overview ? engine.displayHeading : 0,
                                 trailerAngle: Self.angleDiff(engine.trailerHeading, engine.displayHeading),
                                 tilt: view == .follow3D ? s.navPitch : 0)
+                        .environment(store)
                 }
             } else {
                 UserAnnotation()
@@ -613,7 +614,9 @@ struct LaneHelper: View {
 /// Your position on the map: a lorry seen from above (artic with a trailer that swings on turns, rigid, van),
 /// a navigation arrow or a dot — style, size, colour, 3D tilt and animation set in Settings → Navigation → Lorry pin.
 struct TruckMarker: View {
-    @Environment(SettingsStore.self) private var store
+    /// Optional: map pins are drawn outside the normal view tree, where the settings may not be passed down.
+    /// Callers inside a Map add `.environment(store)`; without it the pin uses the default look instead of crashing.
+    @Environment(SettingsStore.self) private var store: SettingsStore?
     /// Direction of the cab on screen (degrees).
     var rotation: Double
     /// Trailer angle relative to the cab (degrees, + = trailer swung clockwise).
@@ -622,7 +625,7 @@ struct TruckMarker: View {
     var tilt: Double = 0
 
     var body: some View {
-        let s = store.settings
+        let s = store?.settings ?? AppSettings()
         let scale: CGFloat = s.navPinSize == "s" ? 0.8 : s.navPinSize == "l" ? 1.35 : 1.05
         let tint = Self.color(s.navPinColor)
         Group {
@@ -673,7 +676,7 @@ struct TruckMarker: View {
             }
             if trailer > 0 {
                 box(tint, height: trailer)
-                    .rotationEffect(.degrees(store.settings.navPinAnimate ? trailerAngle : 0), anchor: .top)
+                    .rotationEffect(.degrees((store?.settings.navPinAnimate ?? true) ? trailerAngle : 0), anchor: .top)
             }
         }
         .padding(3)

@@ -22,7 +22,7 @@ struct NavTile: View {
                 Map(initialPosition: .userLocation(followsHeading: true, fallback: .automatic), interactionModes: []) {
                     if let route = nav.route { MapPolyline(route.polyline).stroke(.blue, lineWidth: 5) }
                     if let c = nav.displayCoordinate ?? nav.location?.coordinate {
-                        Annotation("", coordinate: c) { TruckMarker(rotation: nav.heading).scaleEffect(0.7) }
+                        Annotation("", coordinate: c) { TruckMarker(rotation: nav.heading).environment(store).scaleEffect(0.7) }
                     }
                     if let d = nav.destination { Marker(nav.destinationName, systemImage: "flag.checkered", coordinate: d).tint(.indigo) }
                 }

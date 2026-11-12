@@ -2,6 +2,9 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.18.1 — Navigation map crash fixed
+- Fixed: the app crashed when opening the navigation map (and the map with your live position). The lorry pin couldn't read its settings inside the map; they're now passed to it, and if they're ever missing it shows the default pin instead of crashing.
+
 ## 3.18.0 — Stops in order, emergency page, company profiles
 - Stops in order: you can't tap Arrived at a stop until every earlier stop is finished (Departed, or marked cancelled/failed/rejected). The stop shows "Finish stop N first"; to change the order, move, swap or edit the stops. "Arrived somewhere else" waits until you've left the stop you're at.
 - Emergency page (Today tile, or Settings → Emergency numbers): one-tap calls for 999, 112, Network Rail bridge strikes, police 101, NHS 111, National Highways, Traffic Scotland, Traffic Wales, gas emergency and Crimestoppers, plus numbers abroad (EU 112, 911, 000, NZ 111). Shows where you are (address and coordinates) to read out or send, your own numbers (breakdown, transport office, next of kin) and your companies' numbers. Reminds you to stop safely first.
