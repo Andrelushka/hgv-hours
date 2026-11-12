@@ -10,6 +10,7 @@ final class LiveLocation: NSObject, CLLocationManagerDelegate {
     var heading: CLLocationDirection = 0
 
     @ObservationIgnored private let manager = CLLocationManager()
+    @ObservationIgnored private var filter = GPSFilter()
 
     func start() {
         manager.delegate = self
@@ -29,6 +30,8 @@ final class LiveLocation: NSObject, CLLocationManagerDelegate {
     nonisolated func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let loc = locations.last else { return }
         Task { @MainActor in
+            // Skip rough Wi-Fi / mobile-mast positions and impossible jumps.
+            guard self.filter.accept(loc) else { return }
             self.location = loc
             if loc.course >= 0 && loc.speed > 2 { self.heading = loc.course }
         }

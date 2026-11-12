@@ -2,6 +2,13 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.10.1 — GPS position fixes
+- Fixed: after a reroute the lorry marker could jump to a random point further along the new route (it used your progress along the old route).
+- Rough positions are ignored: when GPS is weak (yards, buildings, tunnels) the iPhone falls back to Wi-Fi / mobile-mast positions that can be hundreds of metres or kilometres out. Fixes worse than 65 m are skipped while a good fix is recent, and impossible jumps (faster than 200 km/h) are dropped — on the navigation screen, the main map and the lorry marker.
+- The route position no longer snaps to the opposite carriageway or to a later part of the route that passes close by (e.g. coming back along the same road).
+- Arrived / Departed and event locations only reuse a recent fix if it's a proper GPS one.
+- 1 new test (98 in total).
+
 ## 3.10.0 — Lorry routing, lane guidance, new navigation screen
 - Fixed: a 15 min break didn't reset the 6h working-time clock. Under the working-time rules any break of 15 min or more interrupts the 6h run; the daily total (30 min for 6–9h, 45 min over 9h) is still checked separately. Driving still needs the 30 min after a 15.
 - Lorry routing: routes are now built for your vehicle (height, width, length, weight, axles, speed limiter) with the free OpenStreetMap Valhalla service — avoiding low bridges, weight and width limits and lorry bans, preferring motorways and A-roads (optional: avoid tolls). Apple Maps is used if it can't be reached (marked "not checked for lorries"). Live traffic delays still come from Apple Maps.

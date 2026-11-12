@@ -20,7 +20,9 @@ final class LocationOnce: NSObject, CLLocationManagerDelegate {
         case .notDetermined: manager.requestWhenInUseAuthorization()
         default: break
         }
-        if let recent = manager.location, abs(recent.timestamp.timeIntervalSinceNow) < 60 { return recent }
+        // A recent fix is reused only if it's a proper GPS one (not a rough Wi-Fi / mast position).
+        if let recent = manager.location, abs(recent.timestamp.timeIntervalSinceNow) < 60,
+           recent.horizontalAccuracy >= 0, recent.horizontalAccuracy <= 100 { return recent }
         return await withCheckedContinuation { continuation in
             waiting.append(continuation)
             manager.requestLocation()

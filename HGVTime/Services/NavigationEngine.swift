@@ -58,6 +58,7 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     @ObservationIgnored private var segmentIndex = 0
     @ObservationIgnored private var lastFix: (location: CLLocation, along: CLLocationDistance, onRoute: Bool)?
     @ObservationIgnored private var smoother: Timer?
+    @ObservationIgnored private var filter = GPSFilter()
     private(set) var progress: CLLocationDistance = 0
 
     // MARK: What's next
@@ -98,6 +99,8 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         parkingOptions = []
         notEnoughTime = false
         route = nil
+        lastFix = nil
+        filter.reset()
         status = "Finding route…"
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
@@ -181,7 +184,12 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         segmentIndex = 0
         progress = 0
         stepIndex = 0
-        if let loc = location { _ = locate(loc, fullSearch: true) }
+        // The last fix's distance-along belonged to the old route: drop it, or the marker jumps along the new one.
+        lastFix = nil
+        if let loc = location {
+            let off = locate(loc, fullSearch: true)
+            lastFix = (loc, progress, off <= max(80, loc.horizontalAccuracy * 2))
+        }
     }
 
     /// Live traffic from Apple Maps: if it says the drive takes longer than the lorry route, the difference is traffic.
@@ -274,6 +282,9 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     private func locate(_ loc: CLLocation, fullSearch: Bool = false) -> CLLocationDistance {
         guard coords.count > 1 else { return .infinity }
         let p = loc.coordinate
+        // Moving: a segment pointing the other way (the opposite carriageway, or the same road on the way back)
+        // isn't where you are, however close it is.
+        let course = loc.course >= 0 && loc.speed > 3 ? loc.course : -1
         let from = fullSearch ? 0 : max(0, segmentIndex - 10)
         let to = fullSearch ? coords.count - 1 : min(coords.count - 1, segmentIndex + 400)
         var best = (dist: CLLocationDistance.infinity, seg: segmentIndex, along: progress)
@@ -285,8 +296,17 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
             let len2 = bx * bx + by * by
             let t = len2 > 0 ? max(0, min(1, (px * bx + py * by) / len2)) : 0
             let dx = px - t * bx, dy = py - t * by
-            let d = (dx * dx + dy * dy).squareRoot()
-            if d < best.dist { best = (d, i, cumulative[i] + t * len2.squareRoot()) }
+            var d = (dx * dx + dy * dy).squareRoot()
+            if course >= 0 && len2 > 4 {
+                var diff = abs(atan2(bx, by) * 180 / .pi - course).truncatingRemainder(dividingBy: 360)
+                if diff < 0 { diff += 360 }
+                if diff > 180 { diff = 360 - diff }
+                if diff > 100 { d += 150 }
+            }
+            // Don't leap far ahead along the route unless we're searching from scratch.
+            let along = cumulative[i] + t * len2.squareRoot()
+            if !fullSearch && along - progress > max(400, loc.speed * 30) { d += 200 }
+            if d < best.dist { best = (d, i, along) }
         }
         if best.dist < 80 && best.along >= progress - 30 {
             segmentIndex = best.seg
@@ -315,6 +335,7 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     }
 
     private func update(with loc: CLLocation) {
+        guard filter.accept(loc) else { return }
         location = loc
         if loc.course >= 0 && loc.speed > 1.5 { heading = loc.course }
         guard isRunning else { return }

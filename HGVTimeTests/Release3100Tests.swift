@@ -74,3 +74,21 @@ final class Release3100Tests: XCTestCase {
         XCTAssertEqual(NavStep.symbol(type: "arrive", modifier: ""), "flag.checkered")
     }
 }
+
+/// 3.10.1: GPS glitches are ignored.
+final class GPSFilterTests: XCTestCase {
+    private func fix(_ lat: Double, _ lon: Double, acc: Double, t: Double) -> CLLocation {
+        CLLocation(coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon), altitude: 0, horizontalAccuracy: acc,
+                   verticalAccuracy: 10, timestamp: Date(timeIntervalSince1970: 1_800_000_000 + t))
+    }
+
+    func testRoughAndImpossibleFixesAreDropped() {
+        var f = GPSFilter()
+        XCTAssertTrue(f.accept(fix(52.2400, -0.9000, acc: 10, t: 0)))
+        XCTAssertFalse(f.accept(fix(52.2500, -0.9200, acc: 1500, t: 1)), "mast position while GPS is good")
+        XCTAssertFalse(f.accept(fix(52.3000, -0.9000, acc: 10, t: 2)), "6 km in 2 s is a glitch")
+        XCTAssertTrue(f.accept(fix(52.2402, -0.9000, acc: 8, t: 3)), "normal driving")
+        XCTAssertFalse(f.accept(fix(52.2402, -0.9000, acc: -1, t: 4)), "invalid")
+        XCTAssertTrue(f.accept(fix(52.2600, -0.9000, acc: 900, t: 200)), "after a long gap a rough fix is better than nothing")
+    }
+}
