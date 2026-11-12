@@ -128,6 +128,17 @@ struct PlanStop: Codable, Equatable, Identifiable {
         return kind.title
     }
 
+    /// "Trailer T1234" / "AB12 CDE" for a pick-up or drop-off stop ("" for other stops).
+    func equipmentName(in vehicles: [Vehicle]) -> String {
+        guard isEquipmentStop else { return "" }
+        if let id = equipmentID, let v = vehicles.first(where: { $0.id.uuidString == id }) { return v.displayName }
+        return equipmentRef ?? ""
+    }
+
+    /// Picking up or dropping off a trailer or vehicle.
+    var isEquipmentStop: Bool { [.trailerPickup, .trailerDrop, .vehiclePickup, .vehicleDrop].contains(kind) }
+    var isTrailerStop: Bool { kind == .trailerPickup || kind == .trailerDrop }
+
     /// Address line(s) for navigation and geocoding.
     var fullAddress: String {
         AddressParts.join(flat: flat, houseName: houseName, houseNumber: houseNumber, street: address ?? place, postcode: postcode)
@@ -140,7 +151,7 @@ struct PlanStop: Codable, Equatable, Identifiable {
     }
 
     enum Kind: String, Codable, CaseIterable, Identifiable {
-        case collection, delivery, depot, fuel, parking, trailer, service, other
+        case collection, delivery, depot, fuel, parking, trailer, trailerPickup, trailerDrop, vehiclePickup, vehicleDrop, service, other
         var id: String { rawValue }
         var title: String {
             switch self {
@@ -150,6 +161,10 @@ struct PlanStop: Codable, Equatable, Identifiable {
             case .fuel: String(localized: "Fuel")
             case .parking: String(localized: "Parking / rest")
             case .trailer: String(localized: "Trailer swap")
+            case .trailerPickup: String(localized: "Pick up trailer")
+            case .trailerDrop: String(localized: "Drop off trailer")
+            case .vehiclePickup: String(localized: "Pick up vehicle")
+            case .vehicleDrop: String(localized: "Drop off vehicle")
             case .service: String(localized: "Vehicle service")
             case .other: String(localized: "Custom stop")
             }
@@ -162,6 +177,10 @@ struct PlanStop: Codable, Equatable, Identifiable {
             case .fuel: "fuelpump.fill"
             case .parking: "parkingsign.circle.fill"
             case .trailer: "arrow.triangle.swap"
+            case .trailerPickup: "link.circle.fill"
+            case .trailerDrop: "personalhotspot.circle"
+            case .vehiclePickup: "key.fill"
+            case .vehicleDrop: "key"
             case .service: "wrench.and.screwdriver.fill"
             case .other: "mappin.circle.fill"
             }
@@ -173,7 +192,8 @@ struct PlanStop: Codable, Equatable, Identifiable {
             case .depot: .gray
             case .fuel: .green
             case .parking: .teal
-            case .trailer: .brown
+            case .trailer, .trailerPickup, .trailerDrop: .brown
+            case .vehiclePickup, .vehicleDrop: .blue
             case .service: .red
             case .other: .purple
             }
@@ -207,6 +227,10 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var departedAt: Date?
     var latitude: Double?
     var longitude: Double?
+    /// For trailer / vehicle pick-up and drop-off stops: the trailer or vehicle (Vehicle.id) from your list…
+    var equipmentID: String?
+    /// …or its number / registration typed in.
+    var equipmentRef: String?
     /// What happened at this stop when it didn't go to plan (nil = normal).
     var outcomeRaw: String?
     var outcomeReason: String?

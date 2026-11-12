@@ -1,4 +1,5 @@
 import MapKit
+import SwiftData
 import SwiftUI
 
 /// Address / postcode search using Apple Maps as you type.
@@ -39,6 +40,7 @@ final class AddressSearch: NSObject, MKLocalSearchCompleterDelegate {
 /// One stop on a job, with room for every detail.
 struct StopEditor: View {
     @Environment(\.dismiss) private var dismiss
+    @Query(sort: \Vehicle.createdAt, order: .reverse) private var vehicles: [Vehicle]
     @State var stop: PlanStop
     var isNew: Bool
     var onSave: (PlanStop) -> Void
@@ -80,6 +82,32 @@ struct StopEditor: View {
                     }
                 } header: {
                     Text("Stop type")
+                }
+
+                if stop.isEquipmentStop {
+                    let trailer = stop.isTrailerStop
+                    let list = vehicles.filter { trailer ? $0.kind == .trailer : $0.kind != .trailer }
+                    Section {
+                        Picker(trailer ? "Trailer" : "Vehicle", selection: Binding(get: { stop.equipmentID ?? "" },
+                                                                                  set: { stop.equipmentID = $0.isEmpty ? nil : $0 })) {
+                            Text("Not in my list").tag("")
+                            ForEach(list) { Text($0.displayName).tag($0.id.uuidString) }
+                        }
+                        if (stop.equipmentID ?? "").isEmpty {
+                            row(trailer ? "Trailer number" : "Registration",
+                                text: Binding(get: { stop.equipmentRef ?? "" }, set: { stop.equipmentRef = $0 }),
+                                prompt: trailer ? "e.g. T1234" : "e.g. AB12 CDE")
+                        }
+                    } header: {
+                        Text(trailer ? "Which trailer" : "Which vehicle")
+                    } footer: {
+                        switch stop.kind {
+                        case .trailerPickup: Text("When you tap Departed here, this trailer becomes your current trailer (if it's in your list).")
+                        case .trailerDrop: Text("When you tap Departed here, this trailer is taken off as your current trailer.")
+                        case .vehiclePickup: Text("When you tap Departed here, this vehicle becomes your current vehicle (if it's in your list).")
+                        default: Text("When you tap Departed here, this vehicle is taken off as your current vehicle.")
+                        }
+                    }
                 }
 
                 Section {
@@ -157,6 +185,7 @@ struct StopEditor: View {
 
 /// Summary row for a stop in the plan editor.
 struct StopRow: View {
+    @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
     var stop: PlanStop
     var number: Int
 
@@ -172,7 +201,8 @@ struct StopRow: View {
                     Spacer()
                     if !stop.bookingText.isEmpty { Text(stop.bookingText).font(.caption.weight(.semibold).monospacedDigit()) }
                 }
-                Text(stop.kindTitle + (stop.fullAddress.isEmpty ? "" : " · " + stop.fullAddress)).font(.caption).foregroundStyle(.secondary)
+                let equipment = stop.equipmentName(in: vehicles)
+                Text([stop.kindTitle, equipment, stop.fullAddress].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
                 let refs = [stop.reference.isEmpty ? "" : "Booking \(stop.reference)", (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                             stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.weight ?? ""].filter { !$0.isEmpty }
                 if !refs.isEmpty { Text(refs.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary) }

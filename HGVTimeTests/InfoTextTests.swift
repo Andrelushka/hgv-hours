@@ -45,3 +45,21 @@ final class MapFilterDefaultsTests: XCTestCase {
         XCTAssertEqual(s.hiddenEvents(on: .day), Set(EventKind.allCases))
     }
 }
+
+/// Trailer and vehicle pick-up / drop-off stops.
+@MainActor
+final class EquipmentStopTests: XCTestCase {
+    func testEquipmentStops() throws {
+        var stop = PlanStop(kind: .trailerPickup)
+        XCTAssertTrue(stop.isEquipmentStop)
+        XCTAssertTrue(stop.isTrailerStop)
+        stop.equipmentRef = "T1234"
+        XCTAssertEqual(stop.equipmentName(in: []), "T1234")
+        XCTAssertEqual(PlanStop(kind: .delivery).equipmentName(in: []), "")
+        XCTAssertFalse(PlanStop(kind: .vehicleDrop).isTrailerStop)
+        // Stops saved before 3.14 (no equipment fields) still load.
+        let old = #"[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","kind":"delivery","place":"Tesco","time":"","reference":"","pallets":"","notes":""}]"#
+        let decoded = try JSONDecoder().decode([PlanStop].self, from: Data(old.utf8))
+        XCTAssertNil(decoded.first?.equipmentID)
+    }
+}

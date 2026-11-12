@@ -479,7 +479,7 @@ final class RulesEngineTests: XCTestCase {
         s.todayOrder = ["earnings", "status", "buttons"]
         s.todayHidden = ["card"]
         // Navigation tiles only appear while navigating; check the rest of the order.
-        let order = s.tileOrder(.today).filter { !$0.rawValue.hasPrefix("nav") }
+        let order = s.tileOrder(.today).filter { !$0.rawValue.hasPrefix("nav") && $0 != .heightCheck }
         XCTAssertEqual(Array(s.tileOrder(.today).drop { $0 != .navTurn }.prefix(7)).last, .buttons, "nav tiles go above the buttons")
         let hidden = s.tileHidden(.today)
         XCTAssertEqual(order.first, .date, "older layouts get the date tile at the top")
@@ -490,7 +490,7 @@ final class RulesEngineTests: XCTestCase {
         XCTAssertTrue(hidden.contains(.restBy), "extra hours tiles start hidden on Today")
 
         s.moveTile(.workLeft, before: .earnings, on: .today)
-        XCTAssertEqual(s.tileOrder(.today)[1], .workLeft)
+        XCTAssertEqual(s.tileOrder(.today).filter { $0 != .heightCheck }[1], .workLeft)
         s.setTile(.card, visible: true, on: .today)
         XCTAssertFalse(s.tileHidden(.today).contains(.card))
         XCTAssertTrue(s.tileHidden(.hours).isEmpty, "every Hours tile shows by default")

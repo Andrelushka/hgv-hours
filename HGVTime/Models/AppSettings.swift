@@ -256,6 +256,9 @@ struct AppSettings: Codable, Equatable {
     var currentTrailerID = ""
     /// Running loaded or empty: "loaded", "empty" or "" (not recorded).
     var currentLoadState = ""
+    /// When the vehicle height was last confirmed (seconds since 1970, 0 = never) and for which vehicle + trailer.
+    var heightCheckedAt: Double = 0
+    var heightCheckedFor = ""
     /// Your start- and end-of-shift checks.
     var shiftChecks: [ShiftCheckTemplate] = []
 

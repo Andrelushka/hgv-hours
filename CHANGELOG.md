@@ -2,6 +2,11 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.14.0 — Trailer/vehicle stops, height check
+- New stop types: Pick up trailer, Drop off trailer, Pick up vehicle, Drop off vehicle — add, edit, move, swap or delete them like any stop. Choose the trailer or vehicle from your list (or type its number). Tapping Departed at a pick-up makes it your current trailer/vehicle; at a drop-off it's taken off.
+- Today: "Vehicle height checked" tile, like the driver card — shows your height (vehicle or trailer, whichever is taller); one tap records the check with the time (logged as an event). It resets each shift and when you change vehicle or trailer.
+- 2 new tests (103 in total).
+
 ## 3.13.2 — Map filters per map, with sensible defaults
 - Activities and events are back on every map, controlled by the filter. Each map remembers its own choice and starts from a default that fits where you opened it:
   - Main map (Today) and the general day map: activities and events off.

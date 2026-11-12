@@ -633,3 +633,44 @@ struct DrivingSafetyBanner: View {
         }
     }
 }
+
+
+/// Today: vehicle height (vehicle or trailer, whichever is taller) with a one-tap "checked" record, like the driver card.
+struct HeightCheckTile: View {
+    var height: Double
+    var checkedAt: Date?
+    var action: () -> Void
+
+    var body: some View {
+        let checked = checkedAt != nil
+        Button(action: action) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle().fill(checked ? Color.green : Color.orange).frame(width: 34, height: 34)
+                    Image(systemName: checked ? "checkmark" : "arrow.up.and.down").font(.subheadline.weight(.heavy)).foregroundStyle(.white)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text("Vehicle height").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                        if height > 0 {
+                            Text(Fmt.length(height)).font(.headline.monospacedDigit())
+                        }
+                    }
+                    if let checkedAt {
+                        Text("Checked at \(Fmt.time(checkedAt)) · tap to undo").font(.caption2).foregroundStyle(.secondary)
+                    } else {
+                        Text(height > 0 ? "Not checked — tap when you've checked the height plate" : "Set the height on your vehicle or trailer, then tap when checked")
+                            .font(.caption2.weight(.semibold)).foregroundStyle(.orange)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .background((checked ? Color.green : Color.orange).opacity(0.1), in: RoundedRectangle(cornerRadius: 14))
+            .overlay(RoundedRectangle(cornerRadius: 14).stroke((checked ? Color.green : Color.orange).opacity(0.5), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+        .sensoryFeedback(.impact, trigger: checked)
+        .accessibilityLabel(checked ? "Vehicle height checked. Tap to undo." : "Vehicle height not checked. Tap to record checking it.")
+    }
+}

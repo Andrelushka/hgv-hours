@@ -7,6 +7,7 @@ struct TodayJobCard: View {
     @Environment(\.modelContext) private var context
     @Environment(SettingsStore.self) private var store
     @Bindable var plan: WorkPlan
+    @Query(sort: \Vehicle.createdAt) private var vehicles: [Vehicle]
     var onEdit: () -> Void
     @State private var busy: UUID?
     @State private var reason = ""
@@ -76,7 +77,7 @@ struct TodayJobCard: View {
                     VStack(alignment: .leading, spacing: 1) {
                         Text([stop.kind == .other ? stop.kindTitle : "", stop.displayName].filter { !$0.isEmpty }.joined(separator: " · "))
                             .font(.caption.weight(.semibold)).lineLimit(1)
-                        let details = [stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
+                        let details = [stop.equipmentName(in: vehicles), stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
                                        (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                                        stop.pallets.isEmpty ? "" : "\(stop.pallets) plt"].filter { !$0.isEmpty }.joined(separator: " · ")
                         if !details.isEmpty { Text(details).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
@@ -135,6 +136,24 @@ struct TodayJobCard: View {
             }
             .buttonStyle(.bordered)
             .font(.caption.weight(.semibold))
+    }
+
+    /// Leaving a pick-up or drop-off stop changes the current trailer or vehicle (and logs it).
+    private func applyEquipment(_ stop: PlanStop, at time: Date) {
+        let id = stop.equipmentID ?? ""
+        switch stop.kind {
+        case .trailerPickup where !id.isEmpty:
+            VehicleLog.selectTrailer(id, context: context, store: store, at: time)
+        case .trailerDrop where id.isEmpty || store.settings.currentTrailerID == id:
+            VehicleLog.selectTrailer("", context: context, store: store, at: time)
+        case .vehiclePickup where !id.isEmpty:
+            VehicleLog.select(id, context: context, store: store, at: time)
+            AutoDriveDetector.shared.update(settings: store.settings)
+        case .vehicleDrop where id.isEmpty || store.settings.currentVehicleID == id:
+            VehicleLog.select("", context: context, store: store, at: time)
+        default:
+            break
+        }
     }
 
     private func moveStop(from: Int, to: Int) {
@@ -199,6 +218,7 @@ struct TodayJobCard: View {
                     ReminderService.shared.fire(.arrived, context: context)
                 } else {
                     stops[i].departedAt = now
+                    applyEquipment(stops[i], at: now)
                 }
                 EventRecorder.log(arrived ? .arrived : .departed, detail: stops[i].place, at: now,
                                   coordinate: location?.coordinate, context: context, settings: store.settings)

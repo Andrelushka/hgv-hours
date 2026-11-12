@@ -5227,6 +5227,34 @@
         }
       }
     },
+    "Checked at %@ · tap to undo": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprawdzono o %@ · stuknij, aby cofnąć"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificat la %@ · atinge ca să anulezi"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверено в %@ · нажмите, чтобы отменить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірено о %@ · натисніть, щоб скасувати"
+          }
+        }
+      }
+    },
     "Checks for your next shift": {
       "localizations": {
         "pl": {
@@ -9271,6 +9299,62 @@
         }
       }
     },
+    "Drop off trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaw naczepę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasă remorca"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставить прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишити причіп"
+          }
+        }
+      }
+    },
+    "Drop off vehicle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaw pojazd"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasă vehiculul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставить машину"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишити машину"
+          }
+        }
+      }
+    },
     "Drop trailer (none)": {
       "localizations": {
         "pl": {
@@ -12813,6 +12897,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Висота"
+          }
+        }
+      }
+    },
+    "Height check undone": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cofnięto sprawdzenie wysokości"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verificarea înălțimii anulată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверка высоты отменена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перевірку висоти скасовано"
           }
         }
       }
@@ -18298,6 +18410,34 @@
         }
       }
     },
+    "Not checked — tap when you've checked the height plate": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie sprawdzono — stuknij, gdy sprawdzisz tabliczkę wysokości"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neverificat — atinge după ce verifici plăcuța de înălțime"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не проверено — нажмите, когда проверите табличку высоты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не перевірено — натисніть, коли перевірите табличку висоти"
+          }
+        }
+      }
+    },
     "Not covered yet": {
       "localizations": {
         "pl": {
@@ -18350,6 +18490,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не вистачає часу водіння, щоб доїхати"
+          }
+        }
+      }
+    },
+    "Not in my list": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie ma na mojej liście"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu e în lista mea"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нет в моём списке"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Немає в моєму списку"
           }
         }
       }
@@ -20556,6 +20724,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Виберіть ×1,25, ×1,5 чи ×2, введіть свій множник або точну ставку понаднормових."
+          }
+        }
+      }
+    },
+    "Pick up trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odbierz naczepę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ia remorca"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрать прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрати причіп"
+          }
+        }
+      }
+    },
+    "Pick up vehicle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odbierz pojazd"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ia vehiculul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрать машину"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрати машину"
           }
         }
       }
@@ -24428,6 +24652,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Задати час виїзду самому"
+          }
+        }
+      }
+    },
+    "Set the height on your vehicle or trailer, then tap when checked": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ustaw wysokość pojazdu lub naczepy, potem stuknij po sprawdzeniu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setează înălțimea vehiculului sau remorcii, apoi atinge după verificare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Укажите высоту у машины или прицепа, затем нажмите после проверки"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вкажіть висоту в машини чи причепа, потім натисніть після перевірки"
           }
         }
       }
@@ -30063,6 +30315,118 @@
         }
       }
     },
+    "Vehicle height": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysokość pojazdu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Înălțimea vehiculului"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высота машины"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Висота машини"
+          }
+        }
+      }
+    },
+    "Vehicle height checked": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysokość pojazdu sprawdzona"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Înălțimea vehiculului verificată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высота машины проверена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Висоту машини перевірено"
+          }
+        }
+      }
+    },
+    "Vehicle height checked. Tap to undo.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysokość pojazdu sprawdzona. Stuknij, aby cofnąć."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Înălțimea vehiculului verificată. Atinge ca să anulezi."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высота машины проверена. Нажмите, чтобы отменить."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Висоту машини перевірено. Натисніть, щоб скасувати."
+          }
+        }
+      }
+    },
+    "Vehicle height not checked. Tap to record checking it.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysokość pojazdu niesprawdzona. Stuknij, aby zapisać sprawdzenie."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Înălțimea vehiculului neverificată. Atinge ca să înregistrezi verificarea."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Высота машины не проверена. Нажмите, чтобы записать проверку."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Висоту машини не перевірено. Натисніть, щоб записати перевірку."
+          }
+        }
+      }
+    },
     "Vehicle heights and lengths": {
       "localizations": {
         "pl": {
@@ -31589,6 +31953,118 @@
         }
       }
     },
+    "When you tap Departed here, this trailer becomes your current trailer (if it's in your list).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy stukniesz tu „Wyjazd”, ta naczepa stanie się Twoją bieżącą naczepą (jeśli jest na liście)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când atingi „Am plecat” aici, această remorcă devine remorca ta curentă (dacă e în listă)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда вы нажмёте «Уехал» здесь, этот прицеп станет вашим текущим прицепом (если он есть в списке)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коли ви натиснете «Виїхав» тут, цей причіп стане вашим поточним причепом (якщо він є в списку)."
+          }
+        }
+      }
+    },
+    "When you tap Departed here, this trailer is taken off as your current trailer.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy stukniesz tu „Wyjazd”, ta naczepa przestanie być Twoją bieżącą naczepą."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când atingi „Am plecat” aici, această remorcă nu mai e remorca ta curentă."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда вы нажмёте «Уехал» здесь, этот прицеп перестанет быть вашим текущим прицепом."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коли ви натиснете «Виїхав» тут, цей причіп перестане бути вашим поточним причепом."
+          }
+        }
+      }
+    },
+    "When you tap Departed here, this vehicle becomes your current vehicle (if it's in your list).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy stukniesz tu „Wyjazd”, ten pojazd stanie się Twoim bieżącym pojazdem (jeśli jest na liście)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când atingi „Am plecat” aici, acest vehicul devine vehiculul tău curent (dacă e în listă)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда вы нажмёте «Уехал» здесь, эта машина станет вашей текущей машиной (если она есть в списке)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коли ви натиснете «Виїхав» тут, ця машина стане вашою поточною машиною (якщо вона є в списку)."
+          }
+        }
+      }
+    },
+    "When you tap Departed here, this vehicle is taken off as your current vehicle.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdy stukniesz tu „Wyjazd”, ten pojazd przestanie być Twoim bieżącym pojazdem."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când atingi „Am plecat” aici, acest vehicul nu mai e vehiculul tău curent."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда вы нажмёте «Уехал» здесь, эта машина перестанет быть вашей текущей машиной."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коли ви натиснете «Виїхав» тут, ця машина перестане бути вашою поточною машиною."
+          }
+        }
+      }
+    },
     "Where each activity started: driving, other work, POA, breaks.": {
       "localizations": {
         "pl": {
@@ -31641,6 +32117,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Де завершується робота (напр. інша база чи стоянка на ніч)."
+          }
+        }
+      }
+    },
+    "Which trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Która naczepa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce remorcă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Какой прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Який причіп"
+          }
+        }
+      }
+    },
+    "Which vehicle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Który pojazd"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce vehicul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Какая машина"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Яка машина"
           }
         }
       }

@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 /// Every block that can appear on the Today and Hours pages.
 enum Tile: String, CaseIterable, Identifiable {
     // Today
-    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage, checks
+    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage, checks, heightCheck
     // Navigation (shown while navigating)
     case navMap, navTurn, navRoad, navSpeedLimit, navArrival, navVoice
     // Right now
@@ -29,7 +29,7 @@ enum Tile: String, CaseIterable, Identifiable {
 
     var group: TileGroup {
         switch self {
-        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks,
+        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck,
              .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice: .today
         case .driveLeft, .workLeft, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .restNow: .now
         case .nextBreak, .comingUp: .breaks
@@ -45,7 +45,7 @@ enum Tile: String, CaseIterable, Identifiable {
     /// Full width (otherwise half width, two to a row).
     var isWide: Bool {
         switch self {
-        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .navMap, .navTurn,
+        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .navMap, .navTurn,
              .restNow, .nextBreak, .comingUp, .shiftLength, .restRules, .allWarnings, .infringements:
             true
         default: false
@@ -65,6 +65,7 @@ enum Tile: String, CaseIterable, Identifiable {
         case .nightOut: String(localized: "Night out")
         case .job: String(localized: "Today's job")
         case .checks: String(localized: "Shift checks")
+        case .heightCheck: String(localized: "Vehicle height checked")
         case .navMap: String(localized: "Navigation map")
         case .navTurn: String(localized: "Next turn")
         case .navRoad: String(localized: "Road you're on")
@@ -119,6 +120,7 @@ enum Tile: String, CaseIterable, Identifiable {
         case .nightOut: "bed.double.fill"
         case .job: "shippingbox.fill"
         case .checks: "checklist"
+        case .heightCheck: "arrow.up.and.down.square.fill"
         case .navMap: "map.fill"
         case .navTurn: "arrow.turn.up.right"
         case .navRoad: "road.lanes"
@@ -186,7 +188,7 @@ enum TilePage: String {
     var allowed: [Tile] {
         switch self {
         case .today:
-            [.date, .status, .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .buttons, .driveLeft, .workLeft, .checks, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
+            [.date, .heightCheck, .status, .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .buttons, .driveLeft, .workLeft, .checks, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
              .job, .vehicle, .mileage, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .nextBreak,
              .tenHourDays, .fifteenHourDays, .shiftLength]
         case .hours:
@@ -197,7 +199,7 @@ enum TilePage: String {
     /// Shown until the driver changes the layout.
     var defaultVisible: Set<Tile> {
         switch self {
-        case .today: [.date, .card, .expiry, .status, .buttons, .navTurn, .navMap, .navArrival, .driveLeft, .workLeft, .checks, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
+        case .today: [.date, .card, .heightCheck, .expiry, .status, .buttons, .navTurn, .navMap, .navArrival, .driveLeft, .workLeft, .checks, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
         case .hours: Set(allowed)
         }
     }
@@ -220,6 +222,11 @@ extension AppSettings {
                 order.remove(at: night)
                 order.insert(.nightOut, at: min(order.firstIndex(of: .card).map { $0 + 1 } ?? card + 1, order.count))
             }
+        }
+        // Height check (3.14) goes under the driver card / night out row in layouts saved before it existed.
+        if page == .today, !order.isEmpty, !raw.contains(Tile.heightCheck.rawValue) {
+            let after = [order.firstIndex(of: .nightOut), order.firstIndex(of: .card)].compactMap { $0 }.max()
+            order.insert(.heightCheck, at: after.map { $0 + 1 } ?? 1)
         }
         // Navigation tiles (3.10) go just above the buttons in layouts saved before they existed (shown only while navigating).
         if page == .today, !order.isEmpty, !raw.contains(Tile.navTurn.rawValue), let b = order.firstIndex(of: .buttons) {

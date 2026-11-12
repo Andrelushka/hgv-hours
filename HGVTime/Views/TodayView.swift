@@ -168,7 +168,7 @@ struct TodayView: View {
         case .job: return onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty
         case .vehicle: return true
         case .mileage: return onShift || VehicleLog.hasMileage(on: now, context: context)
-        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks: return true
+        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks, .heightCheck: return true
         case .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice: return NavigationEngine.shared.isRunning
         default: return data.applies(tile)
         }
@@ -179,6 +179,9 @@ struct TodayView: View {
         switch tile {
         case .date: DateTile(now: now)
         case .card: CardTile(inserted: cardIn, since: cardSince) { toggleCard() }
+        case .heightCheck: HeightCheckTile(height: currentHeight, checkedAt: heightCheckedAt(shiftStart: status.currentShift?.period.start)) {
+            toggleHeightCheck(shiftStart: status.currentShift?.period.start)
+        }
         case .expiry: ExpiryBanner()
         case .status: currentCard(status, dash)
         case .buttons:
@@ -521,6 +524,39 @@ struct TodayView: View {
     }
 
     // MARK: Driver card
+
+    /// Taller of the current vehicle and trailer (metres, 0 = not set).
+    private var currentHeight: Double {
+        let ids = [store.settings.currentVehicleID, store.settings.currentTrailerID].filter { !$0.isEmpty }
+        let all = (try? context.fetch(FetchDescriptor<Vehicle>())) ?? []
+        return all.filter { ids.contains($0.id.uuidString) }.map(\.height).max() ?? 0
+    }
+
+    private var heightKey: String { store.settings.currentVehicleID + "|" + store.settings.currentTrailerID }
+
+    /// When the height was checked for this vehicle + trailer in this shift (or today, off shift); nil = not yet.
+    private func heightCheckedAt(shiftStart: Date?) -> Date? {
+        let s = store.settings
+        guard s.heightCheckedAt > 0, s.heightCheckedFor == heightKey else { return nil }
+        let at = Date(timeIntervalSince1970: s.heightCheckedAt)
+        let from = (shiftStart ?? Calendar.hgv.startOfDay(for: .now)).addingTimeInterval(-3 * 3600)
+        return at >= from ? at : nil
+    }
+
+    private func toggleHeightCheck(shiftStart: Date?) {
+        let checking = heightCheckedAt(shiftStart: shiftStart) == nil
+        let now = Date.now
+        store.settings.heightCheckedAt = checking ? now.timeIntervalSince1970 : 0
+        store.settings.heightCheckedFor = checking ? heightKey : ""
+        let h = currentHeight
+        EventRecorder.log(.note, title: checking ? String(localized: "Vehicle height checked") : String(localized: "Height check undone"),
+                          detail: h > 0 ? Fmt.length(h) : "", context: context, settings: store.settings)
+        withAnimation(.snappy) {
+            toast = Toast(symbol: "arrow.up.and.down.square.fill", color: checking ? .green : .orange,
+                          title: checking ? String(localized: "Vehicle height checked") : String(localized: "Height check undone"),
+                          detail: h > 0 ? Fmt.length(h) : "")
+        }
+    }
 
     private func toggleCard() {
         let inserting = !cardIn
