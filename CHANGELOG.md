@@ -2,6 +2,14 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.18.0 — Stops in order, emergency page, company profiles
+- Stops in order: you can't tap Arrived at a stop until every earlier stop is finished (Departed, or marked cancelled/failed/rejected). The stop shows "Finish stop N first"; to change the order, move, swap or edit the stops. "Arrived somewhere else" waits until you've left the stop you're at.
+- Emergency page (Today tile, or Settings → Emergency numbers): one-tap calls for 999, 112, Network Rail bridge strikes, police 101, NHS 111, National Highways, Traffic Scotland, Traffic Wales, gas emergency and Crimestoppers, plus numbers abroad (EU 112, 911, 000, NZ 111). Shows where you are (address and coordinates) to read out or send, your own numbers (breakdown, transport office, next of kin) and your companies' numbers. Reminds you to stop safely first.
+- Company profiles (Settings → Companies, or Jobs ⚙︎ → Companies): name, site address/location, any number of labelled phone numbers, email and notes (gate code, parking…).
+- Company tile on Today: the company of today's job (matched by name) and any company you pin ("Always show on Today"), with Call buttons for each number, Navigate (lorry navigation) and Email. Saved company names are suggested when you plan a job.
+- All new texts translated into Polish, Romanian, Russian and Ukrainian.
+- 2 new tests (112 in total).
+
 ## 3.17.0 — Vehicle check where you want it, editable layout everywhere, debrief tables
 - Vehicle check is only where you turn it on (Shift checks → ⚙︎ → Full vehicle check):
   - Add to start-of-shift checks: it shows in the Shift checks tile until today's check is signed.

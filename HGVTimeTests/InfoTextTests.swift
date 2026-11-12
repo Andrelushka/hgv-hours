@@ -166,3 +166,40 @@ final class LayoutAndGroupsTests: XCTestCase {
         XCTAssertGreaterThan(c.openCount(column: 1), 0)
     }
 }
+
+/// 3.18: stops in order, phone links and company profiles.
+@MainActor
+final class StopOrderAndContactsTests: XCTestCase {
+    func testArriveInOrder() {
+        var stops = [PlanStop(kind: .collection), PlanStop(kind: .delivery), PlanStop(kind: .delivery)]
+        XCTAssertNil(stops.arrivalBlocker(for: 0))
+        XCTAssertEqual(stops.arrivalBlocker(for: 1), 0, "first stop not done yet")
+        stops[0].arrivedAt = .now
+        XCTAssertEqual(stops.currentStopIndex, 0)
+        XCTAssertEqual(stops.arrivalBlocker(for: 1), 0, "still at the first stop")
+        stops[0].departedAt = .now
+        XCTAssertNil(stops.arrivalBlocker(for: 1))
+        XCTAssertEqual(stops.arrivalBlocker(for: 2), 1)
+        stops[1].outcomeRaw = PlanStop.Outcome.allCases.first?.rawValue   // cancelled/failed counts as finished
+        XCTAssertNil(stops.arrivalBlocker(for: 2))
+        XCTAssertNil(stops.currentStopIndex)
+    }
+
+    func testPhonesAndCompanies() throws {
+        XCTAssertEqual(PhoneContact.callURL("03457 11 41 41")?.absoluteString, "tel:03457114141")
+        XCTAssertEqual(PhoneContact.callURL("+44 (0)300 123")?.absoluteString, "tel:+440300123")
+        XCTAssertNil(PhoneContact.callURL("n/a"))
+        var c = CompanyProfile(name: "DHL Supply Chain")
+        XCTAssertTrue(c.matches(" dhl supply chain "))
+        XCTAssertFalse(c.matches(""))
+        c.showOnToday = true
+        var s = AppSettings()
+        s.companies = [c, CompanyProfile(name: "Tesco")]
+        XCTAssertEqual(CompanyTile.shown(s, jobCompany: "tesco").map(\.name), ["DHL Supply Chain", "Tesco"])
+        // Partial saved data still loads.
+        let old = try JSONDecoder().decode(CompanyProfile.self, from: Data(#"{"name":"Agency"}"#.utf8))
+        XCTAssertEqual(old.name, "Agency")
+        XCTAssertTrue(old.phones.isEmpty)
+        XCTAssertFalse(EmergencyNumbers.uk.isEmpty)
+    }
+}

@@ -887,3 +887,18 @@ final class VehicleUse {
         return gpsKm
     }
 }
+
+extension Array where Element == PlanStop {
+    /// A stop is finished once you've left it or marked it cancelled / failed / rejected.
+    static func isFinished(_ s: PlanStop) -> Bool { s.departedAt != nil || s.outcome != nil }
+
+    /// The earlier stop that must be finished before you can arrive at stop `index` (nil = you can arrive).
+    /// Move, swap or edit the stops to change the order.
+    func arrivalBlocker(for index: Int) -> Int? {
+        guard index > 0, index <= count else { return nil }
+        return self[..<index].firstIndex { !Self.isFinished($0) }
+    }
+
+    /// The stop you're at now (arrived, not left yet).
+    var currentStopIndex: Int? { firstIndex { $0.arrivedAt != nil && !Self.isFinished($0) } }
+}

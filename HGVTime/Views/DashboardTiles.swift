@@ -5,7 +5,7 @@ import UniformTypeIdentifiers
 /// Every block that can appear on the Today and Hours pages.
 enum Tile: String, CaseIterable, Identifiable {
     // Today
-    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage, checks, heightCheck, vehicleCheck
+    case date, card, expiry, status, buttons, inCab, warnings, earnings, nightOut, job, vehicle, mileage, checks, heightCheck, vehicleCheck, company, emergency
     // Navigation (shown while navigating)
     case navMap, navTurn, navRoad, navSpeedLimit, navArrival, navVoice
     // Right now
@@ -29,7 +29,7 @@ enum Tile: String, CaseIterable, Identifiable {
 
     var group: TileGroup {
         switch self {
-        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .vehicleCheck,
+        case .date, .card, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .vehicleCheck, .company, .emergency,
              .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice: .today
         case .driveLeft, .workLeft, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .restNow: .now
         case .nextBreak, .comingUp: .breaks
@@ -45,7 +45,7 @@ enum Tile: String, CaseIterable, Identifiable {
     /// Full width (otherwise half width, two to a row).
     var isWide: Bool {
         switch self {
-        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .vehicleCheck, .navMap, .navTurn,
+        case .date, .expiry, .status, .buttons, .inCab, .warnings, .earnings, .job, .vehicle, .mileage, .checks, .heightCheck, .vehicleCheck, .company, .navMap, .navTurn,
              .restNow, .nextBreak, .comingUp, .shiftLength, .restRules, .allWarnings, .infringements:
             true
         default: false
@@ -67,6 +67,8 @@ enum Tile: String, CaseIterable, Identifiable {
         case .checks: String(localized: "Shift checks")
         case .heightCheck: String(localized: "Vehicle height checked")
         case .vehicleCheck: String(localized: "Vehicle check")
+        case .company: String(localized: "Company")
+        case .emergency: String(localized: "Emergency")
         case .navMap: String(localized: "Navigation map")
         case .navTurn: String(localized: "Next turn")
         case .navRoad: String(localized: "Road you're on")
@@ -123,6 +125,8 @@ enum Tile: String, CaseIterable, Identifiable {
         case .checks: "checklist"
         case .heightCheck: "arrow.up.and.down.square.fill"
         case .vehicleCheck: "checklist.checked"
+        case .company: "building.2.fill"
+        case .emergency: "sos"
         case .navMap: "map.fill"
         case .navTurn: "arrow.turn.up.right"
         case .navRoad: "road.lanes"
@@ -190,7 +194,7 @@ enum TilePage: String {
     var allowed: [Tile] {
         switch self {
         case .today:
-            [.date, .heightCheck, .status, .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .buttons, .driveLeft, .workLeft, .checks, .vehicleCheck, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
+            [.date, .heightCheck, .emergency, .company, .status, .navTurn, .navMap, .navRoad, .navSpeedLimit, .navArrival, .navVoice, .buttons, .driveLeft, .workLeft, .checks, .vehicleCheck, .card, .nightOut, .inCab, .warnings, .expiry, .earnings,
              .job, .vehicle, .mileage, .restBy, .shiftLeft, .breakDue, .drivenToday, .workedToday, .nextBreak,
              .tenHourDays, .fifteenHourDays, .shiftLength]
         case .hours:
@@ -201,7 +205,7 @@ enum TilePage: String {
     /// Shown until the driver changes the layout.
     var defaultVisible: Set<Tile> {
         switch self {
-        case .today: [.date, .card, .heightCheck, .expiry, .status, .buttons, .navTurn, .navMap, .navArrival, .driveLeft, .workLeft, .checks, .vehicleCheck, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
+        case .today: [.date, .card, .heightCheck, .company, .emergency, .expiry, .status, .buttons, .navTurn, .navMap, .navArrival, .driveLeft, .workLeft, .checks, .vehicleCheck, .inCab, .warnings, .earnings, .nightOut, .job, .vehicle, .mileage]
         case .hours: Set(allowed)
         }
     }

@@ -178,7 +178,8 @@ struct TodayView: View {
         case .job: return onShift || !plans.filter({ Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) && !$0.completed }).isEmpty
         case .vehicle: return true
         case .mileage: return onShift || VehicleLog.hasMileage(on: now, context: context)
-        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks, .heightCheck, .vehicleCheck: return true
+        case .date, .card, .expiry, .status, .buttons, .inCab, .earnings, .nightOut, .checks, .heightCheck, .vehicleCheck, .emergency: return true
+        case .company: return store.settings.companies.isEmpty || !CompanyTile.shown(store.settings, jobCompany: todaysCompany(now)).isEmpty
         case .navMap, .navTurn, .navRoad, .navSpeedLimit, .navArrival, .navVoice: return NavigationEngine.shared.isRunning
         default: return data.applies(tile)
         }
@@ -190,6 +191,8 @@ struct TodayView: View {
         case .date: DateTile(now: now)
         case .card: CardTile(inserted: cardIn, since: cardSince) { toggleCard() }
         case .vehicleCheck: VehicleCheckTile()
+        case .company: CompanyTile(jobCompany: todaysCompany(now))
+        case .emergency: EmergencyTile()
         case .heightCheck: HeightCheckTile(height: currentHeight, checkedAt: heightCheckedAt(shiftStart: status.currentShift?.period.start)) {
             toggleHeightCheck(shiftStart: status.currentShift?.period.start)
         }
@@ -736,6 +739,11 @@ struct TodayView: View {
                 TodayJobCard(plan: plan) { editingPlan = plan }
             }
         }
+    }
+
+    /// Company of today's job ("" if none).
+    private func todaysCompany(_ now: Date) -> String {
+        plans.first { !$0.cancelled && (Calendar.hgv.isDate($0.plannedStart, inSameDayAs: now) || ($0.plannedStart <= now && $0.plannedEnd >= now)) }?.company ?? ""
     }
 
     /// The next job that isn't done or cancelled, starting within the next 24 hours.

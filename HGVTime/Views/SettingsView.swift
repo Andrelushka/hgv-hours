@@ -75,6 +75,13 @@ struct SettingsView: View {
                         SettingsRow(title: "Shift checks", symbol: "checklist", color: .green,
                                     value: s.shiftChecks.isEmpty ? "None" : "\(s.shiftChecks.filter(\.enabled).count)")
                     }
+                    NavigationLink { CompaniesView() } label: {
+                        SettingsRow(title: "Companies", symbol: "building.2.fill", color: .indigo,
+                                    value: s.companies.isEmpty ? "None" : "\(s.companies.count)")
+                    }
+                    NavigationLink { EmergencyView() } label: {
+                        SettingsRow(title: "Emergency numbers", symbol: "sos", color: .red, value: "")
+                    }
                     NavigationLink { WakeLeaveSettingsView() } label: {
                         SettingsRow(title: "Wake-up & leave home", symbol: "alarm.waves.left.and.right.fill", color: .orange,
                                     value: s.wakeAlarmEnabled || s.leaveReminderEnabled ? "On" : "Off")

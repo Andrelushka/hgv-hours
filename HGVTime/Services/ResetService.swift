@@ -117,7 +117,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.applyWorkingTime = d.applyWorkingTime; s.nightWorkLimitHours = d.nightWorkLimitHours
             s.wtdReferenceWeeks = d.wtdReferenceWeeks; s.allowConsecutiveReducedWeekly = d.allowConsecutiveReducedWeekly
             s.currentRegime = d.currentRegime; s.multiManned = d.multiManned; s.shiftStartKind = d.shiftStartKind
-            s.vehicleCheckInShift = d.vehicleCheckInShift; s.vehicleCheckAtPickup = d.vehicleCheckAtPickup
+            s.vehicleCheckInShift = d.vehicleCheckInShift; s.vehicleCheckAtPickup = d.vehicleCheckAtPickup; s.companies = d.companies; s.emergencyContacts = d.emergencyContacts
         case .alerts:
             s.notificationsEnabled = d.notificationsEnabled; s.warningLeadMinutes = d.warningLeadMinutes
             s.liveActivityEnabled = d.liveActivityEnabled

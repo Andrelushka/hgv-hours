@@ -595,6 +595,34 @@
         }
       }
     },
+    "%lld phone number(s)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "telefony: %lld"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "telefoane: %lld"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "телефонов: %lld"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "телефонів: %lld"
+          }
+        }
+      }
+    },
     "%lld s%@": {
       "localizations": {
         "en": {
@@ -737,6 +765,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Дні водіння по 10 год"
+          }
+        }
+      }
+    },
+    "112 or 999.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "112 lub 999."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "112 sau 999."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "112 или 999."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "112 або 999."
           }
         }
       }
@@ -1163,6 +1219,34 @@
       }
     },
     "90": {},
+    "999 · 112 · bridge strike · where you are": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "999 · 112 · uderzenie w wiadukt · gdzie jesteś"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "999 · 112 · lovire de pod · unde ești"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "999 · 112 · удар о мост · где вы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "999 · 112 · удар об міст · де ви"
+          }
+        }
+      }
+    },
     "A 9-hour reduced daily rest lets your day stretch to 15 hours. You can use up to 3 between weekly rests.": {
       "localizations": {
         "pl": {
@@ -1444,6 +1528,34 @@
         }
       }
     },
+    "Abroad": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Za granicą"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "În străinătate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За границей"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "За кордоном"
+          }
+        }
+      }
+    },
     "Accident": {
       "localizations": {
         "pl": {
@@ -1496,6 +1608,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Картки ДТП у кабіні"
+          }
+        }
+      }
+    },
+    "Accurate to about %lld m": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokładność około %lld m"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Precizie de circa %lld m"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Точность около %lld м"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Точність близько %lld м"
           }
         }
       }
@@ -1726,6 +1866,34 @@
         }
       }
     },
+    "Add a company": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj firmę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă o companie"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить компанию"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати компанію"
+          }
+        }
+      }
+    },
     "Add a new trailer": {
       "localizations": {
         "pl": {
@@ -1778,6 +1946,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Додати нову машину"
+          }
+        }
+      }
+    },
+    "Add a number": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj numer"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă un număr"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить номер"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати номер"
           }
         }
       }
@@ -1978,6 +2174,34 @@
         }
       }
     },
+    "Add company": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj firmę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă companie"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить компанию"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати компанію"
+          }
+        }
+      }
+    },
     "Add custom stop": {
       "localizations": {
         "pl": {
@@ -2174,6 +2398,34 @@
         }
       }
     },
+    "Add the companies and agency clients you drive for: their site address and phone numbers, ready to call or navigate to from Today.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj firmy i klientów agencji, dla których jeździsz: adres miejsca i telefony — gotowe do dzwonienia lub nawigacji z „Dziś”."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă companiile și clienții agenției pentru care conduci: adresa locației și telefoanele, gata de apelat sau de navigat din „Azi”."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавьте компании и клиентов агентства, на которых вы работаете: адрес объекта и телефоны, чтобы звонить или ехать к ним прямо с «Сегодня»."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додайте компанії й клієнтів агенції, на яких ви працюєте: адресу об'єкта й телефони, щоб дзвонити чи їхати до них просто з «Сьогодні»."
+          }
+        }
+      }
+    },
     "Add tiles": {
       "localizations": {
         "pl": {
@@ -2310,6 +2562,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Додайте машини й причепи в Роботи → Машини."
+          }
+        }
+      }
+    },
+    "Add your companies with their address and phone numbers, then pin one here or it appears with today's job.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj firmy z adresem i telefonami, potem przypnij jedną tutaj — albo pojawi się przy dzisiejszym zleceniu."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă companii cu adresă și telefoane, apoi fixează una aici — sau apare împreună cu cursa de azi."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавьте компании с адресом и телефонами, затем закрепите одну здесь — или она появится вместе с сегодняшней работой."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додайте компанії з адресою й телефонами, потім закріпіть одну тут — або вона з'явиться разом із сьогоднішньою роботою."
+          }
+        }
+      }
+    },
+    "Add your own numbers": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj własne numery"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adaugă numerele tale"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить свои номера"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Додати свої номери"
           }
         }
       }
@@ -3300,6 +3608,34 @@
         }
       }
     },
+    "Always show on Today": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zawsze pokazuj na „Dziś”"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arată mereu pe „Azi”"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всегда показывать на «Сегодня»"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завжди показувати на «Сьогодні»"
+          }
+        }
+      }
+    },
     "Amount": {
       "localizations": {
         "pl": {
@@ -4082,6 +4418,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "У певний час"
+          }
+        }
+      }
+    },
+    "Australia": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Australia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Australia"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Австралия"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Австралія"
           }
         }
       }
@@ -5274,6 +5638,34 @@
         }
       }
     },
+    "Breakdown company, transport office, out-of-hours manager, next of kin…": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomoc drogowa, dział transportu, dyżurny kierownik, bliscy…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firma de depanare, biroul de transport, managerul de serviciu, familia…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эвакуатор, транспортный отдел, дежурный менеджер, близкие…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Евакуатор, транспортний відділ, черговий менеджер, близькі…"
+          }
+        }
+      }
+    },
     "Breaks": {
       "localizations": {
         "pl": {
@@ -5326,6 +5718,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Перерви й терміни"
+          }
+        }
+      }
+    },
+    "Bridge strike or railway problem — Network Rail": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uderzenie w wiadukt lub problem na kolei — Network Rail"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lovire de pod sau problemă la calea ferată — Network Rail"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удар о мост или проблема на ж/д — Network Rail"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удар об міст чи проблема на залізниці — Network Rail"
           }
         }
       }
@@ -5494,6 +5914,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "Зателефонувати"
+          }
+        }
+      }
+    },
+    "Call %@ %@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Call %1$@ %2$@ %3$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zadzwoń: %@ %@ %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sună: %@ %@ %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позвонить: %@ %@ %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зателефонувати: %@ %@ %@"
+          }
+        }
+      }
+    },
+    "Call %@, %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Call %1$@, %2$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zadzwoń: %@, %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sună: %@, %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Позвонить: %@, %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зателефонувати: %@, %@"
           }
         }
       }
@@ -6488,6 +6976,34 @@
         }
       }
     },
+    "Companies": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Firmy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Companii"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Компании"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Компанії"
+          }
+        }
+      }
+    },
     "Company": {
       "localizations": {
         "pl": {
@@ -6540,6 +7056,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Компанія / клієнт агентства"
+          }
+        }
+      }
+    },
+    "Company name": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nazwa firmy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numele companiei"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Название компании"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Назва компанії"
           }
         }
       }
@@ -7016,6 +7560,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Створіть профіль водія"
+          }
+        }
+      }
+    },
+    "Crimestoppers (anonymous)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crimestoppers (anonimowo)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crimestoppers (anonim)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crimestoppers (анонимно)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crimestoppers (анонімно)"
           }
         }
       }
@@ -8332,6 +8904,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Видалити перевірку"
+          }
+        }
+      }
+    },
+    "Delete company": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń firmę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Șterge compania"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалить компанию"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видалити компанію"
           }
         }
       }
@@ -11373,6 +11973,34 @@
         }
       }
     },
+    "Edit your numbers": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edytuj własne numery"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editează numerele tale"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Изменить свои номера"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Змінити свої номери"
+          }
+        }
+      }
+    },
     "Electric": {
       "localizations": {
         "pl": {
@@ -11425,6 +12053,146 @@
           "stringUnit": {
             "state": "translated",
             "value": "Електрика"
+          }
+        }
+      }
+    },
+    "Email": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эл. почта"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ел. пошта"
+          }
+        }
+      }
+    },
+    "Emergency": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomoc w nagłych wypadkach"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urgență"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экстренная помощь"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Екстрена допомога"
+          }
+        }
+      }
+    },
+    "Emergency (works across Europe)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numer alarmowy (działa w całej Europie)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urgență (funcționează în toată Europa)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экстренный номер (работает по всей Европе)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Екстрений номер (працює по всій Європі)"
+          }
+        }
+      }
+    },
+    "Emergency numbers": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numery alarmowe"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numere de urgență"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экстренные номера"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Екстрені номери"
+          }
+        }
+      }
+    },
+    "Emergency — police, fire, ambulance, coastguard": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pomoc — policja, straż, pogotowie, straż przybrzeżna"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urgență — poliție, pompieri, ambulanță, paza de coastă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Экстренная помощь — полиция, пожарные, скорая, береговая охрана"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Екстрена допомога — поліція, пожежники, швидка, берегова охорона"
           }
         }
       }
@@ -11873,6 +12641,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Оцінки — до податків і утримань."
+          }
+        }
+      }
+    },
+    "Europe — any EU country": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Europa — każdy kraj UE"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Europa — orice țară UE"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Европа — любая страна ЕС"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Європа — будь-яка країна ЄС"
           }
         }
       }
@@ -12943,6 +13739,62 @@
         }
       }
     },
+    "Finding the address…": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szukam adresu…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se caută adresa…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ищем адрес…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Шукаємо адресу…"
+          }
+        }
+      }
+    },
+    "Finding where you are…": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ustalam, gdzie jesteś…"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se caută unde ești…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Определяем, где вы…"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Визначаємо, де ви…"
+          }
+        }
+      }
+    },
     "Finish": {
       "localizations": {
         "pl": {
@@ -12967,6 +13819,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Завершення"
+          }
+        }
+      }
+    },
+    "Finish stop %lld first — or move, swap or edit the stops": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw zakończ przystanek %lld — albo przesuń, zamień lub edytuj przystanki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termină întâi oprirea %lld — sau mută, schimbă ori editează opririle"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала завершите остановку %lld — или переместите, поменяйте местами или измените остановки"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спершу завершіть зупинку %lld — або перемістіть, поміняйте місцями чи змініть зупинки"
           }
         }
       }
@@ -14046,6 +14926,34 @@
         }
       }
     },
+    "Gas emergency": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pogotowie gazowe"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urgență gaz"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Утечка газа"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Витік газу"
+          }
+        }
+      }
+    },
     "Gate code, bay, instructions…": {
       "localizations": {
         "pl": {
@@ -15058,6 +15966,34 @@
         }
       }
     },
+    "Hit a railway bridge or a problem at a level crossing. Use the number on the bridge sign if there is one, and call 999 if anyone is hurt or the road or line is blocked.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uderzenie w wiadukt kolejowy lub problem na przejeździe. Dzwoń pod numer z tabliczki na wiadukcie, jeśli jest, i na 999, jeśli ktoś jest ranny albo droga lub tor są zablokowane."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ai lovit un pod de cale ferată sau e o problemă la o trecere la nivel. Sună la numărul de pe placa podului, dacă există, și la 999 dacă e cineva rănit ori drumul sau linia sunt blocate."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удар о ж/д мост или проблема на переезде. Звоните по номеру на табличке моста, если он есть, и в 999, если есть пострадавшие или перекрыта дорога или путь."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удар об залізничний міст чи проблема на переїзді. Телефонуйте за номером на табличці мосту, якщо він є, і на 999, якщо є постраждалі чи перекрито дорогу або колію."
+          }
+        }
+      }
+    },
     "Holiday": {
       "localizations": {
         "pl": {
@@ -15904,6 +16840,34 @@
         }
       }
     },
+    "Incidents, debris or hazards on motorways and major A roads in England.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdarzenia, przeszkody lub zagrożenia na autostradach i głównych drogach A w Anglii."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incidente, obiecte sau pericole pe autostrăzi și drumurile A principale din Anglia."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Происшествия, мусор или опасности на автомагистралях и главных дорогах A в Англии."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Події, уламки чи небезпеки на автомагістралях і головних дорогах A в Англії."
+          }
+        }
+      }
+    },
     "Include app details": {
       "localizations": {
         "pl": {
@@ -16152,6 +17116,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Міжнародні рейси: правила ЄС діють у ЄС/ЄЕЗ і Швейцарії; AETR — у рейсах через країни AETR. Для країн із позначкою «поки не підтримується» діють свої національні правила — уточнюйте на місці."
+          }
+        }
+      }
+    },
+    "Ireland": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irlandia"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Irlanda"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ирландия"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ірландія"
+          }
+        }
+      }
+    },
+    "It also shows on Today whenever today's job is for this company (same name as in the job).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokazuje się też na „Dziś”, gdy dzisiejsze zlecenie jest dla tej firmy (ta sama nazwa co w zleceniu)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apare și pe „Azi” când cursa de azi e pentru această companie (același nume ca în cursă)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Она также показывается на «Сегодня», когда сегодняшняя работа для этой компании (то же название, что в работе)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вона також показується на «Сьогодні», коли сьогоднішня робота для цієї компанії (та сама назва, що в роботі)."
           }
         }
       }
@@ -16688,6 +17708,34 @@
         }
       }
     },
+    "Label, e.g. Transport office": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opis, np. Dział transportu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etichetă, ex. Biroul de transport"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подпись, напр. Транспортный отдел"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підпис, напр. Транспортний відділ"
+          }
+        }
+      }
+    },
     "Landing legs undamaged, handle stowed": {
       "localizations": {
         "pl": {
@@ -17080,6 +18128,34 @@
         }
       }
     },
+    "Life in danger, crime in progress, fire, serious crash.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zagrożenie życia, przestępstwo, pożar, poważny wypadek."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viață în pericol, infracțiune în desfășurare, incendiu, accident grav."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Угроза жизни, преступление, пожар, серьёзное ДТП."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Загроза життю, злочин, пожежа, серйозна ДТП."
+          }
+        }
+      }
+    },
     "Lights, indicators and brake lights working, clean": {
       "localizations": {
         "pl": {
@@ -17446,6 +18522,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Завантаження…"
+          }
+        }
+      }
+    },
+    "Location": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokalizacja"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locație"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Местоположение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розташування"
           }
         }
       }
@@ -18430,6 +19534,34 @@
         }
       }
     },
+    "Medical advice when it's not life-threatening.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porada medyczna, gdy nie ma zagrożenia życia."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sfat medical când viața nu e în pericol."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Медицинский совет, когда нет угрозы жизни."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Медична порада, коли немає загрози життю."
+          }
+        }
+      }
+    },
     "Medium": {
       "localizations": {
         "pl": {
@@ -19298,6 +20430,34 @@
         }
       }
     },
+    "NHS — urgent medical help": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NHS — pilna pomoc medyczna"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NHS — ajutor medical urgent"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NHS — срочная медпомощь"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NHS — термінова медична допомога"
+          }
+        }
+      }
+    },
     "NN11 8XX": {},
     "Name": {
       "localizations": {
@@ -19435,6 +20595,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Вузький"
+          }
+        }
+      }
+    },
+    "National Highways (England)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "National Highways (Anglia)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "National Highways (Anglia)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "National Highways (Англия)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "National Highways (Англія)"
           }
         }
       }
@@ -20455,6 +21643,34 @@
         }
       }
     },
+    "No companies yet": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brak firm"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încă nicio companie"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Компаний пока нет"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Компаній поки немає"
+          }
+        }
+      }
+    },
     "No defects": {
       "localizations": {
         "pl": {
@@ -20759,6 +21975,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Не більше 90 годин водіння за будь-які два поспіль фіксовані тижні."
+          }
+        }
+      }
+    },
+    "No name": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bez nazwy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fără nume"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без названия"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без назви"
           }
         }
       }
@@ -21547,6 +22791,34 @@
         }
       }
     },
+    "Notes (gate code, where to park, contact name…)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notatki (kod bramy, gdzie parkować, osoba kontaktowa…)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Note (cod poartă, unde parchezi, persoană de contact…)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Заметки (код ворот, где парковаться, контакт…)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нотатки (код воріт, де паркуватися, контакт…)"
+          }
+        }
+      }
+    },
     "Nothing due": {
       "localizations": {
         "pl": {
@@ -21937,6 +23209,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Олива"
+          }
+        }
+      }
+    },
+    "On Today": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na „Dziś”"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe „Azi”"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На «Сегодня»"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На «Сьогодні»"
           }
         }
       }
@@ -23641,6 +24941,34 @@
         }
       }
     },
+    "Phone": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефон"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефон"
+          }
+        }
+      }
+    },
     "Phone (optional)": {
       "localizations": {
         "pl": {
@@ -23665,6 +24993,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Телефон (необов'язково)"
+          }
+        }
+      }
+    },
+    "Phone number": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numer telefonu"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Număr de telefon"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер телефона"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер телефону"
+          }
+        }
+      }
+    },
+    "Phone numbers": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numery telefonów"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numere de telefon"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефоны"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Телефони"
           }
         }
       }
@@ -24263,6 +25647,90 @@
         }
       }
     },
+    "Police — non-emergency": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Policja — sprawy niepilne"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poliție — non-urgențe"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полиция — не экстренно"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поліція — не екстрено"
+          }
+        }
+      }
+    },
+    "Police, fire and ambulance (112 works from mobiles).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Policja, straż i pogotowie (z komórki działa 112)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poliție, pompieri și ambulanță (112 merge de pe mobil)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полиция, пожарные и скорая (с мобильного работает 112)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поліція, пожежники й швидка (з мобільного працює 112)."
+          }
+        }
+      }
+    },
+    "Police, fire and ambulance.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Policja, straż i pogotowie."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poliție, pompieri și ambulanță."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Полиция, пожарные и скорая."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поліція, пожежники й швидка."
+          }
+        }
+      }
+    },
     "Position on screen: %lld%% from the bottom": {
       "localizations": {
         "pl": {
@@ -24763,6 +26231,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Прочитати фото"
+          }
+        }
+      }
+    },
+    "Read this to the operator. On a motorway, the marker posts on the hard shoulder and the driver location signs also tell them where you are.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przeczytaj to dyspozytorowi. Na autostradzie słupki na poboczu i tablice lokalizacyjne też wskazują, gdzie jesteś."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Citește asta operatorului. Pe autostradă, stâlpii de pe banda de urgență și indicatoarele de localizare arată și ele unde ești."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте это оператору. На автомагистрали место также подскажут столбики на обочине и знаки местоположения для водителей."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прочитайте це операторові. На автомагістралі місце також підкажуть стовпчики на узбіччі й знаки розташування для водіїв."
           }
         }
       }
@@ -25883,6 +27379,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Замінити все цією резервною копією?"
+          }
+        }
+      }
+    },
+    "Report a crime or incident that isn't an emergency (e.g. load theft found later).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś przestępstwo lub zdarzenie, które nie jest nagłe (np. kradzież ładunku wykryta później)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează o infracțiune sau un incident care nu e urgent (ex. furt de marfă descoperit ulterior)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сообщить о преступлении или происшествии без угрозы (напр. кража груза, обнаруженная позже)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повідомити про злочин чи подію без загрози (напр. крадіжка вантажу, виявлена пізніше)."
           }
         }
       }
@@ -27260,6 +28784,34 @@
         }
       }
     },
+    "Same as 999 in the UK; the emergency number in every EU country.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To samo co 999 w Wielkiej Brytanii; numer alarmowy w każdym kraju UE."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fel ca 999 în Regatul Unit; numărul de urgență în orice țară UE."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "То же, что 999 в Великобритании; экстренный номер в любой стране ЕС."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Те саме, що 999 у Великій Британії; екстрений номер у будь-якій країні ЄС."
+          }
+        }
+      }
+    },
     "Same as start": {
       "localizations": {
         "pl": {
@@ -27872,6 +29424,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Надіслати поштою, WhatsApp…"
+          }
+        }
+      }
+    },
+    "Send my location": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyślij moją lokalizację"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trimite locația mea"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить моё местоположение"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Надіслати моє розташування"
           }
         }
       }
@@ -28864,6 +30444,34 @@
         }
       }
     },
+    "Show where I am": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokaż, gdzie jestem"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arată unde sunt"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать, где я"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показати, де я"
+          }
+        }
+      }
+    },
     "Shown on Today during the shift, and you're reminded if any are left when you end it.": {
       "localizations": {
         "pl": {
@@ -29224,6 +30832,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Дрібно"
+          }
+        }
+      }
+    },
+    "Smell of gas or a gas leak (Great Britain).": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapach gazu lub wyciek (Wielka Brytania)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miros de gaz sau scurgere (Marea Britanie)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запах газа или утечка (Великобритания)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запах газу чи витік (Велика Британія)."
           }
         }
       }
@@ -30634,6 +32270,34 @@
         }
       }
     },
+    "Stop safely first. Use the phone only when parked or hands-free — in an emergency, put on your hazard lights and get everyone to a safe place.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw bezpiecznie się zatrzymaj. Używaj telefonu tylko na postoju lub w trybie głośnomówiącym — w nagłym wypadku włącz światła awaryjne i przeprowadź wszystkich w bezpieczne miejsce."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oprește întâi în siguranță. Folosește telefonul doar parcat sau hands-free — în caz de urgență pune avariile și du pe toată lumea într-un loc sigur."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала безопасно остановитесь. Пользуйтесь телефоном только на стоянке или через громкую связь — в экстренной ситуации включите аварийку и уведите всех в безопасное место."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спершу безпечно зупиніться. Користуйтеся телефоном лише на стоянці чи через гучний зв'язок — в екстреній ситуації увімкніть аварійку й відведіть усіх у безпечне місце."
+          }
+        }
+      }
+    },
     "Stop type": {
       "localizations": {
         "pl": {
@@ -31729,6 +33393,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Повідомити, коли виїжджати з дому"
+          }
+        }
+      }
+    },
+    "Tell them about crime anonymously.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś przestępstwo anonimowo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează o infracțiune anonim."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сообщите о преступлении анонимно."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повідомте про злочин анонімно."
           }
         }
       }
@@ -33111,6 +34803,62 @@
         }
       }
     },
+    "Traffic Scotland": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Scotland"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Scotland"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Scotland"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Scotland"
+          }
+        }
+      }
+    },
+    "Traffic Wales": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Wales"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Wales"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Wales"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traffic Wales"
+          }
+        }
+      }
+    },
     "Traffic jam": {
       "localizations": {
         "pl": {
@@ -33419,6 +35167,62 @@
         }
       }
     },
+    "Trunk road incidents in Scotland.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdarzenia na drogach krajowych w Szkocji."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incidente pe drumurile principale din Scoția."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Происшествия на магистральных дорогах Шотландии."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Події на магістральних дорогах Шотландії."
+          }
+        }
+      }
+    },
+    "Trunk road incidents in Wales.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdarzenia na drogach krajowych w Walii."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incidente pe drumurile principale din Țara Galilor."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Происшествия на магистральных дорогах Уэльса."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Події на магістральних дорогах Уельсу."
+          }
+        }
+      }
+    },
     "Turn on in the cab to record driving automatically, like the tacho.": {
       "localizations": {
         "pl": {
@@ -33695,6 +35499,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Шини — тиск, протектор, порізи й здуття"
+          }
+        }
+      }
+    },
+    "USA and Canada": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "USA i Kanada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUA și Canada"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "США и Канада"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "США й Канада"
           }
         }
       }
@@ -36491,6 +38323,34 @@
         }
       }
     },
+    "Where you are": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gdzie jesteś"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unde ești"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Где вы"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Де ви"
+          }
+        }
+      }
+    },
     "Which trailer": {
       "localizations": {
         "pl": {
@@ -37467,6 +39327,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ваша вантажівка"
+          }
+        }
+      }
+    },
+    "Your numbers": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twoje numery"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numerele tale"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваши номера"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваші номери"
           }
         }
       }

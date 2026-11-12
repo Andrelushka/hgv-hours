@@ -74,6 +74,8 @@ struct TodayJobCard: View {
     @ViewBuilder
     private var jobStops: some View {
             ForEach(plan.stops) { stop in
+                let index = plan.stops.firstIndex { $0.id == stop.id } ?? 0
+                let blocker = plan.stops.arrivalBlocker(for: index)
                 HStack(spacing: 8) {
                     Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
                     VStack(alignment: .leading, spacing: 1) {
@@ -84,6 +86,11 @@ struct TodayJobCard: View {
                                        stop.pallets.isEmpty ? "" : "\(stop.pallets) plt"].filter { !$0.isEmpty }.joined(separator: " · ")
                         if !details.isEmpty { Text(details).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
                         Text(statusText(stop)).font(.caption2).foregroundStyle(.secondary)
+                        if stop.arrivedAt == nil, stop.outcome == nil, let b = blocker {
+                            Label("Finish stop \(b + 1) first — or move, swap or edit the stops",
+                                  systemImage: "lock.fill")
+                                .font(.caption2).foregroundStyle(.orange)
+                        }
                     }
                     Spacer()
                     if let o = stop.outcome {
@@ -93,6 +100,7 @@ struct TodayJobCard: View {
                         ProgressView()
                     } else if stop.arrivedAt == nil {
                         Button("Arrived") { mark(stop.id, arrived: true) }.buttonStyle(.borderedProminent).tint(.green)
+                            .disabled(blocker != nil)
                     } else if stop.departedAt == nil {
                         if store.settings.vehicleCheckAtPickup, picked(stop) != nil {
                             Button { openPickupCheck(stop) } label: { Image(systemName: "checklist.checked") }
@@ -141,6 +149,7 @@ struct TodayJobCard: View {
             }
             HStack {
                 Button { addUnplannedStop() } label: { Label("Arrived somewhere else", systemImage: "mappin.and.ellipse") }
+                    .disabled(plan.stops.currentStopIndex != nil)
                 Spacer()
                 NavigationLink { DebriefView(day: plan.plannedStart) } label: { Label("Debrief", systemImage: "tablecells") }
             }
@@ -257,6 +266,7 @@ struct TodayJobCard: View {
             let location = await LocationOnce.shared.current()
             var stops = plan.stops
             if let i = stops.firstIndex(where: { $0.id == id }) {
+                if arrived, stops.arrivalBlocker(for: i) != nil { busy = nil; return }
                 if arrived {
                     stops[i].arrivedAt = now
                     ReminderService.shared.fire(.arrived, context: context)

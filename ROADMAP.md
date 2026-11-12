@@ -59,6 +59,11 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.18 (3.18.0) — Stops in order, emergency, companies
+- ✅ Arrive at stops in order (move/swap/edit to change it)
+- ✅ Emergency numbers page with your location and own contacts
+- ✅ Company profiles with call / navigate buttons on Today
+
 ## V3.17 (3.17.0) — Layout everywhere, groups, debrief tables
 - ✅ Vehicle check in shift checks and at pick-ups (only when turned on)
 - ✅ Edit layout on Driver log, Jobs, Earnings and the debrief; move tiles between groups, rename/reorder/hide groups

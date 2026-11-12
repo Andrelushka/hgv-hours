@@ -279,6 +279,10 @@ struct AppSettings: Codable, Equatable {
     var vehicleCheckInShift = false
     /// Offer the vehicle check when you pick up a vehicle or trailer (off unless you turn it on).
     var vehicleCheckAtPickup = false
+    /// Company / client profiles: name, location and phone numbers.
+    var companies: [CompanyProfile] = []
+    /// Your own emergency contacts (breakdown, transport office, next of kin…).
+    var emergencyContacts: [PhoneContact] = []
 
     // Shift
     /// Activity recorded when you tap "Start shift" (usually other work for the walk-round check).

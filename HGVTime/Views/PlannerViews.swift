@@ -86,7 +86,7 @@ struct PlanEditor: View {
     var body: some View {
         let issues = PlanCheck.check(start: start, end: end, excluding: plan?.id, plans: plans,
                                      entries: entries.map(\.snapshot), settings: store.settings)
-        let companies = Array(Set(plans.map(\.company).filter { !$0.isEmpty })).sorted()
+        let companies = Array(Set(plans.map(\.company).filter { !$0.isEmpty } + store.settings.companies.map(\.name).filter { !$0.isEmpty })).sorted()
         NavigationStack {
             Form {
                 Section {

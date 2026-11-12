@@ -53,6 +53,8 @@ struct JobSettingsView: View {
             Section {
                 NavigationLink { ShiftSettingsView() } label: { Label("Shift start & double-manning", systemImage: "play.circle") }
                 NavigationLink { VehiclesView() } label: { Label("Vehicles & trailers", systemImage: "box.truck") }
+                NavigationLink { CompaniesView() } label: { Label("Companies", systemImage: "building.2") }
+                NavigationLink { EmergencyView() } label: { Label("Emergency numbers", systemImage: "sos") }
                 NavigationLink { LookupSettingsView() } label: { Label("Registration & postcode lookup", systemImage: "magnifyingglass") }
                 NavigationLink { UnitsSettingsView() } label: { Label("Units (miles/km, feet/metres)", systemImage: "ruler") }
             }
