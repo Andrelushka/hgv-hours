@@ -59,6 +59,11 @@ Status key: ✅ done · 🚧 in progress · ⬜ planned
 - ⬜ Cloud accounts and sync (Sign in with Apple + iCloud) — needs the paid Apple Developer Program
 - ✅ Apple Watch redesign (sized for Ultra): Now (big rings, rest progress), Buttons (large tiles), Coming up (next break, rest deadlines, days left), Card & cab
 
+## V3.19 (3.19.0) — Numbered stops, start/finish trailer, loaded/empty
+- ✅ Numbered stops on Today and in Jobs
+- ✅ Pick up a trailer at the start; drop / keep coupled / leave the vehicle at the finish
+- ✅ Loaded or empty after each stop
+
 ## V3.18 (3.18.0) — Stops in order, emergency, companies
 - ✅ Arrive at stops in order (move/swap/edit to change it)
 - ✅ Emergency numbers page with your location and own contacts

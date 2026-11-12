@@ -203,3 +203,26 @@ final class StopOrderAndContactsTests: XCTestCase {
         XCTAssertFalse(EmergencyNumbers.uk.isEmpty)
     }
 }
+
+/// 3.19: trailer at the start and finish, loaded/empty per stop.
+@MainActor
+final class StartFinishTests: XCTestCase {
+    func testStartAndFinishTasks() throws {
+        let plan = WorkPlan(start: .now, end: .now.addingTimeInterval(3600))
+        XCTAssertFalse(plan.hasStartTask)
+        XCTAssertEqual(plan.endAction, .none)
+        plan.startTrailerRef = "T42"
+        plan.startLoad = "loaded"
+        XCTAssertTrue(plan.hasStartTask)
+        let text = plan.startTaskText(in: [])
+        XCTAssertTrue(text.contains("T42"))
+        XCTAssertTrue(text.contains(LoadState.title("loaded")))
+        plan.endAction = .leaveVehicle
+        XCTAssertEqual(plan.endActionRaw, "leaveVehicle")
+        // Stops saved before 3.19 have no load state.
+        let old = #"[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","kind":"delivery","place":"Tesco","time":"","reference":"","pallets":"","notes":""}]"#
+        let decoded = try JSONDecoder().decode([PlanStop].self, from: Data(old.utf8))
+        XCTAssertNil(decoded.first?.loadAfter)
+        XCTAssertEqual(LoadState.title(nil), "")
+    }
+}

@@ -4422,6 +4422,62 @@
         }
       }
     },
+    "At the finish": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na koniec"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La final"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На финише"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На фініші"
+          }
+        }
+      }
+    },
+    "At the finish: leave the trailer coupled, drop it, or leave the vehicle (solo). On Today the job ends with a Finish row — tap Finished and your current trailer / vehicle is updated.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na koniec: zostaw naczepę podpiętą, odczep ją albo zostaw pojazd (solo). Na „Dziś” zlecenie kończy wiersz „Koniec” — stuknij „Zakończono”, a bieżąca naczepa / pojazd się zaktualizują."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La final: lasă remorca cuplată, decupleaz-o sau lasă vehiculul (solo). Pe „Azi” cursa se încheie cu rândul „Final” — atinge „Terminat” și remorca / vehiculul curent se actualizează."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На финише: оставить прицеп сцепленным, отцепить его или оставить машину (одиночка). На «Сегодня» работа заканчивается строкой «Финиш» — нажмите «Завершено», и текущий прицеп / машина обновятся."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На фініші: залишити причіп зчепленим, відчепити його або залишити машину (одиночка). На «Сьогодні» робота закінчується рядком «Фініш» — натисніть «Завершено», і поточний причіп / машина оновляться."
+          }
+        }
+      }
+    },
     "Australia": {
       "localizations": {
         "pl": {
@@ -7420,6 +7476,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Країна, правила тахографа/GB, робочий час, екіпаж із двох"
+          }
+        }
+      }
+    },
+    "Coupled": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podpięta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuplat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сцеплен"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зчеплено"
+          }
+        }
+      }
+    },
+    "Coupled %@": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podpięta %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuplat %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сцеплен %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зчеплено %@"
           }
         }
       }
@@ -11272,6 +11384,34 @@
         }
       }
     },
+    "Drop the trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odczep naczepę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decuplează remorca"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отцепить прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відчепити причіп"
+          }
+        }
+      }
+    },
     "Drop trailer": {
       "localizations": {
         "pl": {
@@ -13823,6 +13963,34 @@
         }
       }
     },
+    "Finish every stop first": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw zakończ wszystkie przystanki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Termină întâi toate opririle"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала завершите все остановки"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спершу завершіть усі зупинки"
+          }
+        }
+      }
+    },
     "Finish stop %lld first — or move, swap or edit the stops": {
       "localizations": {
         "pl": {
@@ -13875,6 +14043,62 @@
           "stringUnit": {
             "state": "translated",
             "value": "Завершення: %@"
+          }
+        }
+      }
+    },
+    "Finished": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zakończono"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершено"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершено"
+          }
+        }
+      }
+    },
+    "Finished %@": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zakończono %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminat %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершено %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершено %@"
           }
         }
       }
@@ -17316,6 +17540,34 @@
         }
       }
     },
+    "Job finished": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zlecenie zakończone"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cursa terminată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Работа завершена"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Роботу завершено"
+          }
+        }
+      }
+    },
     "Job start and stops": {
       "localizations": {
         "pl": {
@@ -18044,6 +18296,62 @@
         }
       }
     },
+    "Leave the trailer coupled": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaw naczepę podpiętą"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasă remorca cuplată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставить прицеп сцепленным"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишити причіп зчепленим"
+          }
+        }
+      }
+    },
+    "Leave the vehicle": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaw pojazd"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lasă vehiculul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставить машину"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Залишити машину"
+          }
+        }
+      }
+    },
     "Leave time = job start − journey time (with traffic) − arrive-early margin. As an alarm it rings even on silent, with the same snooze as your wake-up alarm.": {
       "localizations": {
         "pl": {
@@ -18466,6 +18774,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Завантажений"
+          }
+        }
+      }
+    },
+    "Loaded or empty": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Załadowana czy pusta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Încărcat sau gol"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Гружёный или пустой"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Навантажений чи порожній"
           }
         }
       }
@@ -23241,6 +23577,34 @@
         }
       }
     },
+    "On Today the job starts with a Start row: tap Coupled when you've picked the trailer up — it becomes your current trailer and loaded/empty is set.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na „Dziś” zlecenie zaczyna wiersz „Start”: stuknij „Podpięta”, gdy odbierzesz naczepę — stanie się bieżącą i ustawi się załadowana/pusta."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe „Azi” cursa începe cu rândul „Start”: atinge „Cuplat” când ai luat remorca — devine remorca curentă și se setează încărcat/gol."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На «Сегодня» работа начинается строкой «Старт»: нажмите «Сцеплен», когда забрали прицеп — он станет текущим, и будет отмечено гружёный/пустой."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На «Сьогодні» робота починається рядком «Старт»: натисніть «Зчеплено», коли забрали причіп — він стане поточним, і буде позначено навантажений/порожній."
+          }
+        }
+      }
+    },
     "On a day rate, overtime starts after the hours your day rate covers (Pay rates), or after the shift hours set here if that's set. Weekly overtime applies to hourly pay only.": {
       "localizations": {
         "pl": {
@@ -25133,6 +25497,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Забрати %@"
+          }
+        }
+      }
+    },
+    "Pick up a trailer": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odbierz naczepę"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ia o remorcă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрать прицеп"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забрати причіп"
           }
         }
       }
@@ -32976,6 +33368,34 @@
         }
       }
     },
+    "Tap Coupled at the start first": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw stuknij „Podpięta” na starcie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atinge întâi „Cuplat” la start"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сначала нажмите «Сцеплен» на старте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спершу натисніть «Зчеплено» на старті"
+          }
+        }
+      }
+    },
     "Tap Start shift when you begin work": {
       "localizations": {
         "pl": {
@@ -34999,6 +35419,34 @@
         }
       }
     },
+    "Trailer at the start": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naczepa na starcie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remorca la start"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прицеп на старте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Причіп на старті"
+          }
+        }
+      }
+    },
     "Trailer at this stop": {
       "localizations": {
         "pl": {
@@ -35023,6 +35471,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Причіп на цій зупинці"
+          }
+        }
+      }
+    },
+    "Trailer coupled at start": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naczepa podpięta na starcie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remorcă cuplată la start"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прицеп сцеплен на старте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Причіп зчеплено на старті"
           }
         }
       }
@@ -35083,6 +35559,34 @@
         }
       }
     },
+    "Trailer number to pick up (optional)": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numer naczepy do odbioru (opcjonalnie)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numărul remorcii de luat (opțional)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер прицепа, который забрать (необязательно)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер причепа, який забрати (необов'язково)"
+          }
+        }
+      }
+    },
     "Trailer swap": {
       "localizations": {
         "pl": {
@@ -35107,6 +35611,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Заміна причепа"
+          }
+        }
+      }
+    },
+    "Trailer when you leave": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naczepa przy wyjeździe"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remorca la plecare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прицеп при выезде"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Причіп при виїзді"
           }
         }
       }
@@ -35527,6 +36059,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "США й Канада"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cofnij"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulează"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отменить"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скасувати"
           }
         }
       }
@@ -38207,6 +38767,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Коли ви натиснете «Виїхав» тут, ця машина перестане бути вашою поточною машиною."
+          }
+        }
+      }
+    },
+    "When you tap Departed, the app switches to running loaded or empty, so your mileage is split.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Po stuknięciu „Wyjazd” aplikacja przełączy jazdę na załadowaną lub pustą, więc przebieg się rozdzieli."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Când atingi „Am plecat”, aplicația trece pe încărcat sau gol, așa că kilometrajul se împarte."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Когда нажмёте «Уехал», приложение переключится на «гружёный» или «пустой», и пробег разделится."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Коли натиснете «Виїхав», застосунок перемкнеться на «навантажений» чи «порожній», і пробіг розділиться."
           }
         }
       }

@@ -2,6 +2,14 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.19.0 — Numbered stops, trailer at start and finish, loaded/empty per stop
+- Stops are numbered on Today's job and in Jobs (planner cards), with a green tick once you've left a stop. The debrief table shows S (start) and F (finish) rows.
+- Start of the job (plan editor → Trailer at the start): choose a trailer to pick up (from your list or typed) and whether it's loaded or empty. Today's job then starts with an S row — tap Coupled: the trailer becomes your current trailer and loaded/empty is set (and the vehicle check opens if you turned that on for pick-ups). Stop 1 waits until you've coupled.
+- Finish (plan editor → End location → At the finish): leave the trailer coupled, drop the trailer, or leave the vehicle (solo). Today's job ends with an F row — tap Finished once every stop is done and your current trailer / vehicle is updated. Both rows have Undo.
+- Loaded or empty per stop: each stop has "Trailer when you leave: Loaded / Empty" (new collections default to loaded, deliveries to empty). Tapping Departed switches to running loaded or empty, so your mileage is split. Shown on the stop lists as "→ Loaded" / "→ Empty".
+- All new texts translated into Polish, Romanian, Russian and Ukrainian.
+- 1 new test (113 in total).
+
 ## 3.18.1 — Navigation map crash fixed
 - Fixed: the app crashed when opening the navigation map (and the map with your live position). The lorry pin couldn't read its settings inside the map; they're now passed to it, and if they're ever missing it shows the default pin instead of crashing.
 

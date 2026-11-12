@@ -49,6 +49,11 @@ struct StopEditor: View {
     @State private var hasBooking: Bool
 
     init(stop: PlanStop, isNew: Bool, onSave: @escaping (PlanStop) -> Void, onDelete: (() -> Void)? = nil) {
+        var stop = stop
+        // New collections usually leave loaded, deliveries empty — change it if not.
+        if isNew, stop.loadAfter == nil {
+            if stop.kind == .collection { stop.loadAfter = "loaded" } else if stop.kind == .delivery { stop.loadAfter = "empty" }
+        }
         _stop = State(initialValue: stop)
         self.isNew = isNew
         self.onSave = onSave
@@ -82,6 +87,22 @@ struct StopEditor: View {
                     }
                 } header: {
                     Text("Stop type")
+                }
+
+                if stop.kind != .vehiclePickup && stop.kind != .vehicleDrop {
+                    Section {
+                        Picker("Trailer when you leave", selection: Binding(get: { stop.loadAfter ?? "" },
+                                                                            set: { stop.loadAfter = $0.isEmpty ? nil : $0 })) {
+                            Text("Not set").tag("")
+                            Text("Loaded").tag("loaded")
+                            Text("Empty").tag("empty")
+                        }
+                        .pickerStyle(.segmented)
+                    } header: {
+                        Text("Loaded or empty")
+                    } footer: {
+                        Text("When you tap Departed, the app switches to running loaded or empty, so your mileage is split.")
+                    }
                 }
 
                 if !stop.isEquipmentStop {
@@ -216,10 +237,7 @@ struct StopRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            ZStack {
-                Circle().fill(stop.kind.color).frame(width: 28, height: 28)
-                Text("\(number)").font(.caption.weight(.bold)).foregroundStyle(.white)
-            }
+            StopNumberBadge(text: "\(number)", color: stop.kind.color)
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(stop.displayName).font(.subheadline.weight(.semibold))
@@ -227,11 +245,34 @@ struct StopRow: View {
                     if !stop.bookingText.isEmpty { Text(stop.bookingText).font(.caption.weight(.semibold).monospacedDigit()) }
                 }
                 let equipment = stop.equipmentName(in: vehicles)
-                Text([stop.kindTitle, equipment, stop.trailerChangeText(in: vehicles), stop.fullAddress].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
+                Text([stop.kindTitle, equipment, stop.trailerChangeText(in: vehicles),
+                      stop.loadAfter == nil ? "" : "→ " + LoadState.title(stop.loadAfter), stop.fullAddress].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption).foregroundStyle(.secondary)
                 let refs = [stop.reference.isEmpty ? "" : "Booking \(stop.reference)", (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                             stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.weight ?? ""].filter { !$0.isEmpty }
                 if !refs.isEmpty { Text(refs.joined(separator: " · ")).font(.caption2).foregroundStyle(.secondary) }
             }
         }
+    }
+}
+
+
+/// Stop number in a coloured circle (or S / F for start and finish).
+struct StopNumberBadge: View {
+    var text: String
+    var color: Color
+    var size: CGFloat = 28
+    var done = false
+
+    var body: some View {
+        ZStack {
+            Circle().fill(done ? Color.green : color).frame(width: size, height: size)
+            if done {
+                Image(systemName: "checkmark").font(.system(size: size * 0.42, weight: .heavy)).foregroundStyle(.white)
+            } else {
+                Text(text).font(.system(size: size * 0.45, weight: .bold).monospacedDigit()).foregroundStyle(.white)
+                    .minimumScaleFactor(0.6)
+            }
+        }
+        .accessibilityLabel(text)
     }
 }

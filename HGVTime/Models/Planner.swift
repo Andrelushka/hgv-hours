@@ -251,6 +251,8 @@ struct PlanStop: Codable, Equatable, Identifiable {
     var dropTrailerID: String?
     var pickTrailerID: String?
     var pickTrailerRef: String?
+    /// The trailer after this stop: "loaded", "empty" or nil (not set).
+    var loadAfter: String?
     /// What happened at this stop when it didn't go to plan (nil = normal).
     var outcomeRaw: String?
     var outcomeReason: String?
@@ -338,6 +340,15 @@ final class WorkPlan {
     var endPostcode: String = ""
     var endLatitude: Double?
     var endLongitude: Double?
+    /// Trailer picked up at the start (Vehicle id, or a typed number) and loaded/empty at the start.
+    var startTrailerID: String = ""
+    var startTrailerRef: String = ""
+    var startLoad: String = ""
+    /// What happens at the finish: "" (not set), "coupled", "dropTrailer", "leaveVehicle".
+    var endActionRaw: String = ""
+    /// When the start pick-up and the finish were done.
+    var startDoneAt: Date?
+    var finishDoneAt: Date?
 
     init(start: Date, end: Date) {
         self.plannedStart = start
@@ -367,6 +378,42 @@ final class WorkPlan {
             }
         }
     }
+
+    enum EndAction: String, CaseIterable, Identifiable {
+        case none = "", coupled, dropTrailer, leaveVehicle
+        var id: String { rawValue }
+        var title: String {
+            switch self {
+            case .none: String(localized: "Not set")
+            case .coupled: String(localized: "Leave the trailer coupled")
+            case .dropTrailer: String(localized: "Drop the trailer")
+            case .leaveVehicle: String(localized: "Leave the vehicle")
+            }
+        }
+        var symbol: String {
+            switch self {
+            case .none: "questionmark.circle"
+            case .coupled: "link"
+            case .dropTrailer: "shippingbox.and.arrow.backward"
+            case .leaveVehicle: "parkingsign.circle"
+            }
+        }
+    }
+
+    var endAction: EndAction {
+        get { EndAction(rawValue: endActionRaw) ?? .none }
+        set { endActionRaw = newValue.rawValue }
+    }
+
+    /// "Pick up T42 · Loaded" for the start.
+    func startTaskText(in vehicles: [Vehicle]) -> String {
+        let name = vehicles.first { $0.id.uuidString == startTrailerID }?.displayName ?? startTrailerRef
+        return [name.isEmpty ? "" : String(localized: "Pick up \(name)"), LoadState.title(startLoad)]
+            .filter { !$0.isEmpty }.joined(separator: " · ")
+    }
+
+    /// Something to do at the start: pick up a trailer and/or set loaded/empty.
+    var hasStartTask: Bool { !startTrailerID.isEmpty || !startTrailerRef.isEmpty || !startLoad.isEmpty }
 
     var endMode: EndMode {
         get { EndMode(rawValue: endModeRaw) ?? .same }
@@ -901,4 +948,16 @@ extension Array where Element == PlanStop {
 
     /// The stop you're at now (arrived, not left yet).
     var currentStopIndex: Int? { firstIndex { $0.arrivedAt != nil && !Self.isFinished($0) } }
+}
+
+
+/// "Loaded" / "Empty" for a load state ("" if not set).
+enum LoadState {
+    static func title(_ raw: String?) -> String {
+        switch raw {
+        case "loaded": String(localized: "Loaded")
+        case "empty": String(localized: "Empty")
+        default: ""
+        }
+    }
 }

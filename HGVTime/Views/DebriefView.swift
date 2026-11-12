@@ -73,15 +73,18 @@ struct TodayJobCard: View {
 
     @ViewBuilder
     private var jobStops: some View {
+            let startPending = plan.hasStartTask && plan.startDoneAt == nil
+            if plan.hasStartTask { startRow }
             ForEach(plan.stops) { stop in
                 let index = plan.stops.firstIndex { $0.id == stop.id } ?? 0
                 let blocker = plan.stops.arrivalBlocker(for: index)
                 HStack(spacing: 8) {
-                    Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
+                    StopNumberBadge(text: "\(index + 1)", color: stop.kind.color, size: 26, done: stop.departedAt != nil)
                     VStack(alignment: .leading, spacing: 1) {
                         Text([stop.kind == .other ? stop.kindTitle : "", stop.displayName].filter { !$0.isEmpty }.joined(separator: " · "))
                             .font(.caption.weight(.semibold)).lineLimit(1)
-                        let details = [stop.equipmentName(in: vehicles), stop.trailerChangeText(in: vehicles), stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
+                        let details = [stop.kind == .other ? "" : stop.kindTitle, stop.equipmentName(in: vehicles), stop.trailerChangeText(in: vehicles),
+                                       stop.loadAfter == nil ? "" : "→ " + LoadState.title(stop.loadAfter), stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
                                        (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                                        stop.pallets.isEmpty ? "" : "\(stop.pallets) plt"].filter { !$0.isEmpty }.joined(separator: " · ")
                         if !details.isEmpty { Text(details).font(.caption2).foregroundStyle(.secondary).lineLimit(2) }
@@ -89,6 +92,9 @@ struct TodayJobCard: View {
                         if stop.arrivedAt == nil, stop.outcome == nil, let b = blocker {
                             Label("Finish stop \(b + 1) first — or move, swap or edit the stops",
                                   systemImage: "lock.fill")
+                                .font(.caption2).foregroundStyle(.orange)
+                        } else if stop.arrivedAt == nil, stop.outcome == nil, index == 0, startPending {
+                            Label("Tap Coupled at the start first", systemImage: "lock.fill")
                                 .font(.caption2).foregroundStyle(.orange)
                         }
                     }
@@ -100,7 +106,7 @@ struct TodayJobCard: View {
                         ProgressView()
                     } else if stop.arrivedAt == nil {
                         Button("Arrived") { mark(stop.id, arrived: true) }.buttonStyle(.borderedProminent).tint(.green)
-                            .disabled(blocker != nil)
+                            .disabled(blocker != nil || startPending)
                     } else if stop.departedAt == nil {
                         if store.settings.vehicleCheckAtPickup, picked(stop) != nil {
                             Button { openPickupCheck(stop) } label: { Image(systemName: "checklist.checked") }
@@ -147,6 +153,7 @@ struct TodayJobCard: View {
                 .font(.caption)
                 .opacity(stop.outcome == nil ? 1 : 0.6)
             }
+            if plan.endAction != .none { finishRow }
             HStack {
                 Button { addUnplannedStop() } label: { Label("Arrived somewhere else", systemImage: "mappin.and.ellipse") }
                     .disabled(plan.stops.currentStopIndex != nil)
@@ -155,6 +162,97 @@ struct TodayJobCard: View {
             }
             .buttonStyle(.bordered)
             .font(.caption.weight(.semibold))
+    }
+
+    /// Start: pick up the trailer and set loaded/empty.
+    private var startRow: some View {
+        HStack(spacing: 8) {
+            StopNumberBadge(text: "S", color: .indigo, size: 26, done: plan.startDoneAt != nil)
+            VStack(alignment: .leading, spacing: 1) {
+                Text([String(localized: "Start"), plan.startName.isEmpty ? plan.startLocation : plan.startName].filter { !$0.isEmpty }.joined(separator: " · "))
+                    .font(.caption.weight(.semibold)).lineLimit(1)
+                Text(plan.startTaskText(in: vehicles)).font(.caption2).foregroundStyle(.secondary)
+                if let t = plan.startDoneAt { Text("Coupled \(Fmt.time(t))").font(.caption2).foregroundStyle(.secondary) }
+            }
+            Spacer()
+            if plan.startDoneAt == nil {
+                if store.settings.vehicleCheckAtPickup, picked(startStop) != nil {
+                    Button { openPickupCheck(startStop) } label: { Image(systemName: "checklist.checked") }
+                        .buttonStyle(.bordered).accessibilityLabel("Vehicle check")
+                }
+                Button("Coupled") { doStart() }.buttonStyle(.borderedProminent).tint(.indigo)
+            } else {
+                Menu {
+                    Button("Undo", systemImage: "arrow.uturn.backward") { plan.startDoneAt = nil; try? context.save() }
+                } label: { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green) }
+            }
+        }
+        .font(.caption)
+    }
+
+    /// Finish: drop the trailer, leave it coupled, or leave the vehicle.
+    private var finishRow: some View {
+        let ready = plan.stops.allSatisfy([PlanStop].isFinished) && !(plan.hasStartTask && plan.startDoneAt == nil)
+        return HStack(spacing: 8) {
+            StopNumberBadge(text: "F", color: .gray, size: 26, done: plan.finishDoneAt != nil)
+            VStack(alignment: .leading, spacing: 1) {
+                Text([String(localized: "Finish"), plan.endText].filter { !$0.isEmpty }.joined(separator: " · "))
+                    .font(.caption.weight(.semibold)).lineLimit(1)
+                Label(plan.endAction.title, systemImage: plan.endAction.symbol).font(.caption2).foregroundStyle(.secondary)
+                if let t = plan.finishDoneAt {
+                    Text("Finished \(Fmt.time(t))").font(.caption2).foregroundStyle(.secondary)
+                } else if !ready {
+                    Label("Finish every stop first", systemImage: "lock.fill").font(.caption2).foregroundStyle(.orange)
+                }
+            }
+            Spacer()
+            if plan.finishDoneAt == nil {
+                Button("Finished") { doFinish() }.buttonStyle(.borderedProminent).tint(.gray).disabled(!ready)
+            } else {
+                Menu {
+                    Button("Undo", systemImage: "arrow.uturn.backward") { plan.finishDoneAt = nil; try? context.save() }
+                } label: { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green) }
+            }
+        }
+        .font(.caption)
+    }
+
+    /// The start pick-up as a stop, for the vehicle check.
+    private var startStop: PlanStop {
+        var s = PlanStop(kind: .trailerPickup)
+        s.equipmentID = plan.startTrailerID.isEmpty ? nil : plan.startTrailerID
+        s.equipmentRef = plan.startTrailerRef.isEmpty ? nil : plan.startTrailerRef
+        return s
+    }
+
+    private func doStart() {
+        let now = Date.now
+        if !plan.startTrailerID.isEmpty {
+            VehicleLog.selectTrailer(plan.startTrailerID, context: context, store: store, at: now)
+        }
+        if !plan.startLoad.isEmpty { VehicleLog.setLoad(plan.startLoad, context: context, store: store, at: now) }
+        plan.startDoneAt = now
+        try? context.save()
+        EventRecorder.log(.note, title: String(localized: "Trailer coupled at start"), detail: plan.startTaskText(in: vehicles),
+                          context: context, settings: store.settings)
+        if store.settings.vehicleCheckAtPickup { openPickupCheck(startStop, onlyIfOpen: true) }
+    }
+
+    private func doFinish() {
+        let now = Date.now
+        switch plan.endAction {
+        case .dropTrailer:
+            VehicleLog.selectTrailer("", context: context, store: store, at: now)
+        case .leaveVehicle:
+            if !store.settings.currentTrailerID.isEmpty { VehicleLog.selectTrailer("", context: context, store: store, at: now) }
+            VehicleLog.select("", context: context, store: store, at: now)
+        case .coupled, .none:
+            break
+        }
+        plan.finishDoneAt = now
+        try? context.save()
+        EventRecorder.log(.note, title: String(localized: "Job finished"), detail: plan.endAction.title,
+                          context: context, settings: store.settings)
     }
 
     /// The vehicle or trailer collected at this stop: its check column name, whether it's a trailer, and its height.
@@ -273,6 +371,7 @@ struct TodayJobCard: View {
                 } else {
                     stops[i].departedAt = now
                     applyEquipment(stops[i], at: now)
+                    if let load = stops[i].loadAfter { VehicleLog.setLoad(load, context: context, store: store, at: now) }
                     if store.settings.vehicleCheckAtPickup { openPickupCheck(stops[i], onlyIfOpen: true) }
                 }
                 EventRecorder.log(arrived ? .arrived : .departed, detail: stops[i].place, at: now,
@@ -517,9 +616,13 @@ struct DebriefData {
         let cards = cardEvents.filter { $0.time >= start && $0.time < end }
         let card = cards.map { "\($0.inserted ? String(localized: "In") : String(localized: "Out")) \(Fmt.time($0.time))" }.joined(separator: " · ")
 
+        if let plan, plan.hasStartTask {
+            d.stops.append(["S", String(localized: "Start"), plan.startName, plan.startLocation, "", "", plan.startDoneAt.map(Fmt.time) ?? "",
+                            "", "", "", "", plan.startTaskText(in: vehicles), ""])
+        }
         for (i, s) in (plan?.stops ?? []).enumerated() {
             let onSite = (s.arrivedAt != nil && s.departedAt != nil) ? Fmt.hm(s.departedAt!.timeIntervalSince(s.arrivedAt!)) : ""
-            let trailer = [s.equipmentName(in: vehicles), s.trailerChangeText(in: vehicles)].filter { !$0.isEmpty }.joined(separator: " · ")
+            let trailer = [s.equipmentName(in: vehicles), s.trailerChangeText(in: vehicles), LoadState.title(s.loadAfter)].filter { !$0.isEmpty }.joined(separator: " · ")
             d.stops.append(["\(i + 1)", s.kindTitle, s.displayName, s.fullAddress, s.bookingText, s.arrivedAt.map(Fmt.time) ?? "",
                             s.departedAt.map(Fmt.time) ?? "", onSite, s.reference, s.orderReference ?? "", s.pallets, trailer,
                             s.outcome.map { "\($0.title)\((s.outcomeReason ?? "").isEmpty ? "" : ": \(s.outcomeReason!)")" } ?? ""])
@@ -528,6 +631,10 @@ struct DebriefData {
             }
         }
 
+        if let plan, plan.endAction != .none {
+            d.stops.append(["F", String(localized: "Finish"), plan.endText, "", "", plan.finishDoneAt.map(Fmt.time) ?? "", "",
+                            "", "", "", "", plan.endAction.title, ""])
+        }
         let t = DayTotals.compute(dayEntries, day: day)
         d.totals = [(String(localized: "Driving"), Fmt.hm(t.driving)), (String(localized: "Other work"), Fmt.hm(t.otherWork)),
                     (String(localized: "POA"), Fmt.hm(t.availability)), (String(localized: "Breaks"), Fmt.hm(t.breaks)),

@@ -30,6 +30,10 @@ struct PlanEditor: View {
     @State private var endPostcode: String
     @State private var endLatitude: Double?
     @State private var endLongitude: Double?
+    @State private var startTrailerID: String
+    @State private var startTrailerRef: String
+    @State private var startLoad: String
+    @State private var endAction: WorkPlan.EndAction
     @State private var cancelled: Bool
     @State private var cancelReason: String
     @State private var editingLine: PlanLine?
@@ -73,6 +77,10 @@ struct PlanEditor: View {
         _endPostcode = State(initialValue: plan?.endPostcode ?? "")
         _endLatitude = State(initialValue: plan?.endLatitude)
         _endLongitude = State(initialValue: plan?.endLongitude)
+        _startTrailerID = State(initialValue: plan?.startTrailerID ?? "")
+        _startTrailerRef = State(initialValue: plan?.startTrailerRef ?? "")
+        _startLoad = State(initialValue: plan?.startLoad ?? "")
+        _endAction = State(initialValue: plan?.endAction ?? .none)
         _cancelled = State(initialValue: plan?.cancelled ?? false)
         _cancelReason = State(initialValue: plan?.cancelReason ?? "")
         _stops = State(initialValue: plan?.stops ?? [])
@@ -134,6 +142,27 @@ struct PlanEditor: View {
                     Text("Start location")
                 } footer: {
                     Text("Search the depot postcode and pick the address, type it, or pinpoint it on the map. The route on the map starts here.")
+                }
+
+                Section {
+                    Picker("Pick up a trailer", selection: $startTrailerID) {
+                        Text("No / not in my list").tag("")
+                        ForEach(vehicles.filter { $0.kind == .trailer }) { Text($0.displayName).tag($0.id.uuidString) }
+                    }
+                    if startTrailerID.isEmpty {
+                        TextField("Trailer number to pick up (optional)", text: $startTrailerRef)
+                            .textInputAutocapitalization(.characters).autocorrectionDisabled()
+                    }
+                    Picker("Trailer at the start", selection: $startLoad) {
+                        Text("Not set").tag("")
+                        Text("Loaded").tag("loaded")
+                        Text("Empty").tag("empty")
+                    }
+                    .pickerStyle(.segmented)
+                } header: {
+                    Text("Trailer at the start")
+                } footer: {
+                    Text("On Today the job starts with a Start row: tap Coupled when you've picked the trailer up — it becomes your current trailer and loaded/empty is set.")
                 }
 
                 Section {
@@ -208,12 +237,18 @@ struct PlanEditor: View {
                                             latitude: $endLatitude, longitude: $endLongitude,
                                             name: $endName, addressLabel: "End location")
                     }
+                    Picker("At the finish", selection: $endAction) {
+                        ForEach(WorkPlan.EndAction.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
+                    }
                 } header: {
                     Text("End location")
                 } footer: {
-                    Text(endMode == .unknown
-                         ? "For trunking and tramping when you don't know yet where you'll finish. You can set it later."
-                         : endMode == .same ? "The job finishes back at the start location." : "Where the job finishes (e.g. a different depot or the parking for the night).")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(endMode == .unknown
+                             ? "For trunking and tramping when you don't know yet where you'll finish. You can set it later."
+                             : endMode == .same ? "The job finishes back at the start location." : "Where the job finishes (e.g. a different depot or the parking for the night).")
+                        Text("At the finish: leave the trailer coupled, drop it, or leave the vehicle (solo). On Today the job ends with a Finish row — tap Finished and your current trailer / vehicle is updated.")
+                    }
                 }
 
                 Section("Load") {
@@ -333,6 +368,10 @@ struct PlanEditor: View {
         endPostcode = p.endPostcode
         endLatitude = p.endLatitude
         endLongitude = p.endLongitude
+        startTrailerID = p.startTrailerID
+        startTrailerRef = p.startTrailerRef
+        startLoad = p.startLoad
+        endAction = p.endAction
         stops = p.stops.map { var s = $0; s.id = UUID(); s.arrivedAt = nil; s.departedAt = nil; s.outcomeRaw = nil; s.outcomeReason = nil; s.outcomeAt = nil; return s }
         load = p.load
         pallets = p.pallets
@@ -371,6 +410,10 @@ struct PlanEditor: View {
         p.endPostcode = endPostcode
         p.endLatitude = endLatitude
         p.endLongitude = endLongitude
+        p.startTrailerID = startTrailerID
+        p.startTrailerRef = startTrailerID.isEmpty ? startTrailerRef.trimmingCharacters(in: .whitespaces) : ""
+        p.startLoad = startLoad
+        p.endAction = endAction
         if plan != nil && cancelled != p.cancelled {
             p.cancelled = cancelled
             p.cancelledAt = cancelled ? .now : nil
@@ -488,13 +531,18 @@ struct PlanCard: View {
             let startText = [plan.startName, AddressParts.join(flat: plan.startFlat, houseName: plan.startHouseName, houseNumber: plan.startHouseNumber,
                                                                 street: plan.startLocation, postcode: plan.startPostcode)].filter { !$0.isEmpty }.joined(separator: ", ")
             if !startText.isEmpty { Label("Start: \(startText)", systemImage: "flag.fill").font(.caption) }
-            ForEach(showStops ? plan.stops : []) { stop in
+            if plan.hasStartTask {
+                Label(plan.startTaskText(in: vehicles), systemImage: "link").font(.caption).foregroundStyle(.secondary)
+            }
+            ForEach(Array((showStops ? plan.stops : []).enumerated()), id: \.element.id) { i, stop in
                 HStack(alignment: .top, spacing: 6) {
-                    Image(systemName: stop.kind.symbol).foregroundStyle(stop.kind.color)
+                    StopNumberBadge(text: "\(i + 1)", color: stop.kind.color, size: 20, done: stop.departedAt != nil)
                     VStack(alignment: .leading, spacing: 1) {
                         Text([stop.bookingText, stop.kind == .other ? stop.kindTitle : "", stop.displayName,
                               stop.outcome.map { $0.title.uppercased() } ?? ""].filter { !$0.isEmpty }.joined(separator: " · ")).font(.caption.weight(.semibold))
-                        let extra = [stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
+                        let extra = [stop.kind == .other ? "" : stop.kindTitle, stop.equipmentName(in: vehicles), stop.trailerChangeText(in: vehicles),
+                                     stop.loadAfter == nil ? "" : "→ " + LoadState.title(stop.loadAfter),
+                                     stop.fullAddress, stop.reference.isEmpty ? "" : "Booking \(stop.reference)",
                                      (stop.orderReference ?? "").isEmpty ? "" : "Ref \(stop.orderReference!)",
                                      stop.pallets.isEmpty ? "" : "\(stop.pallets) plt", stop.notes]
                             .filter { !$0.isEmpty }.joined(separator: " · ")
@@ -505,6 +553,9 @@ struct PlanCard: View {
             if plan.endMode != .same || !startText.isEmpty {
                 Label("Finish: \(plan.endText)", systemImage: plan.endMode == .unknown ? "questionmark.circle" : "flag.checkered")
                     .font(.caption).foregroundStyle(plan.endMode == .unknown ? .orange : .primary)
+            }
+            if plan.endAction != .none {
+                Label(plan.endAction.title, systemImage: plan.endAction.symbol).font(.caption).foregroundStyle(.secondary)
             }
             let loadLine = [plan.load, plan.pallets.isEmpty ? "" : "\(plan.pallets) pallets", plan.reference.isEmpty ? "" : "Ref \(plan.reference)"]
                 .filter { !$0.isEmpty }.joined(separator: " · ")
