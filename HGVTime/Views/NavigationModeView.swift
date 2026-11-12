@@ -120,10 +120,12 @@ struct NavigationModeView: View {
             if let d = engine.destination {
                 Marker(engine.destinationName, systemImage: "flag.checkered", coordinate: d).tint(.indigo)
             }
-            ForEach(engine.parkingOptions, id: \.self) { item in
+            ForEach(s.navShowParking ? engine.parkingOptions : [], id: \.self) { item in
                 Marker(item.name ?? "Parking", systemImage: "parkingsign.circle.fill", coordinate: item.placemark.coordinate).tint(.green)
             }
-            ForEach(hazards.nearby.filter { $0.kind == .camera || cameraDistance < 3000 }) { p in
+            ForEach(hazards.nearby.filter {
+                $0.kind == .camera ? s.navShowCameras : (s.navShowTrafficLights && cameraDistance < 3000)
+            }) { p in
                 Annotation("", coordinate: p.coordinate) {
                     Image(systemName: p.kind == .camera ? "camera.fill" : "light.beacon.max.fill")
                         .font(.system(size: p.kind == .camera ? 13 : 10, weight: .bold))
@@ -219,6 +221,12 @@ struct NavigationModeView: View {
                         Text("High").tag(62.0)
                         Text("Very high (behind the cab)").tag(72.0)
                     }
+                }
+                Menu("Show on map", systemImage: "line.3.horizontal.decrease.circle") {
+                    Toggle("Speed cameras", systemImage: "camera.fill", isOn: Binding(get: { store.settings.navShowCameras }, set: { store.settings.navShowCameras = $0 }))
+                    Toggle("Traffic lights", systemImage: "light.beacon.max.fill", isOn: Binding(get: { store.settings.navShowTrafficLights }, set: { store.settings.navShowTrafficLights = $0 }))
+                    Toggle("Your road reports", systemImage: "exclamationmark.bubble.fill", isOn: Binding(get: { store.settings.navShowReports }, set: { store.settings.navShowReports = $0 }))
+                    Toggle("Parking suggestions", systemImage: "parkingsign.circle.fill", isOn: Binding(get: { store.settings.navShowParking }, set: { store.settings.navShowParking = $0 }))
                 }
                 Menu("Zoom", systemImage: "plus.magnifyingglass") {
                     Picker("Zoom", selection: Binding(get: { store.settings.navZoom }, set: { store.settings.navZoom = $0; follow(engine.location, animated: true, force: true) })) {
@@ -655,7 +663,9 @@ struct NavSettingsView: View {
             }
             Section {
                 Toggle("Road speed limits (OpenStreetMap)", isOn: $store.settings.onlineSpeedLimits)
+                Toggle("Speed cameras on the map", isOn: $store.settings.navShowCameras)
                 Toggle("Traffic lights on the map", isOn: $store.settings.navShowTrafficLights)
+                Toggle("Parking suggestions", isOn: $store.settings.navShowParking)
                 Toggle("Your road reports", isOn: $store.settings.navShowReports)
             } header: {
                 Text("On the map")

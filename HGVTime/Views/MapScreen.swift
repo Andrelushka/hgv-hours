@@ -29,14 +29,11 @@ struct MapDayView: View {
 
     @Binding var day: Date
     @State private var position: MapCameraPosition = .automatic
-    @State private var showRoute = true
-    @State private var showActivity = true
-    @State private var problemsOnly = false
+    @State private var showingFilters = false
     @State private var selected: EventLog?
     @State private var showingList = false
     @State private var navigating: NavTarget?
     @State private var navigatingInApp: NavTarget?
-    @State private var showPlannedRoute = true
     @State private var geocoded: [UUID: CLLocationCoordinate2D] = [:]
     @State private var plannedRoutes: [MKRoute] = []
     @State private var live = LiveLocation()
@@ -72,9 +69,9 @@ struct MapDayView: View {
         let end = day.addingTimeInterval(86_400)
         let route = track.filter { $0.time >= day && $0.time < end }
         let dayEvents = events.filter { $0.time >= day && $0.time < end && $0.hasLocation }
-            .filter { !problemsOnly || $0.kind.isProblem }
+            .filter { !store.settings.mapProblemsOnly || $0.kind.isProblem }
+            .filter { !store.settings.mapHiddenEvents.contains($0.kind.rawValue) }
             .filter { !isLive || !$0.kind.isProblem }
-            .filter { showActivity || $0.kind != .activity }
         let plan = plans.first { cal.isDate($0.plannedStart, inSameDayAs: day) }
         let planStops: [(stop: PlanStop, index: Int, coordinate: CLLocationCoordinate2D)] = (plan?.stops ?? []).enumerated().compactMap { i, st in
             if let lat = st.latitude, let lon = st.longitude { return (st, i, CLLocationCoordinate2D(latitude: lat, longitude: lon)) }
@@ -90,16 +87,16 @@ struct MapDayView: View {
             } else {
                 UserAnnotation()
             }
-            if showRoute && route.count > 1 {
+            if store.settings.mapShowRoute && route.count > 1 {
                 MapPolyline(coordinates: route.map { CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude) })
                     .stroke(.blue.gradient, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
             }
-            if showPlannedRoute {
+            if store.settings.mapShowPlanned {
                 ForEach(Array(plannedRoutes.enumerated()), id: \.offset) { _, r in
                     MapPolyline(r.polyline).stroke(.indigo.opacity(0.7), style: StrokeStyle(lineWidth: 4, lineCap: .round, dash: [8, 6]))
                 }
             }
-            if let plan, let lat = plan.startLatitude, let lon = plan.startLongitude {
+            if store.settings.mapShowStops, let plan, let lat = plan.startLatitude, let lon = plan.startLongitude {
                 Annotation("Start: \(plan.startLocation.isEmpty ? plan.startPostcode : plan.startLocation)",
                            coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
                     Image(systemName: "flag.fill").font(.caption.weight(.bold)).foregroundStyle(.white)
@@ -107,7 +104,7 @@ struct MapDayView: View {
                         .overlay(Circle().stroke(.white, lineWidth: 2))
                 }
             }
-            ForEach(planStops, id: \.stop.id) { item in
+            ForEach(store.settings.mapShowStops ? planStops : [], id: \.stop.id) { item in
                 Annotation("\(item.index + 1). \(item.stop.displayName)", coordinate: item.coordinate) {
                     ZStack {
                         Circle().fill(item.stop.departedAt != nil ? Color.gray : item.stop.kind.color).frame(width: 30, height: 30)
@@ -138,13 +135,17 @@ struct MapDayView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Menu {
-                    Toggle("Route driven", isOn: $showRoute)
-                    Toggle("Planned route", isOn: $showPlannedRoute)
-                    if !isLive { Toggle("Activity changes", isOn: $showActivity) }
-                    if !isLive { Toggle("Problems only", isOn: $problemsOnly) }
-                } label: { Image(systemName: "line.3.horizontal.decrease.circle") }
+                Button { showingFilters = true } label: {
+                    Image(systemName: filtersActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                }
+                .accessibilityLabel("Map filters")
             }
+        }
+        .sheet(isPresented: $showingFilters) {
+            NavigationStack {
+                MapFilterView(isLive: isLive, counts: Dictionary(grouping: events.filter(\.hasLocation), by: \.kind).mapValues(\.count))
+            }
+            .presentationDetents([.medium, .large])
         }
         .sheet(item: $selected) { e in
             EventDetailSheet(event: e).presentationDetents([.fraction(0.3), .medium])
@@ -185,6 +186,11 @@ struct MapDayView: View {
                 .buttonStyle(.plain)
             }
         }
+    }
+
+    private var filtersActive: Bool {
+        let st = store.settings
+        return !st.mapShowRoute || !st.mapShowPlanned || !st.mapShowStops || (!isLive && (st.mapProblemsOnly || !st.mapHiddenEvents.isEmpty))
     }
 
     // MARK: Panel
@@ -378,5 +384,65 @@ struct EventDetailSheet: View {
             Spacer()
         }
         .padding()
+    }
+}
+
+
+/// Map filters: what to show on the map (remembered).
+struct MapFilterView: View {
+    @Environment(SettingsStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    var isLive: Bool
+    /// Events of each type on this day.
+    var counts: [EventKind: Int]
+
+    var body: some View {
+        @Bindable var store = store
+        Form {
+            Section("On the map") {
+                Toggle(isOn: $store.settings.mapShowRoute) { Label("Route driven", systemImage: "point.topleft.down.to.point.bottomright.curvepath") }
+                Toggle(isOn: $store.settings.mapShowPlanned) { Label("Planned route", systemImage: "arrow.triangle.turn.up.right.diamond") }
+                Toggle(isOn: $store.settings.mapShowStops) { Label("Job start and stops", systemImage: "mappin.and.ellipse") }
+            }
+            if !isLive {
+                Section {
+                    Toggle(isOn: $store.settings.mapProblemsOnly) { Label("Problems only", systemImage: "exclamationmark.triangle.fill") }
+                    ForEach(EventKind.allCases) { kind in
+                        Toggle(isOn: Binding(
+                            get: { !store.settings.mapHiddenEvents.contains(kind.rawValue) },
+                            set: { on in
+                                store.settings.mapHiddenEvents.removeAll { $0 == kind.rawValue }
+                                if !on { store.settings.mapHiddenEvents.append(kind.rawValue) }
+                            })) {
+                            HStack {
+                                Label(LocalizedStringKey(kind.title), systemImage: kind.symbol)
+                                    .foregroundStyle(kind.isProblem ? .red : .primary)
+                                Spacer()
+                                if let n = counts[kind], n > 0 {
+                                    Text("\(n)").font(.caption.weight(.bold)).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                        .disabled(store.settings.mapProblemsOnly && !kind.isProblem)
+                    }
+                } header: {
+                    HStack {
+                        Text("Events")
+                        Spacer()
+                        Button("All") { store.settings.mapHiddenEvents = []; store.settings.mapProblemsOnly = false }
+                            .font(.caption.weight(.semibold)).textCase(nil)
+                        Button("None") { store.settings.mapHiddenEvents = EventKind.allCases.map(\.rawValue) }
+                            .font(.caption.weight(.semibold)).textCase(nil)
+                    }
+                }
+            } else {
+                Section {
+                    Text("Events are shown on the driver log's day map.").foregroundStyle(.secondary)
+                }
+            }
+        }
+        .navigationTitle("Map filters")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
     }
 }

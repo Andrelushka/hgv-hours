@@ -2,6 +2,12 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.13.0 — Map filters
+- Every map has a filter (the ☰ button on the day/main map, "Show on map" in the navigation view menu). Choices are remembered.
+- Driver log day map: route driven, planned route, job start and stops, "problems only", and each event type on its own — shift start/end, activity changes, card in/out, arrived/departed, fuel, overspeed, infringements, harsh braking, notes, record changes — with how many there are that day, plus All / None. The filter icon fills in when something is hidden.
+- Main map: route driven, planned route, job start and stops.
+- Navigation: speed cameras, traffic lights, your road reports and parking suggestions (also in Settings → Navigation).
+
 ## 3.12.1 — Edit, reorder, swap and delete stops
 - Today's job: each stop's ⋯ menu now has Edit stop, Move up, Move down, Swap with… (pick any other stop) and Delete stop, as well as cancelled / failed / rejected.
 - Job editor: Swap with… on every stop, and a Reorder button that shows drag handles so you can drag stops into a new order (or delete them).

@@ -315,6 +315,15 @@ struct AppSettings: Codable, Equatable {
     var navCameraAlerts = true
     var navShowTrafficLights = true
     var navShowReports = true
+    var navShowCameras = true
+    var navShowParking = true
+    // Map filters (remembered)
+    var mapShowRoute = true
+    var mapShowPlanned = true
+    var mapShowStops = true
+    var mapProblemsOnly = false
+    /// Event types hidden on the day map (EventKind raw values).
+    var mapHiddenEvents: [String] = []
 
     // Wake-up alarm and "time to leave" (worked out from the next planned job)
     var wakeAlarmEnabled = false

@@ -1417,6 +1417,7 @@
       }
     },
     "Activity changes": {
+      "extractionState": "stale",
       "localizations": {
         "pl": {
           "stringUnit": {
@@ -10195,6 +10196,34 @@
         }
       }
     },
+    "Events are shown on the driver log's day map.": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zdarzenia są widoczne na mapie dnia w dzienniku kierowcy."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evenimentele apar pe harta zilei din jurnalul șoferului."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "События показываются на карте дня в журнале водителя."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Події показуються на мапі дня в журналі водія."
+          }
+        }
+      }
+    },
     "Every 2 weeks": {
       "localizations": {
         "pl": {
@@ -13577,6 +13606,34 @@
         }
       }
     },
+    "Job start and stops": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start zlecenia i przystanki"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Începutul cursei și opririle"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Начало работы и остановки"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Початок роботи й зупинки"
+          }
+        }
+      }
+    },
     "Jobs": {
       "localizations": {
         "pl": {
@@ -15203,6 +15260,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Мапа й журнал подій"
+          }
+        }
+      }
+    },
+    "Map filters": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtry mapy"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtre hartă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фильтры карты"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Фільтри мапи"
           }
         }
       }
@@ -19406,6 +19491,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Стоянка / відпочинок"
+          }
+        }
+      }
+    },
+    "Parking suggestions": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Propozycje parkingów"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sugestii de parcare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Предложения парковок"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пропозиції стоянок"
           }
         }
       }
@@ -24492,6 +24605,34 @@
         }
       }
     },
+    "Show on map": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokaż na mapie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arată pe hartă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать на карте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показати на мапі"
+          }
+        }
+      }
+    },
     "Shown on Today during the shift, and you're reminded if any are left when you end it.": {
       "localizations": {
         "pl": {
@@ -25052,6 +25193,34 @@
         }
       }
     },
+    "Speed cameras": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoradary"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radare de viteză"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камеры скорости"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камери швидкості"
+          }
+        }
+      }
+    },
     "Speed cameras and traffic lights come from OpenStreetMap. Reports (accident, closure, police, low bridge…) are the ones you add with the ⚠︎ button; they're kept on your iPhone.": {
       "localizations": {
         "pl": {
@@ -25076,6 +25245,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Камери швидкості й світлофори беруться з OpenStreetMap. Повідомлення (ДТП, перекриття, поліція, низький міст…) — це те, що ви додаєте кнопкою ⚠︎; вони зберігаються на вашому iPhone."
+          }
+        }
+      }
+    },
+    "Speed cameras on the map": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoradary na mapie"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Radare de viteză pe hartă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камеры скорости на карте"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камери швидкості на мапі"
           }
         }
       }
@@ -28035,6 +28232,34 @@
           "stringUnit": {
             "state": "translated",
             "value": "Затор"
+          }
+        }
+      }
+    },
+    "Traffic lights": {
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sygnalizacja świetlna"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Semafoare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Светофоры"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Світлофори"
           }
         }
       }
