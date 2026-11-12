@@ -319,6 +319,17 @@ struct AppSettings: Codable, Equatable {
     var navShowTrafficLights = true
     var navShowReports = true
     var navShowCameras = true
+    // Lorry pin
+    /// "artic", "rigid", "van", "arrow" or "dot".
+    var navPinStyle = "artic"
+    var navPinSize = "m"
+    var navPinColor = "blue"
+    var navPin3D = true
+    var navPinAnimate = true
+    /// Where the pin sits on screen in navigation: 0 = bottom … 1 = top.
+    var navPinPosition: Double = 0.42
+    /// Corner of the speedometer for the speed-limit sign: "tr", "tl", "br", "bl".
+    var navLimitCorner = "tr"
     var navShowParking = true
     // Map filters (remembered)
     var mapShowRoute = true

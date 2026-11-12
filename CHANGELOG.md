@@ -2,6 +2,16 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.15.0 — Smoother navigation, lorry pin, clearer panel
+- The map glides with the lorry: position and heading are eased 5 times a second and the camera follows the smoothed position, so turns and movement are smooth instead of jumpy.
+- The map always follows you: if you pan around, it goes back to following after 6 seconds; it re-centres when you reopen navigation or come back to the app. No more looking for the pin.
+- Pin position: the pin sits higher, clear of the bottom panel — and you can set exactly where (Settings → Navigation → Lorry pin).
+- New lorry pin: an artic seen from above whose trailer swings out on bends and straightens behind you, tilted in 3D with the map. Also rigid, van, navigation arrow and dot styles; size, colour, 3D and animation on/off.
+- Speed limit: a white circle with a red ring on the speedometer corner you choose (top/bottom, left/right). When the road's limit isn't known it shows your vehicle's limit, faded.
+- Bottom panel redesigned: Arrive, Time left and Distance in big type, the destination, and large Hide / End buttons.
+- Main map (from Today) opens on today's journey: start, all stops, finish and your activities — no events (change it with the filter).
+- 1 new test (104 in total).
+
 ## 3.14.0 — Trailer/vehicle stops, height check
 - New stop types: Pick up trailer, Drop off trailer, Pick up vehicle, Drop off vehicle — add, edit, move, swap or delete them like any stop. Choose the trailer or vehicle from your list (or type its number). Tapping Departed at a pick-up makes it your current trailer/vehicle; at a drop-off it's taken off.
 - Today: "Vehicle height checked" tile, like the driver card — shows your height (vehicle or trailer, whichever is taller); one tap records the check with the time (logged as an event). It resets each shift and when you change vehicle or trailer.

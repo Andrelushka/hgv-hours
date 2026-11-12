@@ -24,6 +24,8 @@ struct NavigationModeView: View {
     private var moving: Bool { (engine.location?.speed ?? 0) * 3.6 > 8 }
     @State private var cameraHeading: CLLocationDirection = 0
     @State private var cameraDistance: Double = 1000
+    @State private var userMovedAt = Date.distantPast
+    @Environment(\.scenePhase) private var scenePhase
     @State private var limits = RoadSpeedLimit()
     @State private var roadLimit: RoadSpeedLimit.Result?
     /// Where to go. `nil` = carry on with the navigation already running.
@@ -99,7 +101,10 @@ struct NavigationModeView: View {
         } message: {
             Text("Saved on your iPhone and shown on the map; you'll be warned when you come this way again.")
         }
-        .onAppear(perform: begin)
+        .onAppear {
+            begin()
+            follow(engine.location, animated: true, force: true)
+        }
     }
 
     // MARK: Map
@@ -108,7 +113,10 @@ struct NavigationModeView: View {
         Map(position: $position) {
             if let c = engine.displayCoordinate ?? engine.location?.coordinate {
                 Annotation("", coordinate: c, anchor: .center) {
-                    TruckMarker(rotation: engine.heading - cameraHeading)
+                    // The camera turns with you in 3D / heading-up, so the cab points up; north-up shows the real heading.
+                    TruckMarker(rotation: view == .northUp || view == .overview ? engine.displayHeading : 0,
+                                trailerAngle: Self.angleDiff(engine.trailerHeading, engine.displayHeading),
+                                tilt: view == .follow3D ? s.navPitch : 0)
                 }
             } else {
                 UserAnnotation()
@@ -154,7 +162,10 @@ struct NavigationModeView: View {
             cameraHeading = ctx.camera.heading
             cameraDistance = ctx.camera.distance
         }
-        .onChange(of: engine.location) { _, loc in follow(loc) }
+        // Follow the smoothed position (5 times a second) so the map glides with the lorry.
+        .onChange(of: engine.displayCoordinate?.latitude) { _, _ in follow(engine.location) }
+        .onChange(of: position.positionedByUser) { _, moved in if moved { userMovedAt = .now } }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { follow(engine.location, animated: true, force: true) } }
         .onChange(of: view) { _, _ in follow(engine.location, animated: true) }
     }
 
@@ -263,32 +274,37 @@ struct NavigationModeView: View {
         Image(systemName: name).font(.title3).frame(width: 46, height: 46).background(.regularMaterial, in: Circle())
     }
 
+    /// Arrival, time left and distance in big type; destination; Hide / End.
     private var bottomPanel: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(engine.eta.map { "Arrive \(Fmt.time($0))" } ?? "—").font(.title2.weight(.bold).monospacedDigit())
-                    HStack(spacing: 8) {
-                        Text(Fmt.hm(engine.remainingTime)).font(.headline.monospacedDigit())
-                        Text(NavigationEngine.distanceText(engine.remainingDistance)).font(.subheadline).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top, spacing: 0) {
+                stat("Arrive", engine.eta.map(Fmt.time) ?? "—", .primary)
+                Divider().frame(height: 44)
+                stat("Time left", Fmt.hm(engine.remainingTime), engine.trafficDelay > 120 ? .orange : .primary)
+                Divider().frame(height: 44)
+                stat("Distance", NavigationEngine.distanceText(engine.remainingDistance)
+                    .replacingOccurrences(of: " miles", with: " mi").replacingOccurrences(of: " metres", with: " m"), .primary)
+            }
+            HStack(spacing: 8) {
+                Image(systemName: "flag.checkered").foregroundStyle(.indigo)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(engine.destinationName).font(.headline).lineLimit(1)
+                    HStack(spacing: 6) {
+                        Text(engine.route?.source ?? engine.status).lineLimit(1)
                         if engine.trafficDelay > 120 {
-                            Text("+\(Int(engine.trafficDelay / 60)) min traffic").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                            Text("+\(Int(engine.trafficDelay / 60)) min traffic").fontWeight(.semibold).foregroundStyle(.orange)
                         }
                     }
-                    Text("\(engine.destinationName) · \(engine.route?.source ?? "")").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    .font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
-                VStack(spacing: 6) {
-                    Button { dismiss() } label: { Text("Hide").font(.subheadline.weight(.semibold)) }
-                        .buttonStyle(.bordered)
-                    Button(role: .destructive) { engine.stop(); dismiss() } label: {
-                        Text("End").font(.headline).padding(.horizontal, 8)
-                    }
-                    .buttonStyle(.borderedProminent).tint(.red)
-                }
+                Button { dismiss() } label: { Text("Hide").font(.headline).padding(.horizontal, 6) }
+                    .buttonStyle(.bordered).controlSize(.large)
+                Button(role: .destructive) { engine.stop(); dismiss() } label: { Text("End").font(.headline).padding(.horizontal, 8) }
+                    .buttonStyle(.borderedProminent).tint(.red).controlSize(.large)
             }
             if let h = heightText, engine.route?.isTruckRoute != true {
-                Label(h, systemImage: "exclamationmark.triangle.fill").font(.caption.weight(.semibold)).foregroundStyle(.orange)
+                Label(h, systemImage: "exclamationmark.triangle.fill").font(.footnote.weight(.semibold)).foregroundStyle(.orange)
             }
             if engine.notEnoughTime {
                 VStack(alignment: .leading, spacing: 4) {
@@ -307,8 +323,19 @@ struct NavigationModeView: View {
                 }
             }
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .padding(14)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22))
+        .overlay(RoundedRectangle(cornerRadius: 22).stroke(.white.opacity(0.25), lineWidth: 1))
+        .shadow(color: .black.opacity(0.2), radius: 10, y: 4)
+    }
+
+    private func stat(_ title: LocalizedStringKey, _ value: String, _ color: Color) -> some View {
+        VStack(spacing: 2) {
+            Text(title).font(.caption.weight(.semibold)).foregroundStyle(.secondary).textCase(.uppercase)
+            Text(value).font(.system(.title2, design: .rounded).weight(.bold).monospacedDigit()).foregroundStyle(color)
+                .lineLimit(1).minimumScaleFactor(0.6)
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var stepsList: some View {
@@ -351,18 +378,21 @@ struct NavigationModeView: View {
         .frame(width: size, height: size)
         .background(.regularMaterial, in: Circle())
         .overlay(Circle().stroke(over ? Color.red : .clear, lineWidth: 4))
-        .overlay(alignment: s.navSpeedoSide == "left" ? .topTrailing : .topLeading) {
-            if let text = limitSignText {
-                Text(text)
-                    .font(.system(size: size * (text.count > 2 ? 0.2 : 0.24), weight: .heavy, design: .rounded).monospacedDigit())
-                    .foregroundStyle(.black)
-                    .frame(width: size * 0.5, height: size * 0.5)
-                    .background(Circle().fill(.white))
-                    .overlay(Circle().stroke(.red, lineWidth: size * 0.065))
-                    .shadow(radius: 2)
-                    .offset(x: s.navSpeedoSide == "left" ? size * 0.18 : -size * 0.18, y: -size * 0.14)
-                    .accessibilityLabel("Speed limit \(text)")
-            }
+        .overlay(alignment: limitAlignment) {
+            // Speed limit: white circle with a red ring, on the corner of the speedometer you choose.
+            let text = limitSignText ?? vehicleLimitText
+            Text(text)
+                .font(.system(size: size * (text.count > 2 ? 0.2 : 0.25), weight: .heavy, design: .rounded).monospacedDigit())
+                .foregroundStyle(.black)
+                .minimumScaleFactor(0.6)
+                .frame(width: size * 0.52, height: size * 0.52)
+                .background(Circle().fill(.white))
+                .overlay(Circle().strokeBorder(.red, lineWidth: size * 0.07))
+                .opacity(limitSignText == nil ? 0.75 : 1)
+                .shadow(radius: 2)
+                .offset(x: s.navLimitCorner.hasSuffix("r") ? size * 0.2 : -size * 0.2,
+                        y: s.navLimitCorner.hasPrefix("t") ? -size * 0.16 : size * 0.16)
+                .accessibilityLabel("Speed limit \(text)")
         }
         .overlay(alignment: .bottom) {
             if limiterKmh > 0 && kmh > limiterKmh - 3 {
@@ -371,6 +401,21 @@ struct NavigationModeView: View {
             }
         }
         .animation(.snappy, value: Int(kmh))
+    }
+
+    private var limitAlignment: Alignment {
+        switch s.navLimitCorner {
+        case "tl": .topLeading
+        case "bl": .bottomLeading
+        case "br": .bottomTrailing
+        default: .topTrailing
+        }
+    }
+
+    /// Your vehicle's own limit, shown (faded) when the road's limit isn't known.
+    private var vehicleLimitText: String {
+        let kmh = AutoDriveDetector.shared.speedLimitKmh
+        return "\(Int((s.useMiles ? kmh / 1.609344 : kmh).rounded()))"
     }
 
     /// The limit that applies to you: the lower of the road's limit and your vehicle's (e.g. 60 mph for a lorry on a motorway).
@@ -468,6 +513,7 @@ struct NavigationModeView: View {
             let active = ((try? ctx.fetch(FetchDescriptor<RoadReport>())) ?? []).filter { $0.expiresAt > .now }
             hazards.warnAhead(engine: NavigationEngine.shared, reports: active, cameras: cameras)
         }
+        if engine.displayHeading == 0 { engine.displayHeading = engine.heading; engine.trailerHeading = engine.heading }
         guard let target else { follow(engine.location, animated: true, force: true); return }
         if engine.isRunning, let d = engine.destination, let c = target.coordinate,
            NavigationEngine.metres(d, c) < 30 { return }
@@ -490,14 +536,15 @@ struct NavigationModeView: View {
 
     /// Moves the camera with you: behind the lorry in 3D (zooming out as speed rises), heading up, north up, or the whole route.
     private func follow(_ loc: CLLocation?, animated: Bool = false, force: Bool = false) {
-        if position.positionedByUser && !force { return }
+        // You looked around the map: carry on following by itself after 6 seconds — no need to re-centre.
+        if position.positionedByUser && !force && Date.now.timeIntervalSince(userMovedAt) < 6 { return }
         if view == .overview, let route = engine.route {
             let rect = route.polyline.boundingMapRect
             withAnimation(.easeInOut(duration: 0.6)) { position = .rect(rect.insetBy(dx: -rect.size.width * 0.15, dy: -rect.size.height * 0.25)) }
             return
         }
         guard let loc else { return }
-        let heading = engine.heading
+        let heading = engine.displayHeading
         let kmh = max(0, loc.speed * 3.6)
         let centre = engine.displayCoordinate ?? loc.coordinate
         let zoom = max(0.3, s.navZoom)
@@ -505,15 +552,18 @@ struct NavigationModeView: View {
         let camera: MapCamera
         switch view {
         case .follow3D:
-            // Look ahead of the lorry; the steeper the tilt, the further ahead the centre.
-            let ahead = NavigationEngine.offset(centre, metres: (60 + kmh * 2) * (0.5 + pitch / 60) * zoom, bearing: heading)
-            camera = MapCamera(centerCoordinate: ahead, distance: (420 + kmh * 9) * zoom, heading: heading, pitch: pitch)
+            // The camera centre sits ahead of (or behind) the lorry so the pin appears where you set it on screen.
+            let distance = (420 + kmh * 9) * zoom
+            let ahead = NavigationEngine.offset(centre, metres: distance * (0.5 - s.navPinPosition) * (0.6 + pitch / 90), bearing: heading)
+            camera = MapCamera(centerCoordinate: ahead, distance: distance, heading: heading, pitch: pitch)
         case .headingUp:
-            camera = MapCamera(centerCoordinate: centre, distance: (900 + kmh * 15) * zoom, heading: heading, pitch: 0)
+            let distance = (900 + kmh * 15) * zoom
+            let ahead = NavigationEngine.offset(centre, metres: distance * (0.5 - s.navPinPosition) * 0.6, bearing: heading)
+            camera = MapCamera(centerCoordinate: ahead, distance: distance, heading: heading, pitch: 0)
         case .northUp, .overview:
             camera = MapCamera(centerCoordinate: centre, distance: (1100 + kmh * 15) * zoom, heading: 0, pitch: 0)
         }
-        withAnimation(animated ? .easeInOut(duration: 0.5) : .linear(duration: 1.0)) { position = .camera(camera) }
+        withAnimation(animated ? .easeInOut(duration: 0.5) : .linear(duration: 0.22)) { position = .camera(camera) }
     }
 
     private func driveLeftNow() -> TimeInterval {
@@ -522,6 +572,14 @@ struct NavigationModeView: View {
         let st = RulesEngine.status(snaps, now: .now, config: settings.ruleConfig)
         if let world = WorldRulesCache.refresh(snaps, now: .now, settings: settings) { return world.driveLeft }
         return st.currentShift == nil ? .infinity : st.drivingLeftToday
+    }
+
+    /// Signed difference a − b in degrees (−180…180).
+    static func angleDiff(_ a: Double, _ b: Double) -> Double {
+        var d = (a - b).truncatingRemainder(dividingBy: 360)
+        if d > 180 { d -= 360 }
+        if d < -180 { d += 360 }
+        return d
     }
 
     /// Arrow for a plain-text instruction (kept for Apple-style instructions).
@@ -552,26 +610,152 @@ struct LaneHelper: View {
     }
 }
 
-/// Top-down lorry: cab at the front, trailer behind, an arrow on the cab. Rotated to your heading.
+/// Your position on the map: a lorry seen from above (artic with a trailer that swings on turns, rigid, van),
+/// a navigation arrow or a dot — style, size, colour, 3D tilt and animation set in Settings → Navigation → Lorry pin.
 struct TruckMarker: View {
+    @Environment(SettingsStore.self) private var store
+    /// Direction of the cab on screen (degrees).
     var rotation: Double
+    /// Trailer angle relative to the cab (degrees, + = trailer swung clockwise).
+    var trailerAngle: Double = 0
+    /// Camera tilt, for the 3D look (degrees).
+    var tilt: Double = 0
 
     var body: some View {
-        VStack(spacing: 1.5) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 4).fill(Color.blue)
-                Image(systemName: "arrowtriangle.up.fill").font(.system(size: 9, weight: .black)).foregroundStyle(.white)
+        let s = store.settings
+        let scale: CGFloat = s.navPinSize == "s" ? 0.8 : s.navPinSize == "l" ? 1.35 : 1.05
+        let tint = Self.color(s.navPinColor)
+        Group {
+            switch s.navPinStyle {
+            case "arrow": arrow(tint)
+            case "dot": dot(tint)
+            case "van": body(tint, cab: 18, length: 26, trailer: 0)
+            case "rigid": body(tint, cab: 18, length: 0, trailer: 0, rigidBox: 30)
+            default: body(tint, cab: 17, length: 0, trailer: 38)
             }
-            .frame(width: 20, height: 15)
-            RoundedRectangle(cornerRadius: 2.5).fill(Color(white: 0.92))
-                .overlay(RoundedRectangle(cornerRadius: 2.5).stroke(Color.blue, lineWidth: 2))
-                .frame(width: 20, height: 34)
+        }
+        .scaleEffect(scale)
+        .rotationEffect(.degrees(rotation))
+        .rotation3DEffect(.degrees(s.navPin3D ? min(55, tilt * 0.8) : 0), axis: (x: 1, y: 0, z: 0), perspective: 0.5)
+        .shadow(color: .black.opacity(0.45), radius: 3, x: 0, y: s.navPin3D ? 3 : 1)
+        .animation(s.navPinAnimate ? .linear(duration: 0.2) : nil, value: rotation)
+        .animation(s.navPinAnimate ? .linear(duration: 0.2) : nil, value: trailerAngle)
+        .accessibilityLabel("Your lorry")
+    }
+
+    static func color(_ name: String) -> Color {
+        switch name {
+        case "red": .red
+        case "green": .green
+        case "orange": .orange
+        case "black": Color(white: 0.15)
+        case "yellow": .yellow
+        default: .blue
+        }
+    }
+
+    /// Cab (with windscreen and mirrors), optional rigid box, optional articulated trailer.
+    private func body(_ tint: Color, cab: CGFloat, length: CGFloat, trailer: CGFloat, rigidBox: CGFloat = 0) -> some View {
+        VStack(spacing: 1) {
+            ZStack(alignment: .top) {
+                RoundedRectangle(cornerRadius: 4).fill(tint.gradient)
+                    .frame(width: 20, height: cab + length)
+                RoundedRectangle(cornerRadius: 2).fill(.black.opacity(0.55))
+                    .frame(width: 15, height: 4).padding(.top, 2)
+                HStack(spacing: 18) {
+                    Capsule().fill(tint).frame(width: 3, height: 5)
+                    Capsule().fill(tint).frame(width: 3, height: 5)
+                }
+                .padding(.top, 3)
+            }
+            if rigidBox > 0 {
+                box(tint, height: rigidBox)
+            }
+            if trailer > 0 {
+                box(tint, height: trailer)
+                    .rotationEffect(.degrees(store.settings.navPinAnimate ? trailerAngle : 0), anchor: .top)
+            }
         }
         .padding(3)
-        .shadow(color: .black.opacity(0.45), radius: 3, y: 1)
-        .rotationEffect(.degrees(rotation))
-        .animation(.linear(duration: 0.15), value: rotation)
-        .accessibilityLabel("Your lorry")
+    }
+
+    private func box(_ tint: Color, height: CGFloat) -> some View {
+        ZStack(alignment: .bottom) {
+            RoundedRectangle(cornerRadius: 2.5).fill(Color(white: 0.94))
+                .overlay(RoundedRectangle(cornerRadius: 2.5).stroke(tint, lineWidth: 2))
+            HStack(spacing: 15) {
+                VStack(spacing: 1.5) { wheel; wheel; wheel }
+                VStack(spacing: 1.5) { wheel; wheel; wheel }
+            }
+            .padding(.bottom, 2)
+        }
+        .frame(width: 21, height: height)
+    }
+
+    private var wheel: some View { RoundedRectangle(cornerRadius: 1).fill(.black.opacity(0.75)).frame(width: 3, height: 4) }
+
+    private func arrow(_ tint: Color) -> some View {
+        Image(systemName: "location.north.fill")
+            .font(.system(size: 34, weight: .bold))
+            .foregroundStyle(tint.gradient)
+            .overlay(Image(systemName: "location.north").font(.system(size: 34, weight: .bold)).foregroundStyle(.white))
+    }
+
+    private func dot(_ tint: Color) -> some View {
+        ZStack {
+            Image(systemName: "arrowtriangle.up.fill").font(.system(size: 12)).foregroundStyle(tint.opacity(0.7)).offset(y: -16)
+            Circle().fill(.white).frame(width: 24, height: 24)
+            Circle().fill(tint).frame(width: 18, height: 18)
+        }
+    }
+}
+
+/// Lorry pin set-up: style, size, colour, 3D and animation.
+struct PinSettingsView: View {
+    @Environment(SettingsStore.self) private var store
+
+    var body: some View {
+        @Bindable var store = store
+        Form {
+            Section {
+                HStack {
+                    Spacer()
+                    TruckMarker(rotation: 20, trailerAngle: -18, tilt: 45)
+                        .frame(height: 110)
+                    Spacer()
+                }
+            }
+            Section("Pin") {
+                Picker("Style", selection: $store.settings.navPinStyle) {
+                    Text("Artic (cab + trailer)").tag("artic")
+                    Text("Rigid lorry").tag("rigid")
+                    Text("Van").tag("van")
+                    Text("Navigation arrow").tag("arrow")
+                    Text("Dot").tag("dot")
+                }
+                Picker("Size", selection: $store.settings.navPinSize) {
+                    Text("Small").tag("s"); Text("Medium").tag("m"); Text("Large").tag("l")
+                }
+                Picker("Colour", selection: $store.settings.navPinColor) {
+                    ForEach(["blue", "red", "green", "orange", "yellow", "black"], id: \.self) { c in
+                        Label(LocalizedStringKey(c.capitalized), systemImage: "circle.fill").foregroundStyle(TruckMarker.color(c)).tag(c)
+                    }
+                }
+                Toggle("3D (tilts with the map)", isOn: $store.settings.navPin3D)
+                Toggle("Animation (smooth turns, trailer swings)", isOn: $store.settings.navPinAnimate)
+            }
+            Section {
+                VStack(alignment: .leading) {
+                    Text("Position on screen: \(Int(store.settings.navPinPosition * 100))% from the bottom").font(.caption)
+                    Slider(value: $store.settings.navPinPosition, in: 0.15...0.7)
+                }
+            } header: {
+                Text("Where the pin sits")
+            } footer: {
+                Text("Lower shows more road ahead; higher keeps the pin clear of the bottom panel.")
+            }
+        }
+        .navigationTitle("Lorry pin")
     }
 }
 
@@ -632,6 +816,11 @@ struct NavSettingsView: View {
                 Picker("Speedometer side", selection: $store.settings.navSpeedoSide) {
                     Text("Left").tag("left"); Text("Right").tag("right")
                 }
+                Picker("Speed limit sign", selection: $store.settings.navLimitCorner) {
+                    Text("Top right").tag("tr"); Text("Top left").tag("tl")
+                    Text("Bottom right").tag("br"); Text("Bottom left").tag("bl")
+                }
+                NavigationLink { PinSettingsView() } label: { Label("Lorry pin", systemImage: "box.truck.fill") }
                 Picker("Directions banner", selection: $store.settings.navBannerSize) {
                     Text("Normal").tag("m"); Text("Large").tag("l")
                 }

@@ -14,7 +14,8 @@ enum MapContext: String {
     /// Event types hidden until you change the filter.
     var defaultHidden: Set<EventKind> {
         switch self {
-        case .main, .day: Set(EventKind.allCases)
+        case .main: Set(EventKind.allCases).subtracting([.activity])   // today's journey: activities, no events
+        case .day: Set(EventKind.allCases)
         case .events: [.activity]
         case .activities: Set(EventKind.allCases).subtracting([.activity])
         }
@@ -134,6 +135,13 @@ struct MapDayView: View {
                            coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
                     Image(systemName: "flag.fill").font(.caption.weight(.bold)).foregroundStyle(.white)
                         .frame(width: 30, height: 30).background(Color.green, in: Circle())
+                        .overlay(Circle().stroke(.white, lineWidth: 2))
+                }
+            }
+            if store.settings.mapShowStops, let plan, plan.endMode == .different, let lat = plan.endLatitude, let lon = plan.endLongitude {
+                Annotation("Finish: \(plan.endText)", coordinate: CLLocationCoordinate2D(latitude: lat, longitude: lon)) {
+                    Image(systemName: "flag.checkered").font(.caption.weight(.bold)).foregroundStyle(.white)
+                        .frame(width: 30, height: 30).background(Color.indigo, in: Circle())
                         .overlay(Circle().stroke(.white, lineWidth: 2))
                 }
             }

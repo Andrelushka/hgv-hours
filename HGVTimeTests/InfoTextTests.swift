@@ -34,7 +34,7 @@ final class InfoTextTests: XCTestCase {
 final class MapFilterDefaultsTests: XCTestCase {
     func testDefaultsPerMap() {
         var s = AppSettings()
-        XCTAssertEqual(s.hiddenEvents(on: .main), Set(EventKind.allCases), "main map: everything off")
+        XCTAssertEqual(s.hiddenEvents(on: .main), Set(EventKind.allCases).subtracting([.activity]), "main map: activities only")
         XCTAssertEqual(s.hiddenEvents(on: .day), Set(EventKind.allCases))
         XCTAssertEqual(s.hiddenEvents(on: .events), [.activity], "events map: only events on")
         XCTAssertFalse(s.hiddenEvents(on: .activities).contains(.activity), "activities map: activities on")
@@ -61,5 +61,26 @@ final class EquipmentStopTests: XCTestCase {
         let old = #"[{"id":"6F9619FF-8B86-D011-B42D-00C04FC964FF","kind":"delivery","place":"Tesco","time":"","reference":"","pallets":"","notes":""}]"#
         let decoded = try JSONDecoder().decode([PlanStop].self, from: Data(old.utf8))
         XCTAssertNil(decoded.first?.equipmentID)
+    }
+}
+
+/// The trailer follows the cab through a turn and straightens afterwards.
+@MainActor
+final class TrailerSwingTests: XCTestCase {
+    func testTrailerSwingsAndStraightens() {
+        var trailer = 0.0
+        // Cab turns to 40° at 10 m/s: the trailer lags behind, then catches up.
+        NavigationEngine.followTrailer(&trailer, cab: 40, speed: 10, dt: 0.2)
+        XCTAssertGreaterThan(trailer, 0)
+        XCTAssertLessThan(trailer, 40)
+        for _ in 0..<100 { NavigationEngine.followTrailer(&trailer, cab: 40, speed: 10, dt: 0.2) }
+        XCTAssertEqual(trailer, 40, accuracy: 1)
+        // Standing still: no swing.
+        var still = 0.0
+        NavigationEngine.followTrailer(&still, cab: 30, speed: 0, dt: 0.2)
+        XCTAssertEqual(still, 0)
+        var h = 350.0
+        NavigationEngine.ease(&h, to: 10, factor: 0.5)
+        XCTAssertEqual(h, 0, accuracy: 0.001, "eases across north the short way")
     }
 }

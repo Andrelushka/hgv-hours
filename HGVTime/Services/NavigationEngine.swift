@@ -19,8 +19,12 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
     var location: CLLocation?
     /// Position drawn on the map, moved smoothly between GPS fixes.
     var displayCoordinate: CLLocationCoordinate2D?
-    /// Direction of travel for the lorry marker (degrees).
+    /// Direction of travel (degrees) from GPS / the route.
     var heading: CLLocationDirection = 0
+    /// Heading drawn on screen: eased towards `heading` so turns look smooth.
+    var displayHeading: CLLocationDirection = 0
+    /// Where the trailer points: it follows the cab through a turn like a real artic.
+    var trailerHeading: CLLocationDirection = 0
     var remainingDistance: CLLocationDistance = 0
     var remainingTime: TimeInterval = 0
     var eta: Date?
@@ -419,15 +423,38 @@ final class NavigationEngine: NSObject, CLLocationManagerDelegate {
         guard let fix = lastFix ?? location.map({ ($0, progress, false) }) else { return }
         let dt = min(2.5, Date.now.timeIntervalSince(fix.location.timestamp))
         let speed = max(0, fix.location.speed)
+        var target = heading
         if fix.onRoute, route != nil {
             let along = fix.along + speed * dt
             displayCoordinate = coordinate(atAlong: along)
-            if speed > 1.5 { heading = bearing(atAlong: along) }
+            if speed > 1.5 { target = bearing(atAlong: along) }
         } else if speed > 1.5, fix.location.course >= 0 {
             displayCoordinate = NavigationEngine.offset(fix.location.coordinate, metres: speed * dt, bearing: fix.location.course)
+            target = fix.location.course
         } else {
             displayCoordinate = fix.location.coordinate
         }
+        Self.ease(&displayHeading, to: target, factor: 0.35)
+        Self.followTrailer(&trailerHeading, cab: displayHeading, speed: speed, dt: 0.2)
+    }
+
+    /// Moves an angle part of the way towards a target along the shorter arc.
+    static func ease(_ angle: inout CLLocationDirection, to target: CLLocationDirection, factor: Double) {
+        var diff = (target - angle).truncatingRemainder(dividingBy: 360)
+        if diff > 180 { diff -= 360 }
+        if diff < -180 { diff += 360 }
+        angle = (angle + diff * factor + 360).truncatingRemainder(dividingBy: 360)
+    }
+
+    /// Trailer kinematics: the trailer turns towards the cab at a rate set by speed ÷ trailer length,
+    /// so it swings out on a bend and straightens behind you afterwards.
+    static func followTrailer(_ trailer: inout CLLocationDirection, cab: CLLocationDirection, speed: Double, dt: Double, length: Double = 10) {
+        var diff = (cab - trailer).truncatingRemainder(dividingBy: 360)
+        if diff > 180 { diff -= 360 }
+        if diff < -180 { diff += 360 }
+        if abs(diff) > 75 { trailer = cab; return }   // jack-knife guard (e.g. GPS jump)
+        let rate = speed / length * sin(diff * .pi / 180) * 180 / .pi   // degrees per second
+        trailer = (trailer + rate * dt + 360).truncatingRemainder(dividingBy: 360)
     }
 
     static func offset(_ c: CLLocationCoordinate2D, metres: Double, bearing: CLLocationDirection) -> CLLocationCoordinate2D {
