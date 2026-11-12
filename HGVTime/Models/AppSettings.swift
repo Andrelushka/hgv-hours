@@ -303,6 +303,12 @@ struct AppSettings: Codable, Equatable {
     var navShowRoad = true
     /// "standard" or "hybrid" (satellite with roads).
     var navMapStyle = "standard"
+    /// How the map follows you: "follow3D", "headingUp", "northUp" or "overview".
+    var navViewMode = "follow3D"
+    /// Camera tilt in the 3D view, degrees (0 = looking straight down, 75 = low behind the lorry).
+    var navPitch: Double = 62
+    /// Camera distance: 0.5 = close, 1 = normal, 2 = far.
+    var navZoom: Double = 1
     /// Directions banner: "m" or "l".
     var navBannerSize = "m"
     // Alerts on the map

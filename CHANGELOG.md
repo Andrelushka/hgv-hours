@@ -2,6 +2,13 @@
 
 Versioning: Major.Minor.Patch — see ROADMAP.md.
 
+## 3.11.0 — Adjustable navigation view, clearer widgets, CarPlay screens
+- Navigation: choose the view (3D behind, heading up, north up, overview), the 3D tilt (flat to behind the cab) and zoom (very close to very far) from the view button, or set them exactly in Settings → Navigation. Your choice is remembered.
+- Widgets redesigned so every number says what it is: "Driving till break" (4h30) and "Working till break" (6h) as rings, plus driving left today, next break (length and time), start rest by, worked this shift, week driving/working, 10h days and 9h rests left, and earnings. Countdowns tick live while you drive. New "Driving left today" option for the custom widgets. The large size is the third option in the widget gallery.
+- CarPlay screens (Hours, Activity buttons, Route): your hours, Drive / Other work / POA / Break / End shift buttons, and the next turn while navigating. They work in Xcode's CarPlay Simulator now; to appear in your car, Apple has to approve the app for CarPlay (needs a paid developer account).
+- Fixed: the "Now" button next to the time on the status card showed as an empty grey pill.
+- All calculations use your activities in the driver log (drive, other work, POA, breaks); events are only a record.
+
 ## 3.10.1 — GPS position fixes
 - Fixed: after a reroute the lorry marker could jump to a random point further along the new route (it used your progress along the old route).
 - Rough positions are ignored: when GPS is weak (yards, buildings, tunnels) the iPhone falls back to Wi-Fi / mobile-mast positions that can be hundreds of metres or kilometres out. Fixes worse than 65 m are skipped while a good fix is recent, and impossible jumps (faster than 200 km/h) are dropped — on the navigation screen, the main map and the lorry marker.

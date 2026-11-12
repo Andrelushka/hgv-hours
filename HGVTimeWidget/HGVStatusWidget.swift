@@ -16,6 +16,15 @@ struct StatusProvider: TimelineProvider {
         d.driveLeft = 3 * 3600 + 20 * 60
         d.workLeft = 4 * 3600
         d.breakDueIn = d.driveLeft
+        d.driveLeftToday = 6 * 3600 + 40 * 60
+        d.dailyDriving = 3 * 3600 + 20 * 60
+        d.dailyDrivingLimit = 10 * 3600
+        d.breakBy = .now.addingTimeInterval(3 * 3600 + 20 * 60)
+        d.breakLength = 45 * 60
+        d.shiftWorking = 4 * 3600
+        d.weeklyDriving = 21 * 3600
+        d.weeklyWorking = 30 * 3600
+        d.cardInserted = true
         d.restBy = .now.addingTimeInterval(8 * 3600)
         d.earnedShift = 96.5
         d.earnedWeek = 412
@@ -89,7 +98,7 @@ struct StatusWidgetView: View {
 
     private func inline(_ d: Dashboard) -> some View {
         if d.onShift {
-            Label("Drive \(WFormat.hm(d.driveLeft(at: entry.date))) · Work \(WFormat.hm(d.workLeft(at: entry.date)))", systemImage: "steeringwheel")
+            Label("Break in \(WFormat.hm(d.driveLeft(at: entry.date))) · Work \(WFormat.hm(d.workLeft(at: entry.date)))", systemImage: "steeringwheel")
         } else {
             Label(d.statusTitle, systemImage: d.symbol)
         }
@@ -106,11 +115,9 @@ struct StatusWidgetView: View {
         .widgetAccentable()
     }
 
-    /// Lock Screen: status, live timer, both countdowns with bars, and the next break / rest deadline.
+    /// Lock Screen: what you're doing, then the two clocks with plain labels.
     private func rectangular(_ d: Dashboard) -> some View {
-        let drive = d.driveLeft(at: entry.date)
-        let work = d.workLeft(at: entry.date)
-        return VStack(alignment: .leading, spacing: 1) {
+        VStack(alignment: .leading, spacing: 1) {
             HStack(spacing: 4) {
                 Image(systemName: d.symbol)
                 Text(d.statusTitle).font(.caption.weight(.bold)).lineLimit(1)
@@ -119,12 +126,8 @@ struct StatusWidgetView: View {
             }
             .widgetAccentable()
             if d.onShift {
-                HStack(spacing: 6) {
-                    miniBar("steeringwheel", WFormat.hm(drive), drive / (4.5 * 3600))
-                    miniBar("briefcase.fill", WFormat.hm(work), work / (6 * 3600))
-                }
-                Text([d.breakBy.map { "Break \(WFormat.time($0))" }, d.restBy.map { "Rest by \(WFormat.time($0))" }]
-                        .compactMap { $0 }.joined(separator: " · "))
+                Text("Drive \(WFormat.hm(d.driveLeft(at: entry.date))) till break").font(.caption.weight(.semibold).monospacedDigit())
+                Text("Work \(WFormat.hm(d.workLeft(at: entry.date))) · today \(WFormat.hm(d.driveLeftToday(at: entry.date)))")
                     .font(.caption2.monospacedDigit()).lineLimit(1).minimumScaleFactor(0.8)
             } else if d.hasData {
                 let target: TimeInterval = d.restTypeRaw == "weekly" ? 45 * 3600 : 11 * 3600
@@ -138,155 +141,150 @@ struct StatusWidgetView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func miniBar(_ symbol: String, _ value: String, _ fraction: Double) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            HStack(spacing: 2) {
-                Image(systemName: symbol).font(.system(size: 9))
-                Text(value).font(.caption.weight(.bold).monospacedDigit())
-            }
-            ProgressView(value: min(max(fraction, 0), 1)).progressViewStyle(.linear).frame(height: 3)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     // MARK: Home Screen
 
+    /// Small: activity, then the driving clock big, working clock underneath.
     private func small(_ d: Dashboard) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 4) {
-                Image(systemName: d.symbol).foregroundStyle(d.tint)
-                Text(d.statusTitle).font(.caption.weight(.bold)).lineLimit(1)
-            }
-            if d.hasData {
-                Text(d.since, style: .timer).font(.caption2.monospacedDigit()).foregroundStyle(.secondary)
-            }
+        VStack(alignment: .leading, spacing: 3) {
+            header(d, compact: true)
             Spacer(minLength: 2)
             if d.onShift {
-                Text("Driving left").font(.caption2).foregroundStyle(.secondary)
-                Text(WFormat.hm(d.driveLeft(at: entry.date)))
-                    .font(.system(.title, design: .rounded).weight(.bold).monospacedDigit())
-                    .foregroundStyle(d.driveLeft(at: entry.date) < 1800 ? .orange : .primary)
-                Text("Work \(WFormat.hm(d.workLeft(at: entry.date)))").font(.caption2.monospacedDigit())
+                Text("Driving till break").font(.caption2).foregroundStyle(.secondary)
+                clock(d.driveLeft(at: entry.date), ends: d.driveEnds(d.driveLeft), font: .system(.title, design: .rounded))
+                    .foregroundStyle(d.driveLeft(at: entry.date) < 1800 ? .orange : .blue)
+                Text("Work till break \(WFormat.hm(d.workLeft(at: entry.date)))").font(.caption2.weight(.semibold).monospacedDigit())
+                    .foregroundStyle(.orange)
             } else {
-                Text(WFormat.money(d.earnedWeek, d.currency)).font(.title3.weight(.bold).monospacedDigit()).foregroundStyle(.green)
-                Text("this week").font(.caption2).foregroundStyle(.secondary)
+                restSummary(d, compact: true)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Medium: the two clocks as rings, and three clearly labelled lines.
     private func medium(_ d: Dashboard) -> some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Label(d.statusTitle, systemImage: d.symbol).font(.headline).foregroundStyle(d.tint).lineLimit(1)
-                if d.hasData {
-                    Text(d.since, style: .timer).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 2)
-                Text(WFormat.money(d.earnedShift, d.currency)).font(.title2.weight(.bold).monospacedDigit()).foregroundStyle(.green)
-                Text("today · \(WFormat.money(d.earnedWeek, d.currency)) week").font(.caption2).foregroundStyle(.secondary)
-                Label(d.cardInserted ? "Card in" : "No card", systemImage: "creditcard.fill")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(d.cardInserted ? .green : .red)
-                if d.vehicleHeight > 0 {
-                    Text(String(format: "Height %.2f m", d.vehicleHeight)).font(.caption2.weight(.bold)).foregroundStyle(.red)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(alignment: .leading, spacing: 8) {
+            header(d, compact: false)
             if d.onShift {
-                VStack(alignment: .leading, spacing: 6) {
-                    row("Drive left", WFormat.hm(d.driveLeft(at: entry.date)), .blue)
-                    row("Work left", WFormat.hm(d.workLeft(at: entry.date)), .orange)
-                    row("Break in", WFormat.hm(d.breakDueIn(at: entry.date)), .green)
-                    if let restBy = d.restBy { row("Rest by", WFormat.time(restBy), .teal) }
+                HStack(spacing: 10) {
+                    ring("Driving\ntill break", d.driveLeft(at: entry.date), d.driveEnds(d.driveLeft), of: 4.5 * 3600, .blue, size: 66)
+                    ring("Working\ntill break", d.workLeft(at: entry.date), d.workEnds(d.workLeft), of: 6 * 3600, .orange, size: 66)
+                    VStack(alignment: .leading, spacing: 5) {
+                        line("Driving left today", WFormat.hm(d.driveLeftToday(at: entry.date)), .blue)
+                        if let b = d.breakBy { line("Next break", "\(WFormat.time(b)) · \(Int(d.breakLength / 60)) min", .green) }
+                        if let r = d.restBy { line("Start rest by", WFormat.time(r), .teal) }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else if d.hasData {
-                VStack(alignment: .leading, spacing: 6) {
-                    let target: TimeInterval = d.restTypeRaw == "weekly" ? 45 * 3600 : 11 * 3600
-                    row("Resting", WFormat.hm(d.restLength + entry.date.timeIntervalSince(d.generatedAt)), d.tint)
-                    row("Full rest at", WFormat.time(d.since.addingTimeInterval(target)), d.tint)
-                    row("Week driving", WFormat.hm(d.weeklyDriving), .blue)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                restSummary(d, compact: false)
             }
         }
     }
 
-    /// Large / extra-large: everything at a glance.
+    /// Large: header, two rings, then "Today" and "This week" in labelled rows.
     private func large(_ d: Dashboard, wide: Bool) -> some View {
-        let drive = d.driveLeft(at: entry.date)
-        let work = d.workLeft(at: entry.date)
-        let cols = Array(repeating: GridItem(.flexible(), spacing: 10, alignment: .leading), count: wide ? 4 : 3)
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Label(d.statusTitle, systemImage: d.symbol).font(.headline).foregroundStyle(d.tint)
-                if d.hasData { Text(d.since, style: .timer).font(.subheadline.monospacedDigit()).foregroundStyle(.secondary) }
-                Spacer()
-                Label(d.cardInserted ? "Card in" : "No card", systemImage: "creditcard.fill")
-                    .font(.caption.weight(.bold)).foregroundStyle(d.cardInserted ? .green : .red)
-            }
+        VStack(alignment: .leading, spacing: 10) {
+            header(d, compact: false)
             if d.onShift {
-                HStack(spacing: 14) {
-                    ring("Driving left", WFormat.hm(drive), drive / (4.5 * 3600), .blue)
-                    ring("Working left", WFormat.hm(work), work / (6 * 3600), .orange)
-                    if wide, let restBy = d.restBy {
-                        ring("Rest by", WFormat.time(restBy), max(0, restBy.timeIntervalSince(entry.date)) / (13 * 3600), .teal)
+                HStack(spacing: 12) {
+                    ring("Driving till break", d.driveLeft(at: entry.date), d.driveEnds(d.driveLeft), of: 4.5 * 3600, .blue, size: 92)
+                    ring("Working till break", d.workLeft(at: entry.date), d.workEnds(d.workLeft), of: 6 * 3600, .orange, size: 92)
+                    if wide {
+                        ring("Driving left today", d.driveLeftToday(at: entry.date), d.driveEnds(d.driveLeftToday), of: d.dailyDrivingLimit, .indigo, size: 92)
                     }
                 }
-            } else if d.hasData {
-                let target: TimeInterval = d.restTypeRaw == "weekly" ? 45 * 3600 : 11 * 3600
-                let rested = d.restLength + entry.date.timeIntervalSince(d.generatedAt)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Resting \(WFormat.hm(rested)) of \(WFormat.hm(target))").font(.title3.weight(.bold).monospacedDigit())
-                    ProgressView(value: min(rested / target, 1)).tint(d.tint)
-                    Text("Full rest at \(WFormat.time(d.since.addingTimeInterval(target)))").font(.caption).foregroundStyle(.secondary)
+                section("Today") {
+                    line("Driving left today", "\(WFormat.hm(d.driveLeftToday(at: entry.date))) (\(WFormat.hm(d.dailyDriving)) of \(WFormat.hm(d.dailyDrivingLimit)) driven)", .blue)
+                    if let b = d.breakBy { line("Next break", "\(Int(d.breakLength / 60)) min by \(WFormat.time(b))", .green) }
+                    if let r = d.restBy { line("Start daily rest by", WFormat.time(r), .teal) }
+                    line("Worked this shift", WFormat.hm(d.shiftWorking), .orange)
                 }
+            } else {
+                restSummary(d, compact: false)
             }
-            LazyVGrid(columns: cols, alignment: .leading, spacing: 10) {
-                if d.onShift {
-                    row("Break in", WFormat.hm(d.breakDueIn(at: entry.date)), .green)
-                    if let b = d.breakBy { row("Break by", "\(WFormat.time(b)) · \(Int(d.breakLength / 60))m", .green) }
-                    if let restBy = d.restBy { row("Rest by", WFormat.time(restBy), .teal) }
-                    row("Driven today", "\(WFormat.hm(d.dailyDriving))/\(WFormat.hm(d.dailyDrivingLimit))", .blue)
-                    row("Shift work", WFormat.hm(d.shiftWorking), .orange)
-                }
-                if let next = d.nextStart { row("Next start", WFormat.time(next), .indigo) }
-                if let w = d.weeklyRestBy { row("Weekly rest by", w.formatted(.dateTime.weekday(.abbreviated).hour().minute()), .indigo) }
-                row("Week driving", "\(WFormat.hm(d.weeklyDriving))/56h", .blue)
-                row("Week working", "\(WFormat.hm(d.weeklyWorking))/60h", .orange)
-                row("10h days left", "\(d.tenHourDaysLeft) of 2", .blue)
-                row("9h rests left", "\(d.reducedRestsLeft) of 3", .teal)
-                row("Earned today", WFormat.money(d.earnedShift, d.currency), .green)
-                row("This week", WFormat.money(d.earnedWeek, d.currency), .green)
-                if d.vehicleHeight > 0 {
-                    let inches = Int((d.vehicleHeight / 0.0254).rounded())
-                    row("Height", "\(inches / 12)′\(inches % 12)″ · \(String(format: "%.2f m", d.vehicleHeight))", .red)
-                }
+            section("This week") {
+                line("Driving", "\(WFormat.hm(d.weeklyDriving)) of 56h", .blue)
+                line("Working", "\(WFormat.hm(d.weeklyWorking)) of 60h", .orange)
+                line("10h days · 9h rests left", "\(d.tenHourDaysLeft) of 2 · \(d.reducedRestsLeft) of 3", .indigo)
+                line("Earned", "\(WFormat.money(d.earnedShift, d.currency)) today · \(WFormat.money(d.earnedWeek, d.currency)) week", .green)
             }
             Spacer(minLength: 0)
         }
     }
 
-    private func ring(_ title: String, _ value: String, _ fraction: Double, _ color: Color) -> some View {
-        VStack(spacing: 4) {
-            ZStack {
-                Circle().stroke(color.opacity(0.18), lineWidth: 8)
-                Circle().trim(from: 0, to: min(max(fraction, 0), 1))
-                    .stroke(color, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                Text(value).font(.system(.headline, design: .rounded).weight(.bold).monospacedDigit()).minimumScaleFactor(0.6).padding(6)
+    // MARK: Pieces
+
+    private func header(_ d: Dashboard, compact: Bool) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: d.symbol).foregroundStyle(d.tint)
+            Text(d.statusTitle).font(compact ? .caption.weight(.bold) : .headline).foregroundStyle(d.tint).lineLimit(1)
+            if d.hasData && !compact {
+                Text(d.since, style: .timer).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }
-            .frame(width: 78, height: 78)
-            Text(title).font(.caption2.weight(.semibold)).foregroundStyle(.secondary)
+            Spacer(minLength: 2)
+            if !compact {
+                Image(systemName: "creditcard.fill").font(.caption).foregroundStyle(d.cardInserted ? .green : .red)
+                    .accessibilityLabel(d.cardInserted ? "Card in" : "No card")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func restSummary(_ d: Dashboard, compact: Bool) -> some View {
+        if d.hasData {
+            let target: TimeInterval = d.restTypeRaw == "weekly" ? 45 * 3600 : 11 * 3600
+            let rested = d.restLength + entry.date.timeIntervalSince(d.generatedAt)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Rested \(WFormat.hm(rested)) of \(WFormat.hm(target))").font(compact ? .caption.weight(.bold) : .headline).monospacedDigit()
+                ProgressView(value: min(max(rested / target, 0), 1)).tint(d.tint)
+                Text("Full rest at \(WFormat.time(d.since.addingTimeInterval(target)))").font(.caption2).foregroundStyle(.secondary)
+                if let next = d.nextStart { Text("Can start from \(WFormat.time(next))").font(.caption2).foregroundStyle(.secondary) }
+                if !compact { Text("Week: \(WFormat.hm(d.weeklyDriving)) driven · \(WFormat.money(d.earnedWeek, d.currency))").font(.caption2).foregroundStyle(.secondary) }
+            }
+        } else {
+            Text("Tap to start your shift").font(.caption)
+        }
+    }
+
+    /// A live countdown when the clock is running, otherwise the value.
+    @ViewBuilder
+    private func clock(_ value: TimeInterval, ends: Date?, font: Font) -> some View {
+        if let ends, ends > entry.date {
+            Text(timerInterval: entry.date...ends, countsDown: true).font(font.weight(.bold).monospacedDigit())
+        } else {
+            Text(WFormat.hm(value)).font(font.weight(.bold).monospacedDigit())
+        }
+    }
+
+    private func ring(_ title: String, _ value: TimeInterval, _ ends: Date?, of total: TimeInterval, _ color: Color, size: CGFloat) -> some View {
+        VStack(spacing: 3) {
+            ZStack {
+                Circle().stroke(color.opacity(0.18), lineWidth: size * 0.1)
+                Circle().trim(from: 0, to: min(max(value / max(1, total), 0), 1))
+                    .stroke(color, style: StrokeStyle(lineWidth: size * 0.1, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Text(WFormat.hm(value)).font(.system(size: size * 0.22, weight: .bold, design: .rounded).monospacedDigit())
+                    .minimumScaleFactor(0.6).padding(4)
+            }
+            .frame(width: size, height: size)
+            Text(title).font(.caption2.weight(.semibold)).foregroundStyle(.secondary).multilineTextAlignment(.center).lineLimit(2)
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func row(_ title: String, _ value: String, _ color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(title).font(.caption2).foregroundStyle(.secondary)
-            Text(value).font(.subheadline.weight(.bold).monospacedDigit()).foregroundStyle(color)
+    private func section<Content: View>(_ title: String, @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title.uppercased()).font(.caption2.weight(.bold)).foregroundStyle(.secondary)
+            content()
+        }
+    }
+
+    private func line(_ title: String, _ value: String, _ color: Color) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            Spacer(minLength: 4)
+            Text(value).font(.caption.weight(.bold).monospacedDigit()).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.7)
         }
     }
 }
@@ -298,7 +296,7 @@ struct HGVStatusWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("HGV Hours")
-        .description("Driving and working time left, rest deadline and earnings.")
+        .description("Driving and working time till your next break, driving left today, next break, rest deadline, week totals and earnings.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .systemExtraLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }

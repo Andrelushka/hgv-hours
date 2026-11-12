@@ -4,12 +4,13 @@ import WidgetKit
 
 /// Something a widget block can show.
 enum WidgetMetric: String, AppEnum {
-    case driveLeft, workLeft, breakDue, restBy, earnedToday, earnedWeek, weekDriving, weekWorking, card, height, status
+    case driveLeft, workLeft, driveToday, breakDue, restBy, earnedToday, earnedWeek, weekDriving, weekWorking, card, height, status
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Information"
     static var caseDisplayRepresentations: [WidgetMetric: DisplayRepresentation] = [
-        .driveLeft: "Driving left",
-        .workLeft: "Working time left",
+        .driveLeft: "Driving till break (4h30)",
+        .workLeft: "Working till break (6h)",
+        .driveToday: "Driving left today",
         .breakDue: "Break due in",
         .restBy: "Start rest by",
         .earnedToday: "Earned today",
@@ -36,12 +37,16 @@ extension WidgetMetric {
         switch self {
         case .driveLeft:
             let v = d.driveLeft(at: date)
-            return MetricValue(title: "Drive left", value: d.onShift ? WFormat.hm(v) : "—", symbol: "steeringwheel",
+            return MetricValue(title: "Drive till break", value: d.onShift ? WFormat.hm(v) : "—", symbol: "steeringwheel",
                                color: v < 1800 && d.onShift ? .orange : .blue, fraction: d.onShift ? v / (4.5 * 3600) : nil)
         case .workLeft:
             let v = d.workLeft(at: date)
-            return MetricValue(title: "Work left", value: d.onShift ? WFormat.hm(v) : "—", symbol: "briefcase.fill",
+            return MetricValue(title: "Work till break", value: d.onShift ? WFormat.hm(v) : "—", symbol: "briefcase.fill",
                                color: v < 1800 && d.onShift ? .orange : .orange, fraction: d.onShift ? v / (6 * 3600) : nil)
+        case .driveToday:
+            let v = d.driveLeftToday(at: date)
+            return MetricValue(title: "Drive today", value: d.onShift ? WFormat.hm(v) : "—", symbol: "road.lanes",
+                               color: .indigo, fraction: d.onShift ? v / max(1, d.dailyDrivingLimit) : nil)
         case .breakDue:
             let v = d.breakDueIn(at: date)
             return MetricValue(title: "Break in", value: d.onShift ? WFormat.hm(v) : "—", symbol: "cup.and.saucer.fill",
@@ -81,6 +86,8 @@ extension Dashboard {
         d.driveLeft = 3 * 3600 + 20 * 60
         d.workLeft = 4 * 3600
         d.breakDueIn = d.driveLeft
+        d.driveLeftToday = 6 * 3600 + 40 * 60
+        d.dailyDrivingLimit = 10 * 3600
         d.restBy = .now.addingTimeInterval(8 * 3600)
         d.earnedShift = 96.5
         d.earnedWeek = 412

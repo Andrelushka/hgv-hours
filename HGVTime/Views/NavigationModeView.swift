@@ -195,10 +195,29 @@ struct NavigationModeView: View {
     private var buttonColumn: some View {
         VStack(spacing: 8) {
             Menu {
-                Picker("View", selection: $view) {
+                Picker("View", selection: Binding(get: { view }, set: { view = $0; store.settings.navViewMode = $0.rawValue })) {
                     ForEach(ViewMode.allCases) { Label($0.title, systemImage: $0.symbol).tag($0) }
                 }
+                Menu("Tilt", systemImage: "rotate.3d") {
+                    Picker("Tilt", selection: Binding(get: { store.settings.navPitch }, set: { store.settings.navPitch = $0; follow(engine.location, animated: true, force: true) })) {
+                        Text("Flat (from above)").tag(0.0)
+                        Text("Low").tag(35.0)
+                        Text("Medium").tag(50.0)
+                        Text("High").tag(62.0)
+                        Text("Very high (behind the cab)").tag(72.0)
+                    }
+                }
+                Menu("Zoom", systemImage: "plus.magnifyingglass") {
+                    Picker("Zoom", selection: Binding(get: { store.settings.navZoom }, set: { store.settings.navZoom = $0; follow(engine.location, animated: true, force: true) })) {
+                        Text("Very close").tag(0.5)
+                        Text("Close").tag(0.75)
+                        Text("Normal").tag(1.0)
+                        Text("Far").tag(1.5)
+                        Text("Very far").tag(2.2)
+                    }
+                }
             } label: { roundIcon(view.symbol) }
+            .accessibilityLabel("Map view, tilt and zoom")
             if position.positionedByUser {
                 Button { follow(engine.location, animated: true, force: true) } label: { roundIcon("location.fill") }
                     .accessibilityLabel("Re-centre")
@@ -398,6 +417,7 @@ struct NavigationModeView: View {
     // MARK: Actions
 
     private func begin() {
+        view = ViewMode(rawValue: s.navViewMode) ?? .follow3D
         engine.driveLeft = { driveLeftNow() }
         engine.profile = profile
         engine.provider = s.navRouting
@@ -458,15 +478,18 @@ struct NavigationModeView: View {
         let heading = engine.heading
         let kmh = max(0, loc.speed * 3.6)
         let centre = engine.displayCoordinate ?? loc.coordinate
+        let zoom = max(0.3, s.navZoom)
+        let pitch = max(0, min(75, s.navPitch))
         let camera: MapCamera
         switch view {
         case .follow3D:
-            let ahead = NavigationEngine.offset(centre, metres: 120 + kmh * 2, bearing: heading)
-            camera = MapCamera(centerCoordinate: ahead, distance: 420 + kmh * 9, heading: heading, pitch: 62)
+            // Look ahead of the lorry; the steeper the tilt, the further ahead the centre.
+            let ahead = NavigationEngine.offset(centre, metres: (60 + kmh * 2) * (0.5 + pitch / 60) * zoom, bearing: heading)
+            camera = MapCamera(centerCoordinate: ahead, distance: (420 + kmh * 9) * zoom, heading: heading, pitch: pitch)
         case .headingUp:
-            camera = MapCamera(centerCoordinate: centre, distance: 900 + kmh * 15, heading: heading, pitch: 0)
+            camera = MapCamera(centerCoordinate: centre, distance: (900 + kmh * 15) * zoom, heading: heading, pitch: 0)
         case .northUp, .overview:
-            camera = MapCamera(centerCoordinate: centre, distance: 1100 + kmh * 15, heading: 0, pitch: 0)
+            camera = MapCamera(centerCoordinate: centre, distance: (1100 + kmh * 15) * zoom, heading: 0, pitch: 0)
         }
         withAnimation(animated ? .easeInOut(duration: 0.5) : .linear(duration: 1.0)) { position = .camera(camera) }
     }
@@ -598,6 +621,17 @@ struct NavSettingsView: View {
                         Text("Arrow see-through: \(Int((1 - store.settings.navSideArrowOpacity) * 100))%").font(.caption)
                         Slider(value: $store.settings.navSideArrowOpacity, in: 0.15...0.8)
                     }
+                }
+                Picker("View", selection: $store.settings.navViewMode) {
+                    ForEach(NavigationModeView.ViewMode.allCases) { Text($0.title).tag($0.rawValue) }
+                }
+                VStack(alignment: .leading) {
+                    Text("3D tilt: \(Int(store.settings.navPitch))°").font(.caption)
+                    Slider(value: $store.settings.navPitch, in: 0...75, step: 1)
+                }
+                VStack(alignment: .leading) {
+                    Text("Zoom: \(store.settings.navZoom < 0.9 ? "close" : store.settings.navZoom > 1.2 ? "far" : "normal") (×\(String(format: "%.1f", store.settings.navZoom)))").font(.caption)
+                    Slider(value: $store.settings.navZoom, in: 0.4...2.5, step: 0.1)
                 }
                 Picker("Map", selection: $store.settings.navMapStyle) {
                     Text("Standard").tag("standard"); Text("Satellite").tag("hybrid")

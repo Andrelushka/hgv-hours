@@ -16,6 +16,8 @@ struct Dashboard: Codable, Equatable {
     var driveLeftReason: String = ""
     /// Driving before the next 45-minute break is due.
     var breakDueIn: TimeInterval = 0
+    /// Driving left today under the 9h/10h, weekly and GB limits (ignoring breaks).
+    var driveLeftToday: TimeInterval = 0
     /// Working time available before a working-time limit (6h break, 60h week, night limit, GB duty).
     var workLeft: TimeInterval = 0
     var workLeftReason: String = ""
@@ -68,6 +70,14 @@ struct Dashboard: Codable, Equatable {
     func driveLeft(at now: Date) -> TimeInterval {
         isDriving ? max(0, driveLeft - now.timeIntervalSince(generatedAt)) : driveLeft
     }
+
+    func driveLeftToday(at now: Date) -> TimeInterval {
+        isDriving ? max(0, driveLeftToday - now.timeIntervalSince(generatedAt)) : driveLeftToday
+    }
+
+    /// When the countdown runs out if the current activity carries on (nil when it isn't counting down).
+    func driveEnds(_ value: TimeInterval) -> Date? { isDriving ? generatedAt.addingTimeInterval(value) : nil }
+    func workEnds(_ value: TimeInterval) -> Date? { isWorking ? generatedAt.addingTimeInterval(value) : nil }
 
     func breakDueIn(at now: Date) -> TimeInterval {
         isDriving ? max(0, breakDueIn - now.timeIntervalSince(generatedAt)) : breakDueIn

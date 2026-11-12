@@ -142,7 +142,7 @@ enum SettingsGroup: String, CaseIterable, Identifiable, Hashable {
             s.navSpeedoSide = d.navSpeedoSide; s.navShowLanes = d.navShowLanes; s.navSideArrow = d.navSideArrow
             s.navSideArrowOpacity = d.navSideArrowOpacity; s.navShowRoad = d.navShowRoad; s.navMapStyle = d.navMapStyle
             s.navBannerSize = d.navBannerSize; s.navCameraAlerts = d.navCameraAlerts; s.navShowTrafficLights = d.navShowTrafficLights
-            s.navShowReports = d.navShowReports
+            s.navShowReports = d.navShowReports; s.navViewMode = d.navViewMode; s.navPitch = d.navPitch; s.navZoom = d.navZoom
             s.keepScreenOn = d.keepScreenOn
         case .layout:
             s.todayOrder = d.todayOrder; s.todayHidden = d.todayHidden

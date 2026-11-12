@@ -18,6 +18,7 @@ extension Dashboard {
         // They're independent — driving isn't capped by the working clock — and don't drop to 0 during a break.
         let gbOnly = settings.primaryRegime == .gbDomestic && s.stats.euDriving == 0
         d.driveLeft = gbOnly ? s.drivingLeftToday : min(s.continuousDrivingRemaining, s.drivingLeftToday)
+        d.driveLeftToday = s.drivingLeftToday
         d.breakDueIn = settings.applyWorkingTime ? min(s.continuousDrivingRemaining, s.wtdWorkBeforeBreak) : s.continuousDrivingRemaining
         if s.currentKind == .rest, let reset = s.breakResetAt, reset > s.now {
             if let split = s.breakSplitPartAt, split > s.now {
